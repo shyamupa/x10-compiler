@@ -8,7 +8,7 @@ letter 		[A-Za-z_]
 digit 		[0-9]
 id		{letter}({letter}|{digit})*	
 comment 	"/*"(.|\n)*"*/"
-line_comment 	\/\/.*\n$
+line_comment 	"//".*\n
 %%
 ^\n$		{}
 {ws}		{printf(" ");}
