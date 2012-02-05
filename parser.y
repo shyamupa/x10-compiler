@@ -21,6 +21,7 @@
 %token LT
 %token PLUS
 %token MINUS
+%token UMINUS
 %token MULT
 %token DIV
 %token SEMICOLON
@@ -32,6 +33,12 @@
 %token RBOX
 %token COLON
 %token NUMBER
+
+%left GE LE EQ NE '<' '>'
+%left '+' '-'
+%left '*' '/'
+%nonassoc UMINUS
+
 %%
 
 expr:
