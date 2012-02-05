@@ -1,6 +1,6 @@
 %{
 #include<stdio.h>
-//#include<y.tab.h>		// to be included when yacc file is ready
+#include"y.tab.h"		// to be included when yacc file is ready
 %}
 
 delim 		[ \t]
@@ -9,19 +9,23 @@ letter 		[A-Za-z_]
 digit 		[0-9]
 line_comment 	"//".*\n
 id		{letter}({letter}|{digit})*	
+number		{digit}+(\.{digit}+)?(E[-+]?{digit}+)?	
 comment 	"/*"(.|\n)*"*/"
 %%
 ^\n$		{}
 {ws}		{printf(" ");}
-\"(\\.|[^"])*\"	{printf("STRING %s",yytext);}
+\"(\\.|[^"])*\"	{
+			printf("STRING %s",yytext);	/*need to handle \" containing strings*/
+			return *yytext;
+		}
 
-if		{printf("IF");}
+if		{printf("IF");return IF;}
 then		{printf("THEN");}
 else		{printf("ELSE");}
 
 for		{printf("FOR");}
 in		{printf("IN");}
-".."		{printf("..");}
+".."		{printf("..");}		
 while		{printf("WHILE");}
 continue	{printf("CONTINUE");}
 break		{printf("BREAK");}
@@ -34,8 +38,8 @@ default		{printf("DEFAULT");}
 "=="		{printf("==");}
 ">="		{printf(">=");}
 ">"		{printf(">");}
-"<"		{printf("<");}
 "<="		{printf("<=");}
+"<"		{printf("<");}
 
 "+="		{printf("+=");}
 "-="		{printf("-=");}
@@ -67,4 +71,5 @@ assert		{printf("ASSERT");}
 {comment}	{/* no action */}
 {line_comment}	{printf("\n");}
 {id}		{printf("ID");}
+{number}	{printf("NUMBER");}
 %%

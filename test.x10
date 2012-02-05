@@ -8,9 +8,10 @@ else
 {
 	c=0;
 	f="////";		// this should be a string
+	g="string containing quotes \"Hello\" world\n";
 }
 
-
+num=123.0119E-21;
 
 
 
