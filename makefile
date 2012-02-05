@@ -7,4 +7,4 @@ lex.yy.c: lexer.l
 	flex lexer.l
 
 clean:
-	rm -rf lex.yy.c
+	rm -rf lex.yy.c lexer
