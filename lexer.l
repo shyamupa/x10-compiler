@@ -52,7 +52,8 @@ default		{printf("DEFAULT");}
 \}		{printf("}");}
 \(		{printf("(");}
 \)		{printf(")");}
-
+"["		{printf("[");}
+"]"		{printf("]");}
 ":"		{printf(":");}
 var		{printf("VAR");}
 def		{printf("DEF");}
