@@ -41,6 +41,7 @@ default		{printf("DEFAULT");}
 "-="		{printf("-=");}
 "*="		{printf("*=");}
 "/="		{printf("/=");}
+"="		{printf("=");}
 
 "+"		{printf("+");}
 "-"		{printf("-");}
