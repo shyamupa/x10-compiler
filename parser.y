@@ -1,5 +1,23 @@
 %{
 #include<stdio.h>
+#include<ctype.h>
+#include<stdlib.h>
+//#include<sym_tab.h>
+#define YYDEBUG 1	//enable debugging
+
+install(char* sym_name)
+{
+	sym_record* r;
+	r=search(sym_name);
+	if(r==NULL)	// sym_name not already in table add it
+	{
+		r=insert(sym_name);
+	}
+	else	// oops the name already exists
+	{
+		// what to do here?? do we check scope or not
+	}
+}
 %}
 %token IF 
 %token THEN 
@@ -37,14 +55,14 @@
 %left GE LE EQ NE '<' '>'
 %left '+' '-'
 %left '*' '/'
+%right UMINUS
+
 %nonassoc UMINUS
 
 %%
 
 expr:
-	NUMBER	{$$=$1;}
-	| expr '+' expr	{$$=$1+$3;}
-	| expr '-' expr	{$$=$1-$3;}
+	| expr '+' term {$$=$1+$3;}
 
 %%
 int main()
