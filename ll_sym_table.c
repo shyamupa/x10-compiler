@@ -1,10 +1,11 @@
 #include<stdio.h>
 #include<stdlib.h>
 #include<string.h>
+#include<assert.h>
 extern int main();
 struct sym_record
 {
-	char* sym_name;		// name of symbol like 'counter'
+	char sym_name[20];		// name of symbol like 'counter'
 	char* type;		// type of symbol like 'int'
 	struct sym_record * next;
 };
@@ -30,4 +31,12 @@ sym_record* search(char* target_name)	//searches for a record and returns a ptr 
 		p=p->next;	
 	}
 	return NULL;
+}
+int main()
+{
+	sym_record* p=insert("counter");
+	p->type="int";
+	sym_record* q=search("counter");
+	printf("%s\n",q->type);
+	return 0;
 }
