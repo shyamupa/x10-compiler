@@ -1,8 +1,8 @@
 %{
 #include<stdio.h>
 #include"y.tab.h"		// to be included when yacc file is ready
+extern int yylval;
 %}
-
 delim 		[ \t]
 ws		{delim}+
 letter 		[A-Za-z_]
@@ -47,19 +47,34 @@ default		{printf("DEFAULT");}
 "/="		{printf("/=");}
 "="		{printf("=");}
 
-"+"		{printf("+");}
-"-"		{printf("-");}
-"*"		{printf("*");}
-"/"		{printf("/");}
-;		{printf(";");}
+"+"		{
+			//printf("+");
+			return '+';
+		}
+"-"		{
+			//printf("-");
+			return '-';
+		}
+"*"		{
+			//printf("*");
+			return '*';
+		}
+"/"		{
+			//printf("/");
+			return '/';
+		}
+;		{
+			//printf(";");
+			return ';';
+		}
 
-\{		{printf("{");}
-\}		{printf("}");}
-\(		{printf("(");}
-\)		{printf(")");}
-"["		{printf("[");}
-"]"		{printf("]");}
-":"		{printf(":");}
+\{		{printf("{");return '{';}
+\}		{printf("}");return '}';}
+\(		{printf("(");return '(';}
+\)		{printf(")");return ')';}
+"["		{printf("[");return '[';}
+"]"		{printf("]");return ']';}
+":"		{printf(":");return ':';}
 var		{printf("VAR");}
 def		{printf("DEF");}
 public		{printf("PUBLIC");}
@@ -71,5 +86,13 @@ assert		{printf("ASSERT");}
 {comment}	{/* no action */}
 {line_comment}	{printf("\n");}
 {id}		{printf("ID");}
-{number}	{printf("NUMBER");}
+{number}	{
+			yylval=atoi(yytext);
+			//printf("NUMBER{%d}",yylval);
+			return NUMBER;
+		}
 %%
+int yywrap()
+{
+	return 1;
+}

@@ -40,3 +40,4 @@ sym_record* search(char* target_name)	//searches for a record and returns a ptr 
 	//~ printf("%s\n",q->type);
 	//~ return 0;
 //~ }
+

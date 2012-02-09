@@ -2,9 +2,12 @@
 #include<stdio.h>
 #include<ctype.h>
 #include<stdlib.h>
-//#include<sym_tab.h>
+#include"sym_tab.h"
 #define YYDEBUG 1	//enable debugging
-
+void yyerror(char*s)  {printf("%s\n",s);}
+extern int yylex();
+extern char* yytext;
+extern int yywrap();
 install(char* sym_name)
 {
 	sym_record* r;
@@ -24,7 +27,7 @@ install(char* sym_name)
 %token ELSE
 %token FOR
 %token IN
-%token ELLIPSIS
+%token '..'
 %token WHILE
 %token CONTINUE
 %token BREAK
@@ -32,37 +35,39 @@ install(char* sym_name)
 %token SWITCH
 %token CASE
 %token DEFAULT
-%token EQ
-%token GE
-%token GT
-%token LE
-%token LT
-%token PLUS
-%token MINUS
+%token '!='
 %token UMINUS
-%token MULT
-%token DIV
-%token SEMICOLON
-%token LBRACE
-%token RBRACE
-%token LPAR
-%token RPAR
-%token LBOX
-%token RBOX
-%token COLON
+%token ';'
+%token '{'
+%token '}'
+%token '('
+%token ')'
+%token '['
+%token ']'
+%token ':'
 %token NUMBER
+%token ID
 
-%left GE LE EQ NE '<' '>'
 %left '+' '-'
 %left '*' '/'
-%right UMINUS
 
 %nonassoc UMINUS
-
+%start Stmt
 %%
-
-expr:
-	| expr '+' term {$$=$1+$3;}
+Stmt	:E ';' {printf("%d\n",$1);} Stmt	
+	|E ';'	{printf("%d\n",$1);}
+	|';'
+	;
+E	:E '+' T 	{$$=$1+$3;/*printf("%d\n",$$)*/;}
+	|T 	{$$=$1;/*printf("%d\n",$$)*/;}
+	;
+T	:T '*' F	{$$=$1*$3;/*printf("%d\n",$$)*/;}
+	|F 	{$$=$1;/*printf("%d\n",$$)*/;}
+	;
+F	:'('E')' 	{$$=$2;printf("%d\n",$$);}
+	|NUMBER		{$$=$1;}
+	|ID 	{$$=install(yytext);}	
+	;
 
 %%
 int main()
