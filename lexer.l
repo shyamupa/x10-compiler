@@ -1,7 +1,10 @@
 %{
 #include<stdio.h>
+#include<string.h>
 #include"y.tab.h"		// to be included when yacc file is ready
-extern int yylval;
+//#include "include.h"
+//#include "header.h"
+extern YYSTYPE yylval;
 %}
 delim 		[ \t]
 ws		{delim}+
@@ -75,6 +78,10 @@ default		{printf("DEFAULT");}
 "["		{printf("[");return '[';}
 "]"		{printf("]");return ']';}
 ":"		{printf(":");return ':';}
+val		{
+			printf("VAL");
+			return VAL;
+		}
 var		{printf("VAR");}
 def		{printf("DEF");}
 public		{printf("PUBLIC");}
@@ -85,9 +92,9 @@ assert		{printf("ASSERT");}
 
 {comment}	{/* no action */}
 {line_comment}	{printf("\n");}
-{id}		{printf("ID");}
+{id}		{printf("ID"); yylval.charPtr=yytext; return IDENT;}
 {number}	{
-			yylval=atoi(yytext);
+			yylval.iVal=atoi(yytext);
 			//printf("NUMBER{%d}",yylval);
 			return NUMBER;
 		}
