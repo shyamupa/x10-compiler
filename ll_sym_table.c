@@ -2,14 +2,8 @@
 #include<stdlib.h>
 #include<string.h>
 #include<assert.h>
+#include"ll_sym_table.h"
 extern int main();
-struct sym_record
-{
-	char sym_name[20];		// name of symbol like 'counter'
-	char* type;		// type of symbol like 'int'
-	struct sym_record * next;
-};
-typedef struct sym_record sym_record;
 sym_record* sym_table=NULL;	// global sym table
 sym_record* insert(char* sym_name)	// inserts a record and returns a ptr to it
 {

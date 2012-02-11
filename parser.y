@@ -2,16 +2,17 @@
 #include<stdio.h>
 #include<ctype.h>
 #include<stdlib.h>
-#include"sym_tab.h"
+#include<math.h>
+#include"ll_sym_table.h"
 #include "include.h"
 #define YYDEBUG 1	//enable debugging
-
+extern sym_record sym_table;
 void yyerror(char*s)  {printf("%s\n",s);}
 extern int yylex();
 extern char* yytext;
 
 extern int yywrap();
-install(char* sym_name)
+sym_record* install(char* sym_name)
 {
 	printf("installing#%s#\n",sym_name);
 	sym_record* r;
@@ -19,6 +20,7 @@ install(char* sym_name)
 	if(r==NULL)	// sym_name not already in table add it
 	{
 		r=insert(sym_name);
+		return r;
 	}
 	else	// oops the name already exists
 	{
@@ -32,7 +34,7 @@ install(char* sym_name)
 	char* charPtr ;
 	//nodeType *nPtr;
 }
-%token VAL
+%token VAL VAR
 %token IF 
 %token THEN 
 %token ELSE
@@ -46,11 +48,8 @@ install(char* sym_name)
 %token SWITCH
 %token CASE
 %token DEFAULT
-%token '!='
-%token UMINUS
-%token ';'
-%token '{'
-%token '}'
+%token '!=' 
+%token ';''{' '}'
 %token '('
 %token ')'
 %token '['
@@ -60,34 +59,38 @@ install(char* sym_name)
 %token NUMBER
 %type <iVal> NUMBER
 %type <charPtr> IDENT
-%type <iVal> Stmt E T F
+%type <iVal> Stmt Expression VarDec
 %left '+' '-'
 %left '*' '/'
-
-%nonassoc UMINUS
+%left NEG
+%right POW
 %start Stmt
 %%
-Stmt	:E ';' {printf("%d\n",$1);} Stmt	
-	|E ';'	{printf("%d\n",$1);}
+Stmt	:Expression';' {printf("%d\n",$1);} Stmt	
+	|Expression ';'	{printf("%d\n",$1);}
 	|VarDec ';'
-	|';'
 	;
-E	:E '+' T 	{$$=$1+$3;/*printf("%d\n",$$)*/;}
-	|T 	{$$=$1;/*printf("%d\n",$$)*/;}
+Expression	:NUMBER				{ $$=$1; }
+	  	| Expression '+' Expression	{ $$=$1+$3; }
+		| Expression '-' Expression	{ $$=$1-$3; }
+		| Expression '*' Expression	{ $$=$1*$3; }
+		| Expression '/' Expression	{ $$=$1/$3; }
+		| Expression POW Expression	{ $$=pow($1,$3);}			
+		| '-' Expression %prec NEG	{ $$=-$2; }
+		| '('Expression')'		{ $$=$2; }
+		| IDENT	{
+				//sym_record* s=search(yytext);
+				//printf("@%s@",s->type);
+				//$$=71;
+			}
+		;
+VarDec	: Type IDENT {sym_record* s=install(yytext); s->type="Int";} IdList
 	;
-T	:T '*' F	{$$=$1*$3;/*printf("%d\n",$$)*/;}
-	|F 	{$$=$1;/*printf("%d\n",$$)*/;}
+Type	: VAL 
+	| VAR
 	;
-F	:'('E')' 	{$$=$2;printf("%d\n",$$);}
-	|NUMBER		{$$=$1;}
-	|IDENT 	{/*$$=install(yytext);*/}	
-	;
-
-VarDec	: VAL IdList 
-	;
-
-IdList	:IDENT ',' IdList {install($1);}
-	|IDENT {install($1);}
+IdList	: ',' IDENT {sym_record* s=install(yytext); s->type="Int";} IdList
+	|
 	;
 %%
 int main()

@@ -6,7 +6,7 @@
 //#include "header.h"
 extern YYSTYPE yylval;
 %}
-delim 		[ \t]
+delim 		[ \t\n]
 ws		{delim}+
 letter 		[A-Za-z_]
 digit 		[0-9]
@@ -16,7 +16,7 @@ number		{digit}+(\.{digit}+)?(E[-+]?{digit}+)?
 comment 	"/*"(.|\n)*"*/"
 %%
 ^\n$		{}
-{ws}		{printf(" ");}
+{ws}		{printf("");}
 \"(\\.|[^"])*\"	{
 			printf("STRING %s",yytext);	/*need to handle \" containing strings*/
 			return *yytext;
@@ -66,20 +66,48 @@ default		{printf("DEFAULT");}
 			//printf("/");
 			return '/';
 		}
+"**"		{
+			return POW;
+		}
 ;		{
 			//printf(";");
 			return ';';
 		}
+","		{
+			//printf(";");
+			return ',';
+		}
 
-\{		{printf("{");return '{';}
-\}		{printf("}");return '}';}
-\(		{printf("(");return '(';}
-\)		{printf(")");return ')';}
-"["		{printf("[");return '[';}
-"]"		{printf("]");return ']';}
-":"		{printf(":");return ':';}
+\{		{
+			//printf("{");
+			return '{';
+		}
+\}		{
+			//printf("}");
+			return '}';
+		}
+\(		{
+			//printf("(");
+			return '(';
+		}
+\)		{
+			//printf(")");
+			return ')';
+		}
+"["		{
+			//printf("[");
+			return '[';
+		}
+"]"		{
+			//printf("]");
+			return ']';
+		}
+":"		{
+			//printf(":");
+			return ':';
+		}
 val		{
-			printf("VAL");
+			//printf("VAL");
 			return VAL;
 		}
 var		{printf("VAR");}
@@ -92,7 +120,7 @@ assert		{printf("ASSERT");}
 
 {comment}	{/* no action */}
 {line_comment}	{printf("\n");}
-{id}		{printf("ID"); yylval.charPtr=yytext; return IDENT;}
+{id}		{printf("!%s!",yytext); yylval.charPtr=yytext; return IDENT;}
 {number}	{
 			yylval.iVal=atoi(yytext);
 			//printf("NUMBER{%d}",yylval);
