@@ -7,14 +7,20 @@
 #include "include.h"
 #define YYDEBUG 1	//enable debugging
 extern sym_record sym_table;
-void yyerror(char*s)  {printf("%s\n",s);}
+extern yylineno;
 extern int yylex();
 extern char* yytext;
-
 extern int yywrap();
+
+void yyerror(char*s)  
+{
+	//printf("%s\n",s);
+	printf("%d: %s at %s\n",yylineno,s,yytext);
+}
+
 sym_record* install(char* sym_name)
 {
-	printf("installing#%s#\n",sym_name);
+	printf("installing %s\n",sym_name);
 	sym_record* r;
 	r=search(sym_name);
 	if(r==NULL)	// sym_name not already in table add it
@@ -35,26 +41,11 @@ sym_record* install(char* sym_name)
 	//nodeType *nPtr;
 }
 %token VAL VAR
-%token IF 
-%token THEN 
-%token ELSE
-%token FOR
-%token IN
-%token '..'
-%token WHILE
-%token CONTINUE
-%token BREAK
-%token DO
-%token SWITCH
-%token CASE
-%token DEFAULT
+%token IF THEN ELSE
+%token FOR IN '..' WHILE CONTINUE BREAK DO
+%token SWITCH CASE DEFAULT
 %token '!=' 
-%token ';''{' '}'
-%token '('
-%token ')'
-%token '['
-%token ']'
-%token ':'
+%token ';' '{' '}' '(' ')' '[' ']' ':'
 %token IDENT
 %token NUMBER
 %type <iVal> NUMBER
@@ -66,7 +57,11 @@ sym_record* install(char* sym_name)
 %right POW
 %start Stmt
 %%
-Stmt	:Expression';' {printf("%d\n",$1);} Stmt	
+Stmt	:Stmt Expression';'
+	{
+		printf("%d\n",$2);
+		//using left recursion to keep stack size small
+	}	
 	|Expression ';'	{printf("%d\n",$1);}
 	|VarDec ';'
 	;
@@ -78,11 +73,6 @@ Expression	:NUMBER				{ $$=$1; }
 		| Expression POW Expression	{ $$=pow($1,$3);}			
 		| '-' Expression %prec NEG	{ $$=-$2; }
 		| '('Expression')'		{ $$=$2; }
-		| IDENT	{
-				//sym_record* s=search(yytext);
-				//printf("@%s@",s->type);
-				//$$=71;
-			}
 		;
 VarDec	: Type IDENT {sym_record* s=install(yytext); s->type="Int";} IdList
 	;
