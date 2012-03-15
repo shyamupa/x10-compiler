@@ -2,10 +2,11 @@
 #include<stdio.h>
 #include<string.h>
 #include"y.tab.h"		// to be included when yacc file is ready
-//#include "include.h"
-//#include "header.h"
+#include "node_def.h"
+#include "ll_sym_table.h"
 extern YYSTYPE yylval;
 %}
+
 delim 		[ \t\n]
 ws		{delim}+
 letter 		[A-Za-z_]
@@ -69,6 +70,12 @@ default		{printf("DEFAULT");}
 "**"		{
 			return POW;
 		}
+"++"		{
+			return PP;
+		}
+"--"		{
+			return MM;
+		}
 ;		{
 			//printf(";");
 			return ';';
@@ -120,11 +127,15 @@ assert		{printf("ASSERT");}
 
 {comment}	{/* no action */}
 {line_comment}	{printf("\n");}
-{id}		{printf("!%s!",yytext); yylval.charPtr=yytext; return IDENT;}
+{id}		{
+				printf("!%s!",yytext); 
+				yylval.sPtr->sym_name=strdup(yytext); 
+				return IDENT;
+			}
 {number}	{
 			yylval.iVal=atoi(yytext);
 			//printf("NUMBER{%d}",yylval);
-			return NUMBER;
+			return INTEGER;
 		}
 %%
 int yywrap()

@@ -3,21 +3,28 @@
 #include<string.h>
 #include<assert.h>
 #include"ll_sym_table.h"
-extern int main();
-sym_record* sym_table=NULL;	// global sym table
-sym_record* insert(char* sym_name)	// inserts a record and returns a ptr to it
+/*
+This is a linked list implementation of the symbol table
+*/
+typedef struct sym_record sym_record;
+sym_record* new_sym_table()
+{
+	sym_record* st=NULL;
+	return st;
+}
+sym_record* insert(sym_record* st,char* sym_name)	// inserts a record and returns a ptr to it
 {
 	sym_record* rv;
 	rv=(sym_record*)malloc(sizeof(sym_record));
-	strcpy(rv->sym_name,sym_name);
-	rv->next=sym_table;
-	sym_table=rv;
+	rv->sym_name=strdup(sym_name);
+	rv->next=st;
+	st=rv;
 	return rv;
 }
-sym_record* search(char* target_name)	//searches for a record and returns a ptr to it
+sym_record* search(sym_record* st,char* target_name)	//searches for a record and returns a ptr to it
 {
 	sym_record* p;
-	p=sym_table;
+	p=st;
 	while(p!=NULL)
 	{
 		if(strcmp(p->sym_name,target_name)==0)
@@ -26,11 +33,3 @@ sym_record* search(char* target_name)	//searches for a record and returns a ptr 
 	}
 	return NULL;
 }
-//~ int main()
-//~ {
-	//~ sym_record* p=insert("counter");
-	//~ p->type="int";
-	//~ sym_record* q=search("counter");
-	//~ printf("%s\n",q->type);
-	//~ return 0;
-//~ }
