@@ -13,7 +13,8 @@ letter 		[A-Za-z_]
 digit 		[0-9]
 line_comment 	"//".*\n
 id		{letter}({letter}|{digit})*	
-number		{digit}+(\.{digit}+)?(E[-+]?{digit}+)?	
+integer		{digit}+
+float		[-+]?{digit}*\.{digit}+([eE][-+]?{digit}+)?
 comment 	"/*"(.|\n)*"*/"
 %%
 ^\n$		{}
@@ -23,49 +24,45 @@ comment 	"/*"(.|\n)*"*/"
 			return *yytext;
 		}
 
-if		{printf("IF");return IF;}
-then		{printf("THEN");}
-else		{printf("ELSE");}
+if		{return IF;}
+then		{return THEN;}
+else		{return ELSE;}
 
-for		{printf("FOR");}
-in		{printf("IN");}
-".."		{printf("..");}		
-while		{printf("WHILE");}
-continue	{printf("CONTINUE");}
-break		{printf("BREAK");}
-do		{printf("DO");}
+for		{return FOR;}
+in		{return IN;}
+".."		{return ELLIPSIS;}		
+while		{return WHILE;}
+continue	{return CONTINUE;}
+break		{return BREAK;}
+do		{return DO;}
 
-switch		{printf("SWITCH");}
-case		{printf("CASE");}
-default		{printf("DEFAULT");}
+switch		{return SWITCH;}
+case		{return CASE;}
+default		{return DEFAULT;}
 
-"=="		{printf("==");}
-">="		{printf(">=");}
-">"		{printf(">");}
-"<="		{printf("<=");}
-"<"		{printf("<");}
+"=="		{return BEQ;}
+">="		{return GE;}
+">"		{return GT;}
+"<="		{return LE;}
+"<"		{return LT;}
 
-"+="		{printf("+=");}
-"-="		{printf("-=");}
-"*="		{printf("*=");}
-"/="		{printf("/=");}
-"="		{printf("=");}
+"+="		{return PLUS_EQ;}
+"-="		{return MINUS_EQ;}
+"*="		{return MULT_EQ;}
+"/="		{return DIV_EQ;}
+"="		{return EQ;}
 
 "+"		{
-			//printf("+");
-			return '+';
+			return PLUS;
 		}
 "-"		{
-			//printf("-");
-			return '-';
+			return MINUS;
 		}
 "*"		{
-			//printf("*");
-			return '*';
+			return MULT;
 		}
 "/"		{
-			//printf("/");
-			return '/';
+			return DIV;
 		}
 "**"		{
 			return POW;
@@ -77,16 +74,13 @@ default		{printf("DEFAULT");}
 			return MM;
 		}
 ;		{
-			//printf(";");
 			return ';';
 		}
 ","		{
-			//printf(";");
 			return ',';
 		}
 
 \{		{
-			//printf("{");
 			return '{';
 		}
 \}		{
@@ -98,32 +92,31 @@ default		{printf("DEFAULT");}
 			return '(';
 		}
 \)		{
-			//printf(")");
 			return ')';
 		}
 "["		{
-			//printf("[");
 			return '[';
 		}
 "]"		{
-			//printf("]");
 			return ']';
 		}
 ":"		{
-			//printf(":");
 			return ':';
 		}
 val		{
-			//printf("VAL");
 			return VAL;
 		}
-var		{printf("VAR");}
-def		{printf("DEF");}
-public		{printf("PUBLIC");}
-private		{printf("PRIVATE");}
-Array		{printf("ARRAY");}
-return		{printf("RETURN");}
-assert		{printf("ASSERT");}
+int		{return TYPE_INT;}
+float		{return TYPE_FLOAT;}
+char 		{return TYPE_CHAR;}
+var		{return VAR;}
+def		{return DEF;}
+public		{return PUBLIC;}
+protected	{return PROTECTED;}
+private		{return PRIVATE;}
+Array		{return ARRAY;}
+return		{return RETURN;}
+assert		{return ASSERT;}
 
 {comment}	{/* no action */}
 {line_comment}	{printf("\n");}
@@ -132,11 +125,18 @@ assert		{printf("ASSERT");}
 				yylval.sPtr->sym_name=strdup(yytext); 
 				return IDENT;
 			}
-{number}	{
+'{letter}'			{
+				yylval.cVal=yytext[0];
+				return CHAR;
+			}
+{integer}	{
 			yylval.iVal=atoi(yytext);
-			//printf("NUMBER{%d}",yylval);
 			return INTEGER;
 		}
+{float}	{
+			yylval.fVal=atoi(yytext);
+			return INTEGER;
+		}		
 %%
 int yywrap()
 {

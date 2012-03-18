@@ -7,24 +7,42 @@
 This is a linked list implementation of the symbol table
 */
 typedef struct sym_record sym_record;
-sym_record* new_sym_table()
+typedef struct symbol_table symbol_table;
+
+symbol_table* new_sym_table()
 {
-	sym_record* st=NULL;
+	symbol_table* st;
+	st=(symbol_table*)malloc(sizeof(symbol_table));
 	return st;
 }
-sym_record* insert(sym_record* st,char* sym_name)	// inserts a record and returns a ptr to it
+symbol_table* free_table (symbol_table* st) 
+{
+	symbol_table* current;
+	current = st->parent;
+	sym_record* p=st->Head;
+	sym_record* t;
+	while(p!=NULL)
+	{
+		t=p->next;
+		free(p);
+		p=t;
+	}
+	free(st);
+	return current;
+}
+sym_record* insert(symbol_table* st,char* sym_name)	// inserts a record and returns a ptr to it
 {
 	sym_record* rv;
 	rv=(sym_record*)malloc(sizeof(sym_record));
 	rv->sym_name=strdup(sym_name);
-	rv->next=st;
-	st=rv;
+	rv->next=st->Head;
+	st->Head=rv;
 	return rv;
 }
-sym_record* search(sym_record* st,char* target_name)	//searches for a record and returns a ptr to it
+sym_record* search(symbol_table* st,char* target_name)	//searches for a record and returns a ptr to it
 {
 	sym_record* p;
-	p=st;
+	p=st->Head;	// first sym_record
 	while(p!=NULL)
 	{
 		if(strcmp(p->sym_name,target_name)==0)
