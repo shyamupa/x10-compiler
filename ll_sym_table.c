@@ -35,8 +35,15 @@ sym_record* insert(symbol_table* st,char* sym_name)	// inserts a record and retu
 	sym_record* rv;
 	rv=(sym_record*)malloc(sizeof(sym_record));
 	rv->sym_name=strdup(sym_name);
-	rv->next=st->Head;
-	st->Head=rv;
+	if(st->Head!=NULL)
+	{
+		rv->next=st->Head;
+		st->Head=rv;
+	}
+	else
+	{
+		rv->next=NULL;
+	}
 	return rv;
 }
 sym_record* search(symbol_table* st,char* target_name)	//searches for a record and returns a ptr to it
@@ -50,4 +57,14 @@ sym_record* search(symbol_table* st,char* target_name)	//searches for a record a
 		p=p->next;	
 	}
 	return NULL;
+}
+void print_st(symbol_table* st)
+{
+	printf("PRINTING SYM_T\n");
+	struct sym_record* p=st->Head;
+	while(p!=NULL)
+	{
+		printf("%s\n",p->sym_name);
+		p=p->next;
+	}
 }

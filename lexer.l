@@ -5,6 +5,7 @@
 #include "node_def.h"
 #include "ll_sym_table.h"
 extern YYSTYPE yylval;
+extern struct symbol_table* current_st;
 %}
 
 delim 		[ \t\n]
@@ -84,11 +85,9 @@ default		{return DEFAULT;}
 			return '{';
 		}
 \}		{
-			//printf("}");
 			return '}';
 		}
 \(		{
-			//printf("(");
 			return '(';
 		}
 \)		{
@@ -121,10 +120,9 @@ assert		{return ASSERT;}
 {comment}	{/* no action */}
 {line_comment}	{printf("\n");}
 {id}		{
-				printf("!%s!",yytext); 
-				yylval.sPtr->sym_name=strdup(yytext); 
-				return IDENT;
-			}
+			yylval.sPtr=insert(current_st,yytext);
+			return IDENT;
+		}
 '{letter}'			{
 				yylval.cVal=yytext[0];
 				return CHAR;

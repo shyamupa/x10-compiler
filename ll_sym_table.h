@@ -7,7 +7,7 @@ enum modifier
 };
 struct sym_record
 {
-	char*sym_name;		// name of symbol like 'counter'
+	char* sym_name;		// name of symbol like 'counter'
 	int type;			// type of symbol like 'int'
 	int offset;			// offset of symbol
 	/*some other attributes as required*/
@@ -28,6 +28,7 @@ struct symbol_table* free_table (struct symbol_table* st);
 struct symbol_table* new_sym_table();
 struct sym_record* insert(struct symbol_table* st,char* sym_name);	// inserts a record and returns a ptr to it
 struct sym_record* search(struct symbol_table* st,char* target_name);	//searches for a record and returns a ptr to it
+void print_st(struct symbol_table* st);
 
 
 #endif
