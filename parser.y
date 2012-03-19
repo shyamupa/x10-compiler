@@ -155,7 +155,7 @@ ExpressionStmt	:Expression ';'
 		|';'
 		;
 SelectionStmt	:IF '(' Expression ')' Stmt %prec IFX	{$$=opr(IF,2,$3,$5);}
-		|IF '(' Expression ')' Block ELSE Stmt	{$$=opr(IF,3,$3,$5,$7);}
+		|IF '(' Expression ')' Stmt ELSE Stmt	{$$=opr(IF,3,$3,$5,$7);}
 		|SWITCH '(' Expression ')' Stmt	{$$=opr(SWITCH,2,$3,$5);}
 		;
 IterationStmt	:WHILE '(' Expression ')' Stmt	{ $$ = opr(WHILE, 2, $3, $5);}
@@ -201,7 +201,7 @@ MethodName	:IDENT	{
 				/*do some type check here*/
 			}
 		;
-Expression	:ConstExp			{ printf("asd");$$=$1;}		
+Expression	:ConstExp			{ $$=$1;}		
 		|IDENT				{ $$=id($1);}
 	  	|Assignment			{$$=$1;}
 		| Expression PLUS Expression	{ $$=opr(PLUS,2,$1,$3); }
@@ -290,7 +290,7 @@ nodeType* con(int value)
 }
 nodeType *id(struct sym_record* i) 
 {
-	printf("name is %s\n",i->sym_name);
+	//printf("name is %s\n",i->sym_name);
 	nodeType *p;
 	if ((p = malloc(sizeof(idNodeType))) == NULL)
 		yyerror("out of memory");

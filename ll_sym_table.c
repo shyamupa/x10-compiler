@@ -34,16 +34,17 @@ sym_record* insert(symbol_table* st,char* sym_name)	// inserts a record and retu
 {
 	sym_record* rv;
 	rv=(sym_record*)malloc(sizeof(sym_record));
-	rv->sym_name=strdup(sym_name);
-	if(st->Head!=NULL)
+	rv->sym_name=strdup(sym_name);	// copies from yytext
+	sym_record* p=st->Head;
+	if(p==NULL)
 	{
-		rv->next=st->Head;
 		st->Head=rv;
 	}
 	else
 	{
-		rv->next=NULL;
-	}
+		while(p->next!=NULL) p=p->next;
+		p->next=rv;
+	}	
 	return rv;
 }
 sym_record* search(symbol_table* st,char* target_name)	//searches for a record and returns a ptr to it

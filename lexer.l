@@ -120,18 +120,17 @@ assert		{return ASSERT;}
 {comment}	{/* no action */}
 {line_comment}	{printf("\n");}
 {id}		{
-			yylval.sPtr=insert(current_st,yytext);
 			return IDENT;
 		}
-'{letter}'			{
-				yylval.cVal=yytext[0];
-				return CHAR;
-			}
+'{letter}'	{
+			yylval.cVal=yytext[0];
+			return CHAR;
+		}
 {integer}	{
 			yylval.iVal=atoi(yytext);
 			return INTEGER;
 		}
-{float}	{
+{float}		{
 			yylval.fVal=atoi(yytext);
 			return INTEGER;
 		}		
