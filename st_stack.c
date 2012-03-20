@@ -2,24 +2,30 @@
 #include<stdlib.h>
 #include "st_stack.h"
 
-typedef struct symbol_table symbol_table;
+int st_top = EMPTYSTACK;
+struct symbol_table* st_stack[MAXSTACK];
 
-symbol_table* st_stack[MAXSTACK];
-
-void st_push(symbol_table* st)
+void st_push(struct symbol_table* st)
 {
 	if(!st_full())
-		stack[++st_top]= st;
+		st_stack[++st_top]= st;
 	else
-		stderr("Stack overflow\n");
+		fprintf(stderr,"Stack overflow\n");
 			
 }
-symbol_table* st_pop()
+struct symbol_table* st_examine_top()
+{
+	if(!st_empty())
+		return st_stack[st_top];
+	else
+		return NULL;
+}
+struct symbol_table* st_pop()
 {
 	if(!st_empty())
 		return st_stack[st_top--];
 	else
-		stderr("Stack Underflow\n");
+		fprintf(stderr,"Stack Underflow\n");
 }
 int st_empty()	// returns 0 if not empty and 1 if empty
 {

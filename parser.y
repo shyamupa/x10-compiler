@@ -5,6 +5,7 @@
 #include<math.h>
 #include<stdarg.h>	// for variable arguments
 #include "ll_sym_table.h"	// definitions of the symbol table
+#include "st_stack.h"
 #include "node_def.h"
 #include"y.tab.h"
 #define INVOC 1337
@@ -30,6 +31,8 @@ void FreeNode(nodeType *p);	// frees node
 void yyerror(char*s);  
 struct sym_record* install(char* sym_name);
 /*prototypes end*/
+/*global variables*/
+/*global variables*/
 %}
 %union 
 {
@@ -48,7 +51,7 @@ struct sym_record* install(char* sym_name);
 %token RETURN DEF
 %token CLASS THIS STRUCT NEW
 %token PUBLIC PRIVATE PROTECTED
-%token NEQ BEQ LT GT LE GE 
+%token NEQ BEQ LT GT LE GE TRUE FALSE 
 %token ';' '{' '}' '(' ')' '[' ']' ':'
 %token IDENT
 %token ARRAY ELLIPSIS ASSERT
@@ -61,8 +64,8 @@ struct sym_record* install(char* sym_name);
 %type <nPtr> ArgList
 %type <nPtr> Assignment
 %type <nPtr> AssOp
-%type <nPtr> Block 
 %type <nPtr> BasicForStmt
+%type <nPtr> BoolExpression
 %type <nPtr> CompoundStmt 
 %type <nPtr> ConstExp 
 %type <nPtr> ClassDecln
@@ -72,9 +75,12 @@ struct sym_record* install(char* sym_name);
 %type <nPtr> CtorDecln 
 %type <nPtr> CtorBody 
 %type <nPtr> CtorBlock
-%type <nPtr> DeclarationList Declaration
+%type <nPtr> Declaration
+%type <nPtr> Defn_or_Decln
 %type <nPtr> Expression
 %type <nPtr> ExpressionStmt
+%type <nPtr> FuncDefnList 
+%type <nPtr> FuncDefn 
 %type <nPtr> ForInit 
 %type <nPtr> ForUpdate
 %type <nPtr> FormalArg
@@ -84,6 +90,7 @@ struct sym_record* install(char* sym_name);
 %type <nPtr> MethodInv  MethodName
 %type <nPtr> ObjCreation
 %type <nPtr> PreincrementExp
+%type <nPtr> PostincrementExp
 %type <nPtr> StmtList
 %type <nPtr> Stmt 
 %type <nPtr> StmtExp 
@@ -104,48 +111,68 @@ struct sym_record* install(char* sym_name);
 %left MULT DIV
 %left NEG
 %right POW
-%start StmtList
+%start Defn_or_Decln
 %%
+Defn_or_Decln	:	{
+				if(current_st==NULL)
+				{
+					printf("first sym table created\n");
+					current_st=new_sym_table(current_st);
+				}	
+			}	
+		FuncDefnList
+		;
+FuncDefnList	: FuncDefnList FuncDefn
+		|FuncDefn
+		;
+FuncDefn	:DEF IDENT 	{
+					// make ident point to the new sym tab
+					printf("%s\n",yytext);
+					
+				}
+		'(' FormalArgList ')' Stmt 
+		;
 FormalArgList	:FormalArgList ',' FormalArg
 		|FormalArg
 		;
 FormalArg	:VarDec	{$$=$1; /*THIS IS INCOMPLETE*/}
 		|{$$=NULL;}	
 		;
-StmtList	:	{
-				if(current_st==NULL)
-				{
-					current_st=new_sym_table();
-					printf("new sym_tab created\n");
-				}	
-			}
-		Stmt	{$$=$2; print_st(current_st);} 			
+StmtList	:	
+		Stmt	{$$=$1; print_st(current_st);} 			
 		|StmtList Stmt {$$=opr(';',2,$1,$2);}	
 		;
 		
 Stmt	:ExpressionStmt	{$$=$1;}
 	|IterationStmt 	{$$=$1;}
-	|BasicForStmt {$$=$1;}
+	|BasicForStmt 	{$$=$1;}
 	|SelectionStmt	{$$=$1;}
-	|PreincrementExp {$$=$1;}
-	|MethodInv {$$=$1;}
-	|ObjCreation {$$=$1;}
+	|PreincrementExp{$$=$1;}
+	|MethodInv 	{$$=$1;}
+	|ObjCreation 	{$$=$1;}
 	|CompoundStmt	{$$=$1;}
 	|LabeledStmt	{$$=$1;}
+	|Declaration	{$$=$1;}
 	;
 
-LabeledStmt	:IDENT ':' Stmt	
+LabeledStmt	:IDENT ':' Stmt		
 		|CASE ConstExp ':' Stmt	{$$=opr(CASE,2,$2,$4);}
 		|DEFAULT ':' Stmt	{$$=opr(CASE,1,$3);}
 		;
 		
-CompoundStmt	:'{' '}'
-		| '{' StmtList '}'	
-		| '{' DeclarationList '}'	
-		| '{' DeclarationList StmtList '}'
-		;
-DeclarationList	:DeclarationList Declaration   {$$=$2;}
-		|Declaration  {$$=$1;}
+CompoundStmt	:'{'
+			{	
+				st_push(current_st);
+				current_st=new_sym_table(current_st);
+				current_st->parent=st_examine_top();
+			}
+			
+			 StmtList 
+			
+			{	
+				current_st=st_pop();
+			}
+		'}'
 		;
 Declaration	:VarDec	{$$=$1;}
 		|ClassDecln  {$$=$1;}
@@ -162,7 +189,7 @@ IterationStmt	:WHILE '(' Expression ')' Stmt	{ $$ = opr(WHILE, 2, $3, $5);}
 		;
 
 BasicForStmt	:FOR '(' ForInit ';' Expression ';' ForUpdate ')' Stmt {$$=opr(FOR,4,$3,$5,$7,$9);}
-;
+		;
 ForInit		:StmtExpList  {$$=$1;}	
 		;
 ForUpdate	:StmtExpList  {$$=$1;}	
@@ -171,7 +198,8 @@ StmtExpList	:StmtExp  {$$=$1;}
 		|StmtExpList ',' StmtExp  {$$=opr(FOR_STMT,2,$1,$3);}
 		;
 StmtExp		:Assignment		{$$=$1;}	
-		|PreincrementExp	{$$=$1;}		
+		|PreincrementExp	{$$=$1;}
+		|PostincrementExp	{$$=$1;}
 		|MethodInv		{$$=$1;}	
 		|ObjCreation		{$$=$1;}
 		;
@@ -179,9 +207,11 @@ ObjCreation	:NEW TypeName '(' ArgList ')'	{$$=opr(NEW,2,$2,$4);}
 		;
 TypeName	:IDENT	{$$=id($1);}
 		;
-PreincrementExp	:PP IDENT	{$$=opr(PP,1,$2);}	
+PreincrementExp	:PP IDENT	{$$=opr(PP,2,$2,0);}	
 		;
+PostincrementExp:IDENT PP	{$$=opr(PP,2,$1,1);}		
 Assignment	:LHS AssOp Expression	{$$=opr(ASSIGN,3,$1,$2,$3);}
+		|LHS EQ	ObjCreation	{$$=$1;}
 		;
 LHS		:IDENT	{$$=id($1);}
 		;
@@ -201,6 +231,9 @@ MethodName	:IDENT	{
 				/*do some type check here*/
 			}
 		;
+BoolExpression	:TRUE	{$$=con(1);}
+		|FALSE	{$$=con(0);}
+		;
 Expression	:ConstExp			{ $$=$1;}		
 		|IDENT				{ $$=id($1);}
 	  	|Assignment			{$$=$1;}
@@ -216,14 +249,12 @@ ConstExp	:INTEGER	{$$=con($1);}
 		|FLOAT		{$$=con($1);}
 		|CHAR		{$$=con($1);}
 		;
-Block		:'{' StmtList '}'	{$$=$2;}
-		;
 VarDec	:VAR IdList ':' Type 
 	;
 Type	:TYPE_INT	{$$=133;}	
 	|TYPE_FLOAT	{$$=134;}	
 	;
-IdList	:IDENT {struct sym_record* s=install(yytext);}
+IdList	:IDENT	{struct sym_record* s=install(yytext);}
 	|IdList ',' IDENT {struct sym_record* s=install(yytext);}
 	;
 

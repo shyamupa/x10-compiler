@@ -21,11 +21,11 @@ struct symbol_table{
 	struct sym_record* Head;	//first entry in list of local variables
 	struct sym_record* Tail;	//last entry in list of local variable
 	int numparam;			//header
-	int depth;		// 
+	int proc_sym;		// 1 if st of proc else 0
 };
 
 struct symbol_table* free_table (struct symbol_table* st); 
-struct symbol_table* new_sym_table();
+struct symbol_table* new_sym_table(struct symbol_table* parent);
 struct sym_record* insert(struct symbol_table* st,char* sym_name);	// inserts a record and returns a ptr to it
 struct sym_record* search(struct symbol_table* st,char* target_name);	//searches for a record and returns a ptr to it
 void print_st(struct symbol_table* st);

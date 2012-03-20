@@ -9,10 +9,12 @@ This is a linked list implementation of the symbol table
 typedef struct sym_record sym_record;
 typedef struct symbol_table symbol_table;
 
-symbol_table* new_sym_table()
+symbol_table* new_sym_table(symbol_table* parent)
 {
+	printf("NEW SYM TAB CREATED\n");
 	symbol_table* st;
 	st=(symbol_table*)malloc(sizeof(symbol_table));
+	st->parent=parent;
 	return st;
 }
 symbol_table* free_table (symbol_table* st) 
@@ -61,6 +63,7 @@ sym_record* search(symbol_table* st,char* target_name)	//searches for a record a
 }
 void print_st(symbol_table* st)
 {
+	printf("####################\n");
 	printf("PRINTING SYM_T\n");
 	struct sym_record* p=st->Head;
 	while(p!=NULL)
@@ -68,4 +71,5 @@ void print_st(symbol_table* st)
 		printf("%s\n",p->sym_name);
 		p=p->next;
 	}
+	printf("####################\n");
 }

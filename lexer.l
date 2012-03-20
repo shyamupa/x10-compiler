@@ -40,7 +40,8 @@ do		{return DO;}
 switch		{return SWITCH;}
 case		{return CASE;}
 default		{return DEFAULT;}
-
+true		{return TRUE;}
+false		{return FALSE;}
 "=="		{return BEQ;}
 ">="		{return GE;}
 ">"		{return GT;}
@@ -116,7 +117,7 @@ private		{return PRIVATE;}
 Array		{return ARRAY;}
 return		{return RETURN;}
 assert		{return ASSERT;}
-
+new		{return NEW;}
 {comment}	{/* no action */}
 {line_comment}	{printf("\n");}
 {id}		{

@@ -2,6 +2,7 @@
 #include<stdlib.h>
 #include "offset_stack.h"
 
+int off_top = EMPTYSTACK;
 int off_stack[MAXSTACK];
 
 void off_push(int offset)

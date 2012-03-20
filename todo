@@ -1,7 +1,13 @@
 make comp() for stmt composition
 id() should check st before creating/sending the node
-global stack for st and global variable curr_st
+//global stack for st and global variable curr_st
 function for checking stack for id
 also correct install etc for using st
-$0 problem
-strcpy segfault
+
+
+
+//func decl
+sym_tab for fun decl
+for loop
+shift reduce
+type info in var dec
