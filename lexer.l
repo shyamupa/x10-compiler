@@ -42,6 +42,45 @@ case		{return CASE;}
 default		{return DEFAULT;}
 true		{return TRUE;}
 false		{return FALSE;}
+
+abstract		{return ABSTRACT;} 
+as				{return AS;}
+async			{return ASYNC;}
+at				{return AT;}
+athome			{return ATHOME;}
+ateach			{return ATEACH;}
+atomic			{return ATOMIC;}
+catch			{return CATCH;}
+class			{return CLASS;}
+clocked			{return CLOCKED;}
+extends			{return EXTENDS;}
+final			{return FINAL;}
+finally			{return FINALLY;}
+finish			{return FINISH;}
+goto			{return GOTO;}
+haszero			{return HASZERO;}
+here			{return HERE;}
+implements		{return IMPLEMENTS;}
+import			{return IMPORT;}
+instanceof		{return INSTANCEOF;}
+interface		{return INTERFACE;}
+native			{return NATIVE;}
+offer			{return OFFER;}
+offers			{return OFFERS;}
+operator		{return OPERATOR;}
+package			{return PACKAGE;}
+property		{return PROPERTY;}
+self			{return SELF;}
+static			{return STATIC;}
+struct			{return STRUCT;}
+super			{return SUPER;}
+this			{return THIS;}
+throw			{return THROW;}
+transient		{return TRANSIENT;}
+try 			{return TRY;}
+void			{return VOID;}
+when			{return WHEN;}
+
 "=="		{return BEQ;}
 ">="		{return GE;}
 ">"		{return GT;}
@@ -132,7 +171,7 @@ new		{return NEW;}
 			return INTEGER;
 		}
 {float}		{
-			yylval.fVal=atoi(yytext);
+			yylval.fVal=atof(yytext);
 			return INTEGER;
 		}		
 %%

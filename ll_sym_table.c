@@ -68,7 +68,7 @@ void print_st(symbol_table* st)
 	struct sym_record* p=st->Head;
 	while(p!=NULL)
 	{
-		printf("%s\n",p->sym_name);
+		printf("%s type %d \n",p->sym_name,p->type);
 		p=p->next;
 	}
 	printf("####################\n");

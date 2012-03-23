@@ -2,6 +2,7 @@
 #ifndef node_def_h_included
 #define node_def_h_included
 typedef enum { typeCon, typeId, typeOpr } nodeEnum;
+
 // for constants
 typedef struct 
 {
@@ -13,7 +14,8 @@ typedef struct
 typedef struct 
 {
 	nodeEnum type;
-	struct sym_record* i;	// index in ident array
+	struct sym_record* i;
+	struct symbol_table* st;
 }idNodeType;
 
 // for operators

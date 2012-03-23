@@ -1,6 +1,8 @@
 def myfunc0(var a:int)
 {
 	var i:int;
+	var f:float;
+	i=f;		// should geive mismatch
 	i=new myclass(16);
 	for(i=0;10+10;i++)
 		i=i*i;

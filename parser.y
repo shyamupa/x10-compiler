@@ -13,6 +13,10 @@
 #define ASSIGN 1339
 #define ARGS 1340
 #define CLOSURE 1341
+#define IDLIST 1342
+#define FUN 1343
+#define COMMA 1344
+#define TYPE 1345
 #define YYDEBUG 1	//enable debugging
 
 struct symbol_table* current_st=NULL;	// global current st 
@@ -21,7 +25,7 @@ extern yylineno;
 extern int yylex();
 extern char* yytext;
 extern int yywrap();
-typedef union nodeTypeTag nodeType;
+typedef union nodeTypeTag nodeType;	// 
 
 /*prototypes start*/
 nodeType* id(struct sym_record* i);	// node creator function for identifiers
@@ -30,6 +34,9 @@ nodeType* opr(int oper, int nops, ...);
 void FreeNode(nodeType *p);	// frees node
 void yyerror(char*s);  
 struct sym_record* install(char* sym_name);
+void dist_type(nodeType* nptr);
+nodeType* get_operand(nodeType* opnode,int index);
+void type_check_assign(nodeType* lhs, nodeType* rhs);
 /*prototypes end*/
 /*global variables*/
 /*global variables*/
@@ -44,19 +51,56 @@ struct sym_record* install(char* sym_name);
 	union nodeTypeTag *nPtr;	 // node pointer
 }
 %token VAL VAR
+%token ABSTRACT
+%token AS
+%token ASYNC
+%token  AT
+%token ATHOME
+%token ATEACH
+%token ATOMIC
+%token CATCH
+%token CLASS
+%token CLOCKED
+%token EXTENDS
+%token FINAL
+%token FINALLY
+%token FINISH
+%token GOTO
+%token HASZERO
+%token HERE
+%token IMPLEMENTS
+%token IMPORT
+%token INSTANCEOF
+%token INTERFACE
+%token NATIVE
+%token  OFFER
+%token OFFERS
+%token OPERATOR
+%token PACKAGE
+%token PROPERTY
+%token SELF
+%token STATIC
+%token STRUCT
+%token SUPER
+%token THIS
+%token THROW
+%token TRANSIENT
+%token TRY
+%token VOID
+%token WHEN
 %token IF THEN ELSE
 %token FOR IN WHILE CONTINUE BREAK DO
 %token SWITCH CASE DEFAULT
 %token INTEGER FLOAT CHAR TYPE_INT TYPE_FLOAT TYPE_CHAR
 %token RETURN DEF
-%token CLASS THIS STRUCT NEW
+%token NEW
 %token PUBLIC PRIVATE PROTECTED
 %token NEQ BEQ LT GT LE GE TRUE FALSE 
 %token ';' '{' '}' '(' ')' '[' ']' ':'
 %token IDENT
 %token ARRAY ELLIPSIS ASSERT
 %token EQ PLUS_EQ MULT_EQ MINUS_EQ  DIV_EQ PP MM
-%type <iVal> INTEGER TYPE_INT IdList HasResultType Type EQ PLUS_EQ MULT_EQ MINUS_EQ  DIV_EQ Mods
+%type <iVal> INTEGER TYPE_INT HasResultType EQ PLUS_EQ MULT_EQ MINUS_EQ  DIV_EQ Mods
 %type <fVal> FLOAT TYPE_FLOAT
 %type <cVal> CHAR TYPE_CHAR
 %type <sPtr> IDENT
@@ -84,6 +128,8 @@ struct sym_record* install(char* sym_name);
 %type <nPtr> ForInit 
 %type <nPtr> ForUpdate
 %type <nPtr> FormalArg
+%type <nPtr> FormalArgList
+%type <nPtr> IdList
 %type <nPtr> IterationStmt
 %type <nPtr> LHS
 %type <nPtr> LabeledStmt
@@ -97,6 +143,7 @@ struct sym_record* install(char* sym_name);
 %type <nPtr> StmtExpList
 %type <nPtr> SelectionStmt
 %type <nPtr> StructDecln
+%type <nPtr> Type
 %type <nPtr> TypeParamsI 
 %type <nPtr> TypeParamIList 
 %type <nPtr> TypeParams 
@@ -118,9 +165,10 @@ Defn_or_Decln	:	{
 				{
 					printf("first sym table created\n");
 					current_st=new_sym_table(current_st);
+					printf("$$$$$$$$$$$$$$$$$$$$$$$$$$$$\n");
 				}	
 			}	
-		FuncDefnList
+		FuncDefnList	{$$=$2;}
 		;
 FuncDefnList	: FuncDefnList FuncDefn
 		|FuncDefn
@@ -130,16 +178,16 @@ FuncDefn	:DEF IDENT 	{
 					printf("%s\n",yytext);
 					
 				}
-		'(' FormalArgList ')' Stmt 
+		'(' FormalArgList ')' Stmt	{$$=opr(FUN,3,$2,$5,$7);} 
 		;
-FormalArgList	:FormalArgList ',' FormalArg
-		|FormalArg
+FormalArgList	:FormalArgList ',' FormalArg	{$$=opr(COMMA,2,$1,$3);}
+		|FormalArg	{$$=$1;}
 		;
 FormalArg	:VarDec	{$$=$1; /*THIS IS INCOMPLETE*/}
 		|{$$=NULL;}	
 		;
 StmtList	:	
-		Stmt	{$$=$1; print_st(current_st);} 			
+		Stmt	{$$=$1;} 			
 		|StmtList Stmt {$$=opr(';',2,$1,$2);}	
 		;
 		
@@ -155,8 +203,7 @@ Stmt	:ExpressionStmt	{$$=$1;}
 	|Declaration	{$$=$1;}
 	;
 
-LabeledStmt	:IDENT ':' Stmt		
-		|CASE ConstExp ':' Stmt	{$$=opr(CASE,2,$2,$4);}
+LabeledStmt	:CASE ConstExp ':' Stmt	{$$=opr(CASE,2,$2,$4);}
 		|DEFAULT ':' Stmt	{$$=opr(CASE,1,$3);}
 		;
 		
@@ -164,22 +211,23 @@ CompoundStmt	:'{'
 			{	
 				st_push(current_st);
 				current_st=new_sym_table(current_st);
-				current_st->parent=st_examine_top();
+				//current_st->parent=st_examine_top();
 			}
 			
 			 StmtList 
 			
 			{	
+				print_st(current_st);
 				current_st=st_pop();
 			}
-		'}'
+		'}'	{$$=$3;}
 		;
 Declaration	:VarDec	{$$=$1;}
 		|ClassDecln  {$$=$1;}
 		|StructDecln {$$=$1;}
 		;
-ExpressionStmt	:Expression ';'
-		|';'
+ExpressionStmt	:Expression ';'	{$$=$1;}
+		|';'	{$$=NULL;}
 		;
 SelectionStmt	:IF '(' Expression ')' Stmt %prec IFX	{$$=opr(IF,2,$3,$5);}
 		|IF '(' Expression ')' Stmt ELSE Stmt	{$$=opr(IF,3,$3,$5,$7);}
@@ -210,16 +258,29 @@ TypeName	:IDENT	{$$=id($1);}
 PreincrementExp	:PP IDENT	{$$=opr(PP,2,$2,0);}	
 		;
 PostincrementExp:IDENT PP	{$$=opr(PP,2,$1,1);}		
-Assignment	:LHS AssOp Expression	{$$=opr(ASSIGN,3,$1,$2,$3);}
+
+Assignment	:LHS AssOp Expression	{
+						$$=opr(ASSIGN,3,$1,$2,$3);
+						//type_check_assign($1,$3);
+					}
 		|LHS EQ	ObjCreation	{$$=$1;}
 		;
-LHS		:IDENT	{$$=id($1);}
+LHS		:IDENT	{
+				struct sym_record*s=search(current_st,yytext);
+				if(s!=NULL)
+				{
+					printf("%s is name\n",s->sym_name);/*right now jsut searhc curr later we will serach till parent*/
+					$$=id(search(current_st,yytext));/*right now jsut searhc curr later we will serach till parent*/
+				}
+				else
+					printf("sym_name %s not found in symbol table\n",yytext);
+			}
 		;
-AssOp		:EQ	{$$=con($1);}	
+AssOp		:EQ		{$$=con($1);}	
 		|PLUS_EQ	{$$=con($1);}
 		|MINUS_EQ	{$$=con($1);}
 		|MULT_EQ	{$$=con($1);}
-		|DIV_EQ	{$$=con($1);}
+		|DIV_EQ		{$$=con($1);}
 		;
 MethodInv	:MethodName '(' ArgList ')' {$$=opr(INVOC,2,$1,$3);}
 		;
@@ -249,13 +310,13 @@ ConstExp	:INTEGER	{$$=con($1);}
 		|FLOAT		{$$=con($1);}
 		|CHAR		{$$=con($1);}
 		;
-VarDec	:VAR IdList ':' Type 
+VarDec	:VAR IdList ':' Type {$$=opr(TYPE,2,$2,$4);dist_type($$);/*printf("%d",$$->opr.nops);*/}
 	;
-Type	:TYPE_INT	{$$=133;}	
-	|TYPE_FLOAT	{$$=134;}	
+Type	:TYPE_INT	{$$=con(133);}	
+	|TYPE_FLOAT	{$$=con(134);}	
 	;
-IdList	:IDENT	{struct sym_record* s=install(yytext);}
-	|IdList ',' IDENT {struct sym_record* s=install(yytext);}
+IdList	:IDENT	{struct sym_record* s=install(yytext);$$=id(s);}
+	|IdList ',' IDENT {struct sym_record* s=install(yytext);$$=opr(COMMA,2,$1,id(s));printf("%s is last ident now\n",$$->opr.op[1]->id.i->sym_name);}
 	;
 
 ClassDecln 	: Mods CLASS IDENT TypeParamsI ClassBody ';'	{
@@ -298,7 +359,7 @@ HasResultType 		: ':' Type {$$=$2;}
 			;
 CtorBody 		: '=' CtorBlock {$$=$2;	/*for the time being*/}
 			| CtorBlock
-			| ';'
+			| ';'	{$$=NULL;}
 			;
 CtorBlock 		: '{' StmtList '}'	{$$=$2;}
 			;
@@ -319,7 +380,10 @@ nodeType* con(int value)
 	p->con.value=value;
 	return p;
 }
-nodeType *id(struct sym_record* i) 
+
+// Having installed a ident in the symbol table we call id() with its sym_record pointer
+// this creates a node for the ident which will be used in the Syntax Tree
+nodeType *id(struct sym_record* i)	 
 {
 	//printf("name is %s\n",i->sym_name);
 	nodeType *p;
@@ -369,4 +433,46 @@ void yyerror(char*s)
 	//printf("%d: %s at %s\n",yylineno,s,yytext);
 }
 
-
+// get_operand takes a nodeType of
+//
+nodeType* get_operand(nodeType* opnode,int index)
+{
+	return opnode->opr.op[index];
+}
+//takes a VarDec node and spread the type info 
+void dist_type(nodeType* nptr)
+{
+	printf("%d\n",nptr->type); // should be typeOp
+	printf("%d is the type to be assigned\n",get_operand(nptr,1)->con.value);
+	int TypeToAssign=get_operand(nptr,1)->con.value;
+	nodeType* idlist=get_operand(nptr,0);
+	if(idlist->type==typeId)
+		idlist->id.i->type=TypeToAssign;
+	else
+	{
+		while(idlist->type!=typeId)
+		{
+			nodeType* leftnode=get_operand(idlist,0);
+			nodeType* rightnode=get_operand(idlist,1);
+			rightnode->id.i->type=TypeToAssign;
+			idlist=leftnode;
+		}
+		idlist->id.i->type=TypeToAssign;
+	}	
+}
+int get_type(nodeType* data_type_ptr)
+{
+	if(data_type_ptr->type==typeCon)
+		return data_type_ptr->con.type;	// add type fiedl in con node !!!
+	else
+	{
+		return (data_type_ptr->id.i)->type;
+	}
+}
+void type_check_assign(nodeType* lhs,nodeType* rhs)
+{
+	if(get_type(lhs)!=get_type(rhs))
+	{
+		printf("type mismatch\n");
+	}
+}
