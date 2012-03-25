@@ -27,7 +27,9 @@ extern int yywrap();
 typedef union nodeTypeTag nodeType;	
 /*prototypes start*/
 nodeType* id(struct sym_record* i);	// node creator function for identifiers
-nodeType* con(int value); // node creator function for constants
+nodeType* con_i(int value); // node creator function for constants integer
+nodeType* con_f(float value); // node creator function for constants floats
+nodeType* con_c(char value); // node creator function for constants character
 nodeType* opr(int oper, int nops, ...);
 void FreeNode(nodeType *p);	// frees node
 void yyerror(char*s);  
@@ -35,6 +37,13 @@ struct sym_record* install(char* sym_name);
 void dist_type(nodeType* nptr);
 nodeType* get_operand(nodeType* opnode,int index);
 void type_check_assign(nodeType* lhs, nodeType* rhs);
+void type_check_relational(nodeType* lhs, nodeType* rhs);
+void type_check_int(nodeType* node);
+void type_check_char(nodeType* node);
+void type_check_float(nodeType* node);
+void type_check_division(nodeType* lhs,nodeType* rhs);
+void type_check_prepostfix(nodeType* node);
+void type_check_typeid(nodeType* node);
 /*prototypes end*/
 /*global variables*/
 struct symbol_table* current_st=NULL;	// global current st 
@@ -285,11 +294,11 @@ TypeName
 	;
 
 AssOp	
-	:EQ		{$$=con($1);}	
-	|PLUS_EQ	{$$=con($1);}
-	|MINUS_EQ	{$$=con($1);}
-	|MULT_EQ	{$$=con($1);}
-	|DIV_EQ		{$$=con($1);}
+	:EQ		{$$=con_i($1);}	
+	|PLUS_EQ	{$$=con_i($1);}
+	|MINUS_EQ	{$$=con_i($1);}
+	|MULT_EQ	{$$=con_i($1);}
+	|DIV_EQ		{$$=con_i($1);}
 	;
 MethodInv	
 	:MethodName '(' Expression ')' {$$=opr(INVOC,2,$1,$3);}
@@ -305,8 +314,8 @@ VarDec
 	:VAR IdList ':' Type {$$=opr(TYPE,2,$2,$4);dist_type($$);/*printf("%d",$$->opr.nops);*/}
 	;
 Type	
-	:TYPE_INT	{$$=con(133);}	
-	|TYPE_FLOAT	{$$=con(134);}	
+	:TYPE_INT	{$$=con_i(133);}	
+	|TYPE_FLOAT	{$$=con_f(134);}	
 	;
 IdList	
 	:IDENT			{struct sym_record* s=install(yytext);$$=id(s);}
@@ -315,14 +324,18 @@ IdList
 				}
 	;
 primary_Expression	
-	:IDENT
-	|ConstExp
+	:IDENT			{
+					printf("adsad%s",yytext);					
+					struct sym_record*s =install(yytext);					
+					$$=id(s);
+				}
+	|ConstExp		{$$=$1;}
 	|'(' Expression ')' 	{$$=$2;}
 	;
 ConstExp	
-	:INTEGER	{$$=con($1);}
-	|FLOAT		{$$=con($1);}
-	|CHAR		{$$=con($1);}
+	:INTEGER	{$$=con_i($1);}
+	|FLOAT		{$$=con_f($1);}
+	|CHAR		{$$=con_c($1);}
 
 Expression
 	:assignment_Expression
@@ -332,8 +345,8 @@ Expression
 	;
 
 assignment_Expression	
-	:conditional_Expression
-	|unary_Expression AssOp assignment_Expression
+	:conditional_Expression		{$$=$1;}
+	|unary_Expression AssOp assignment_Expression		{type_check_assign($1,$3);}
 	;
 
 conditional_Expression	
@@ -343,7 +356,7 @@ conditional_Expression
 
 logical_or_Expression	
 	:logical_and_Expression
-	|logical_or_Expression BOOL_OR logical_and_Expression
+	|logical_or_Expression BOOL_OR logical_and_Expression	
 	;
 
 logical_and_Expression
@@ -374,28 +387,28 @@ equality_Expression
 
 relational_Expression
 	:shift_Expression
-	|relational_Expression LT shift_Expression
-	|relational_Expression GT shift_Expression
-	|relational_Expression LE shift_Expression
-	|relational_Expression GE shift_Expression
+	|relational_Expression LT shift_Expression			{type_check_relational($1,$3);}
+	|relational_Expression GT shift_Expression			{type_check_relational($1,$3);}
+	|relational_Expression LE shift_Expression			{type_check_relational($1,$3);}
+	|relational_Expression GE shift_Expression			{type_check_relational($1,$3);}
 	;
 
 shift_Expression
 	:additive_Expression
-	|shift_Expression LSH additive_Expression
-	|shift_Expression RSH additive_Expression
+	|shift_Expression LSH additive_Expression			{type_check_int($3);}
+	|shift_Expression RSH additive_Expression			{type_check_int($3);}
 	;
 
 additive_Expression
 	:multiplicative_Expression
-	|additive_Expression PLUS multiplicative_Expression
-	|additive_Expression MINUS multiplicative_Expression
+	|additive_Expression PLUS multiplicative_Expression		{type_check_relational($1,$3);}
+	|additive_Expression MINUS multiplicative_Expression	{type_check_relational($1,$3);}
 	;
 
 multiplicative_Expression
 	: cast_Expression
-	| multiplicative_Expression MULT cast_Expression
-	| multiplicative_Expression DIV cast_Expression
+	| multiplicative_Expression MULT cast_Expression		{type_check_relational($1,$3);}
+	| multiplicative_Expression DIV cast_Expression			{type_check_division($1,$3);}
 	;
 
 cast_Expression
@@ -404,20 +417,20 @@ cast_Expression
 
 unary_Expression
 	: postfix_Expression
-	| PP unary_Expression	{$$=$2;}
-	| MM unary_Expression	{$$=$2;}
+	| PP unary_Expression	{$$=opr(PP,2,$1,$2);type_check_prepostfix($2);}
+	| MM unary_Expression	{$$=opr(MM,2,$1,$2);type_check_prepostfix($2);}
 	| unary_operator cast_Expression	{$$=$2;}
 	;
 postfix_Expression
 	: primary_Expression
-	| postfix_Expression '[' Expression ']'
-	| postfix_Expression '.' IDENT
-	| postfix_Expression PP
-	| postfix_Expression MM
+	| postfix_Expression '[' Expression ']'		{type_check_typeid($1);}
+	| postfix_Expression '.' IDENT				
+	| postfix_Expression PP			{type_check_prepostfix($1);}
+	| postfix_Expression MM			{type_check_prepostfix($1);}
 	;
 unary_operator
-	:PLUS
-	|MINUS
+	:PLUS		{$$=con_i($1);}
+	|MINUS		{$$=con_i($1);}
 	;
 	
 ClassDecln
@@ -428,9 +441,9 @@ ClassDecln
 								/*here $1 will contain enum type which will be handled by the traversal function*/
 								}
 		;						
-Mods		:PUBLIC		{$$=con(modPUBLIC);}
-		|PRIVATE	{$$=con(modPRIVATE);}
-		|PROTECTED	{$$=con(modPROTECTED);}
+Mods		:PUBLIC		{$$=con_i(modPUBLIC);}
+		|PRIVATE	{$$=con_i(modPRIVATE);}
+		|PROTECTED	{$$=con_i(modPROTECTED);}
 		;
 StructDecln	:STRUCT IDENT TypeParamsI ClassBody ';' {$$=opr(STRUCT,3,$2,$3,$4);}
 		;	
@@ -471,15 +484,41 @@ int main()
 	yyparse();
 	return 0;
 }
-nodeType* con(int value)
+
+
+nodeType* con_i(int value)
 {
 	nodeType *p;
-	if((p=malloc(sizeof(conNodeType)))==NULL)
+	if((p=malloc(sizeof(con_iNodeType)))==NULL)
 	{
 		yyerror("out of memory");
 	}
-	p->type=typeCon;
-	p->con.value=value;
+	p->type=typeConI;
+	p->con_i.value=value;
+	return p;
+}
+
+nodeType* con_f(float value)
+{
+	nodeType *p;
+	if((p=malloc(sizeof(con_fNodeType)))==NULL)
+	{
+		yyerror("out of memory");
+	}
+	p->type=typeConF;
+	p->con_f.value=value;
+	return p;
+}
+
+nodeType* con_c(char value)
+{
+	nodeType *p;
+	if((p=malloc(sizeof(con_cNodeType)))==NULL)
+	{
+		yyerror("out of memory");
+	}
+	p->type=typeConC;
+	p->con_c.value=value;
 	return p;
 }
 
@@ -551,11 +590,11 @@ nodeType* get_operand(nodeType* opnode,int index)
 void dist_type(nodeType* nptr)
 {
 	printf("%d\n",nptr->type); // should be typeOp
-	printf("%d is the type to be assigned\n",get_operand(nptr,1)->con.value);
-	int TypeToAssign=get_operand(nptr,1)->con.value;
+	printf("%d is the type to be assigned\n",get_operand(nptr,1)->con_i.value);
+	int TypeToAssign=get_operand(nptr,1)->con_i.value;
 	nodeType* idlist=get_operand(nptr,0);
 	if(idlist->type==typeId)
-		idlist->id.i->type=TypeToAssign;
+		idlist->id.i->type=TypeToAssign;		
 	else
 	{
 		while(idlist->type!=typeId)
@@ -570,17 +609,114 @@ void dist_type(nodeType* nptr)
 }
 int get_type(nodeType* data_type_ptr)
 {
-	if(data_type_ptr->type==typeCon)
-		return data_type_ptr->con.type;	// add type fiedl in con node !!!
+	if(data_type_ptr->type==typeConI)
+	{
+		return data_type_ptr->con_i.type;	// add type fiedl in con node !!!
+	}
+	else if(data_type_ptr->type==typeConF)
+	{
+		return data_type_ptr->con_f.type;	// add type fiedl in con node !!!
+	}
+	else if(data_type_ptr->type==typeConC)
+	{
+		return data_type_ptr->con_c.type;	// add type fiedl in con node !!!
+	}
 	else
 	{
 		return (data_type_ptr->id.i)->type;
 	}
 }
+
 void type_check_assign(nodeType* lhs,nodeType* rhs)
-{
+{	
 	if(get_type(lhs)!=get_type(rhs))
 	{
 		printf("type mismatch\n");
+		exit(0);
 	}
+	return;
+}
+
+void type_check_relational(nodeType* lhs,nodeType* rhs)
+{	
+	if(get_type(lhs)==133 || get_type(lhs)==134)
+	{
+		if(get_type(rhs)==133 || get_type(rhs)==134)
+		{
+			return;
+		}
+	}
+	printf("type mismatch\n");
+	exit(0);
+}
+
+void type_check_int(nodeType* node)
+{
+	if(get_type(node)!=133)
+	{
+		printf("type mismatch\n");
+		exit(0);
+	}
+	return;
+}
+
+void type_check_float(nodeType* node)
+{
+	if(get_type(node)!=134)
+	{
+		printf("type mismatch\n");
+		exit(0);
+	}
+	return;
+}
+void type_check_char(nodeType* node)
+{
+	if(get_type(node)!=135)
+	{
+		printf("type mismatch\n");
+		exit(0);
+	}
+	return;
+}
+
+void type_check_division(nodeType* lhs,nodeType* rhs)
+{	
+	if(get_type(lhs)==133 || get_type(lhs)==134)
+	{
+		if(get_type(rhs)==133 || get_type(rhs)==134)
+		{
+			if(rhs->type==typeConI)
+			{
+				if(rhs->con_i.value!=0)		return;
+			}
+			else if(rhs->type==typeConF)
+			{
+				if(rhs->con_f.value!=0)		return;
+			}
+			printf("Division by zero\n");
+			exit(0);
+		}
+	}
+	printf("type mismatch\n");
+	exit(0);
+}
+
+void type_check_prepostfix(nodeType* node)
+{
+	if(get_type(node)!=133 || get_type(node)!=134)
+	{
+		printf("type mismatch\n");
+		exit(0);
+	}
+	return;
+}
+
+void type_check_typeid(nodeType* node)
+{
+	if(node->type!=typeId)
+	{
+		printf("type undefined\n");
+		exit(0);
+	}
+	return;
 }

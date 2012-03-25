@@ -2,8 +2,7 @@ def myfunc0(var a:int)
 {
 	var i,j,k,l,m:int;
 	var f:float;
-	var for:float;
-	i=f;		// should geive mismatch
+	i=f;		// should give mismatch
 	for(i=0;10+10;i++)
 		i=i*i;
 	if(1111)

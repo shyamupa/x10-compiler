@@ -1,14 +1,26 @@
 #include "ll_sym_table.h"
 #ifndef node_def_h_included
 #define node_def_h_included
-typedef enum { typeCon, typeId, typeOpr } nodeEnum;
+typedef enum { typeConI,typeConF,typeConC, typeId, typeOpr} nodeEnum;
 
-// for constants
+// for constants int
 typedef struct 
 {
-	nodeEnum type;	
+	nodeEnum type;
 	int value;
-}conNodeType;
+}con_iNodeType;
+
+typedef struct 
+{
+	nodeEnum type;
+	float value;
+}con_fNodeType;
+
+typedef struct 
+{
+	nodeEnum type;
+	char value;
+}con_cNodeType;
 
 // for identifiers
 typedef struct 
@@ -30,7 +42,9 @@ typedef struct
 union nodeTypeTag 
 {
 	nodeEnum type;		// type of node
-	conNodeType con;
+	con_iNodeType con_i;
+	con_fNodeType con_f;
+	con_cNodeType con_c;
 	idNodeType id;
 	oprNodeType opr;
 };

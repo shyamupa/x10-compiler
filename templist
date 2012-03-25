@@ -1,0 +1,16 @@
+%type <nPtr> assignment_Expression
+%type <nPtr> conditional_Expression
+%type <nPtr> unary_Expression
+%type <nPtr> logical_or_Expression
+%type <nPtr> logical_and_Expression
+%type <nPtr> inclusive_or_Expression
+%type <nPtr> exclusive_or_Expression
+%type <nPtr> and_Expression
+%type <nPtr> equality_Expression
+%type <nPtr> relational_Expression
+%type <nPtr> shift_Expression
+%type <nPtr> additive_Expression
+%type <nPtr> multiplicative_Expression
+%type <nPtr> cast_Expression
+%type <nPtr> unary_Expression
+%type <nPtr> postfix_Expression

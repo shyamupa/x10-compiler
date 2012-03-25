@@ -1,0 +1,3828 @@
+Terminals unused in grammar
+
+   VAL
+   ABSTRACT
+   AS
+   ASYNC
+   AT
+   ATHOME
+   ATEACH
+   ATOMIC
+   CATCH
+   CLOCKED
+   EXTENDS
+   FINAL
+   FINALLY
+   FINISH
+   GOTO
+   HASZERO
+   HERE
+   IMPLEMENTS
+   IMPORT
+   INSTANCEOF
+   INTERFACE
+   NATIVE
+   MY_NULL
+   OFFER
+   OFFERS
+   OPERATOR
+   PACKAGE
+   PROPERTY
+   SELF
+   STATIC
+   SUPER
+   THROW
+   TRANSIENT
+   TRY
+   VOID
+   WHEN
+   THEN
+   IN
+   CONTINUE
+   BREAK
+   DO
+   TYPE_CHAR
+   RETURN
+   BEQ
+   TRUE
+   FALSE
+   ARRAY
+   ELLIPSIS
+   ASSERT
+   NEG
+   POW
+
+
+Grammar
+
+    0 $accept: Defn_or_Decln $end
+
+    1 $@1: /* empty */
+
+    2 Defn_or_Decln: $@1 FuncDefnList
+
+    3 FuncDefnList: FuncDefnList FuncDefn
+    4             | FuncDefn
+
+    5 $@2: /* empty */
+
+    6 FuncDefn: DEF IDENT $@2 '(' FormalArgList ')' CompoundStmt
+
+    7 FormalArgList: FormalArgList ',' FormalArg
+    8              | FormalArg
+
+    9 FormalArg: VarDec
+   10          | /* empty */
+
+   11 StmtList: Stmt
+   12         | StmtList Stmt
+
+   13 Stmt: ExpressionStmt
+   14     | IterationStmt
+   15     | BasicForStmt
+   16     | SelectionStmt
+   17     | CompoundStmt
+   18     | LabeledStmt
+   19     | NonFuncDeclaration
+
+   20 LabeledStmt: CASE ConstExp ':' Stmt
+   21            | DEFAULT ':' Stmt
+
+   22 $@3: /* empty */
+
+   23 $@4: /* empty */
+
+   24 CompoundStmt: '{' $@3 StmtList $@4 '}'
+   25             | error '}'
+
+   26 NonFuncDeclaration: VarDec
+   27                   | ClassDecln
+   28                   | StructDecln
+
+   29 ExpressionStmt: Expression ';'
+   30               | ';'
+   31               | Expression error ';'
+   32               | error ';'
+
+   33 SelectionStmt: IF '(' Expression ')' Stmt
+   34              | IF '(' Expression ')' Stmt ELSE Stmt
+   35              | SWITCH '(' Expression ')' Stmt
+
+   36 IterationStmt: WHILE '(' Expression ')' Stmt
+
+   37 BasicForStmt: FOR '(' Expression ';' Expression ';' Expression ')' Stmt
+
+   38 ObjCreation: NEW TypeName '(' Expression ')'
+
+   39 TypeName: IDENT
+
+   40 AssOp: EQ
+   41      | PLUS_EQ
+   42      | MINUS_EQ
+   43      | MULT_EQ
+   44      | DIV_EQ
+
+   45 MethodInv: MethodName '(' Expression ')'
+
+   46 MethodName: IDENT
+
+   47 VarDec: VAR IdList ':' Type
+
+   48 Type: TYPE_INT
+   49     | TYPE_FLOAT
+
+   50 IdList: IDENT
+   51       | IdList ',' IDENT
+
+   52 primary_Expression: IDENT
+   53                   | ConstExp
+   54                   | '(' Expression ')'
+
+   55 ConstExp: INTEGER
+   56         | FLOAT
+   57         | CHAR
+
+   58 Expression: assignment_Expression
+   59           | Expression ',' assignment_Expression
+   60           | ObjCreation
+   61           | MethodInv
+
+   62 assignment_Expression: conditional_Expression
+   63                      | unary_Expression AssOp assignment_Expression
+
+   64 conditional_Expression: logical_or_Expression
+   65                       | logical_or_Expression QM Expression ':' conditional_Expression
+
+   66 logical_or_Expression: logical_and_Expression
+   67                      | logical_or_Expression BOOL_OR logical_and_Expression
+
+   68 logical_and_Expression: inclusive_or_Expression
+   69                       | logical_and_Expression BOOL_AND inclusive_or_Expression
+
+   70 inclusive_or_Expression: exclusive_or_Expression
+   71                        | inclusive_or_Expression BIT_OR exclusive_or_Expression
+
+   72 exclusive_or_Expression: and_Expression
+   73                        | exclusive_or_Expression XOR and_Expression
+
+   74 and_Expression: equality_Expression
+   75               | and_Expression BIT_AND equality_Expression
+
+   76 equality_Expression: relational_Expression
+   77                    | equality_Expression BOOL_EQ relational_Expression
+   78                    | equality_Expression NEQ relational_Expression
+
+   79 relational_Expression: shift_Expression
+   80                      | relational_Expression LT shift_Expression
+   81                      | relational_Expression GT shift_Expression
+   82                      | relational_Expression LE shift_Expression
+   83                      | relational_Expression GE shift_Expression
+
+   84 shift_Expression: additive_Expression
+   85                 | shift_Expression LSH additive_Expression
+   86                 | shift_Expression RSH additive_Expression
+
+   87 additive_Expression: multiplicative_Expression
+   88                    | additive_Expression PLUS multiplicative_Expression
+   89                    | additive_Expression MINUS multiplicative_Expression
+
+   90 multiplicative_Expression: cast_Expression
+   91                          | multiplicative_Expression MULT cast_Expression
+   92                          | multiplicative_Expression DIV cast_Expression
+
+   93 cast_Expression: unary_Expression
+
+   94 unary_Expression: postfix_Expression
+   95                 | PP unary_Expression
+   96                 | MM unary_Expression
+   97                 | unary_operator cast_Expression
+
+   98 postfix_Expression: primary_Expression
+   99                   | postfix_Expression '[' Expression ']'
+  100                   | postfix_Expression '.' IDENT
+  101                   | postfix_Expression PP
+  102                   | postfix_Expression MM
+
+  103 unary_operator: PLUS
+  104               | MINUS
+
+  105 ClassDecln: Mods CLASS IDENT TypeParamsI ClassBody ';'
+
+  106 Mods: PUBLIC
+  107     | PRIVATE
+  108     | PROTECTED
+
+  109 StructDecln: STRUCT IDENT TypeParamsI ClassBody ';'
+
+  110 TypeParamsI: '[' TypeParamIList ']'
+  111            | /* empty */
+
+  112 TypeParamIList: IDENT
+  113               | TypeParamIList ',' IDENT
+  114               | TypeParamIList ','
+
+  115 TypeParams: '[' TypeParamList ']'
+
+  116 TypeParamList: TypeParam
+  117              | TypeParamList ',' TypeParam
+
+  118 TypeParam: IDENT
+
+  119 ClassBody: '{' ClassMemberDeclns '}'
+
+  120 ClassMemberDeclns: ClassMemberDecln
+  121                  | ClassMemberDeclns ClassMemberDecln
+
+  122 ClassMemberDecln: CtorDecln
+
+  123 CtorDecln: DEF THIS TypeParams HasResultType CtorBody
+
+  124 HasResultType: ':' Type
+
+  125 CtorBody: '=' CtorBlock
+  126         | CtorBlock
+  127         | ';'
+
+  128 CtorBlock: '{' StmtList '}'
+
+
+Terminals, with rules where they appear
+
+$end (0) 0
+'(' (40) 6 33 34 35 36 37 38 45 54
+')' (41) 6 33 34 35 36 37 38 45 54
+',' (44) 7 51 59 113 114 117
+'.' (46) 100
+':' (58) 20 21 47 65 124
+';' (59) 29 30 31 32 37 105 109 127
+'=' (61) 125
+'[' (91) 99 110 115
+']' (93) 99 110 115
+'{' (123) 24 119 128
+'}' (125) 24 25 119 128
+error (256) 25 31 32
+VAL (258)
+VAR (259) 47
+ABSTRACT (260)
+AS (261)
+ASYNC (262)
+AT (263)
+ATHOME (264)
+ATEACH (265)
+ATOMIC (266)
+BOOL_EQ (267) 77
+BOOL_OR (268) 67
+BOOL_AND (269) 69
+BIT_AND (270) 75
+BIT_OR (271) 71
+CATCH (272)
+CLASS (273) 105
+CLOCKED (274)
+EXTENDS (275)
+FINAL (276)
+FINALLY (277)
+FINISH (278)
+GOTO (279)
+HASZERO (280)
+HERE (281)
+IMPLEMENTS (282)
+IMPORT (283)
+INSTANCEOF (284)
+INTERFACE (285)
+LSH (286) 85
+NATIVE (287)
+NEQ (288) 78
+NEW (289) 38
+MY_NULL (290)
+OFFER (291)
+OFFERS (292)
+OPERATOR (293)
+PACKAGE (294)
+PROPERTY (295)
+QM (296) 65
+RSH (297) 86
+SELF (298)
+STATIC (299)
+STRUCT (300) 109
+SUPER (301)
+THIS (302) 123
+THROW (303)
+TRANSIENT (304)
+TRY (305)
+VOID (306)
+WHEN (307)
+XOR (308) 73
+IF (309) 33 34
+THEN (310)
+ELSE (311) 34
+FOR (312) 37
+IN (313)
+WHILE (314) 36
+CONTINUE (315)
+BREAK (316)
+DO (317)
+SWITCH (318) 35
+CASE (319) 20
+DEFAULT (320) 21
+INTEGER (321) 55
+FLOAT (322) 56
+CHAR (323) 57
+TYPE_INT (324) 48
+TYPE_FLOAT (325) 49
+TYPE_CHAR (326)
+RETURN (327)
+DEF (328) 6 123
+PUBLIC (329) 106
+PRIVATE (330) 107
+PROTECTED (331) 108
+BEQ (332)
+LT (333) 80
+GT (334) 81
+LE (335) 82
+GE (336) 83
+TRUE (337)
+FALSE (338)
+IDENT (339) 6 39 46 50 51 52 100 105 109 112 113 118
+ARRAY (340)
+ELLIPSIS (341)
+ASSERT (342)
+EQ (343) 40
+PLUS_EQ (344) 41
+MULT_EQ (345) 43
+MINUS_EQ (346) 42
+DIV_EQ (347) 44
+PP (348) 95 101
+MM (349) 96 102
+IFX (350)
+MINUS (351) 89 104
+PLUS (352) 88 103
+DIV (353) 92
+MULT (354) 91
+NEG (355)
+POW (356)
+
+
+Nonterminals, with rules where they appear
+
+$accept (113)
+    on left: 0
+Defn_or_Decln (114)
+    on left: 2, on right: 0
+$@1 (115)
+    on left: 1, on right: 2
+FuncDefnList (116)
+    on left: 3 4, on right: 2 3
+FuncDefn (117)
+    on left: 6, on right: 3 4
+$@2 (118)
+    on left: 5, on right: 6
+FormalArgList (119)
+    on left: 7 8, on right: 6 7
+FormalArg (120)
+    on left: 9 10, on right: 7 8
+StmtList (121)
+    on left: 11 12, on right: 12 24 128
+Stmt (122)
+    on left: 13 14 15 16 17 18 19, on right: 11 12 20 21 33 34 35 36
+    37
+LabeledStmt (123)
+    on left: 20 21, on right: 18
+CompoundStmt (124)
+    on left: 24 25, on right: 6 17
+$@3 (125)
+    on left: 22, on right: 24
+$@4 (126)
+    on left: 23, on right: 24
+NonFuncDeclaration (127)
+    on left: 26 27 28, on right: 19
+ExpressionStmt (128)
+    on left: 29 30 31 32, on right: 13
+SelectionStmt (129)
+    on left: 33 34 35, on right: 16
+IterationStmt (130)
+    on left: 36, on right: 14
+BasicForStmt (131)
+    on left: 37, on right: 15
+ObjCreation (132)
+    on left: 38, on right: 60
+TypeName (133)
+    on left: 39, on right: 38
+AssOp (134)
+    on left: 40 41 42 43 44, on right: 63
+MethodInv (135)
+    on left: 45, on right: 61
+MethodName (136)
+    on left: 46, on right: 45
+VarDec (137)
+    on left: 47, on right: 9 26
+Type (138)
+    on left: 48 49, on right: 47 124
+IdList (139)
+    on left: 50 51, on right: 47 51
+primary_Expression (140)
+    on left: 52 53 54, on right: 98
+ConstExp (141)
+    on left: 55 56 57, on right: 20 53
+Expression (142)
+    on left: 58 59 60 61, on right: 29 31 33 34 35 36 37 38 45 54 59
+    65 99
+assignment_Expression (143)
+    on left: 62 63, on right: 58 59 63
+conditional_Expression (144)
+    on left: 64 65, on right: 62 65
+logical_or_Expression (145)
+    on left: 66 67, on right: 64 65 67
+logical_and_Expression (146)
+    on left: 68 69, on right: 66 67 69
+inclusive_or_Expression (147)
+    on left: 70 71, on right: 68 69 71
+exclusive_or_Expression (148)
+    on left: 72 73, on right: 70 71 73
+and_Expression (149)
+    on left: 74 75, on right: 72 73 75
+equality_Expression (150)
+    on left: 76 77 78, on right: 74 75 77 78
+relational_Expression (151)
+    on left: 79 80 81 82 83, on right: 76 77 78 80 81 82 83
+shift_Expression (152)
+    on left: 84 85 86, on right: 79 80 81 82 83 85 86
+additive_Expression (153)
+    on left: 87 88 89, on right: 84 85 86 88 89
+multiplicative_Expression (154)
+    on left: 90 91 92, on right: 87 88 89 91 92
+cast_Expression (155)
+    on left: 93, on right: 90 91 92 97
+unary_Expression (156)
+    on left: 94 95 96 97, on right: 63 93 95 96
+postfix_Expression (157)
+    on left: 98 99 100 101 102, on right: 94 99 100 101 102
+unary_operator (158)
+    on left: 103 104, on right: 97
+ClassDecln (159)
+    on left: 105, on right: 27
+Mods (160)
+    on left: 106 107 108, on right: 105
+StructDecln (161)
+    on left: 109, on right: 28
+TypeParamsI (162)
+    on left: 110 111, on right: 105 109
+TypeParamIList (163)
+    on left: 112 113 114, on right: 110 113 114
+TypeParams (164)
+    on left: 115, on right: 123
+TypeParamList (165)
+    on left: 116 117, on right: 115 117
+TypeParam (166)
+    on left: 118, on right: 116 117
+ClassBody (167)
+    on left: 119, on right: 105 109
+ClassMemberDeclns (168)
+    on left: 120 121, on right: 119 121
+ClassMemberDecln (169)
+    on left: 122, on right: 120 121
+CtorDecln (170)
+    on left: 123, on right: 122
+HasResultType (171)
+    on left: 124, on right: 123
+CtorBody (172)
+    on left: 125 126 127, on right: 123
+CtorBlock (173)
+    on left: 128, on right: 125 126
+
+
+state 0
+
+    0 $accept: . Defn_or_Decln $end
+
+    $default  reduce using rule 1 ($@1)
+
+    Defn_or_Decln  go to state 1
+    $@1            go to state 2
+
+
+state 1
+
+    0 $accept: Defn_or_Decln . $end
+
+    $end  shift, and go to state 3
+
+
+state 2
+
+    2 Defn_or_Decln: $@1 . FuncDefnList
+
+    DEF  shift, and go to state 4
+
+    FuncDefnList  go to state 5
+    FuncDefn      go to state 6
+
+
+state 3
+
+    0 $accept: Defn_or_Decln $end .
+
+    $default  accept
+
+
+state 4
+
+    6 FuncDefn: DEF . IDENT $@2 '(' FormalArgList ')' CompoundStmt
+
+    IDENT  shift, and go to state 7
+
+
+state 5
+
+    2 Defn_or_Decln: $@1 FuncDefnList .
+    3 FuncDefnList: FuncDefnList . FuncDefn
+
+    DEF  shift, and go to state 4
+
+    $default  reduce using rule 2 (Defn_or_Decln)
+
+    FuncDefn  go to state 8
+
+
+state 6
+
+    4 FuncDefnList: FuncDefn .
+
+    $default  reduce using rule 4 (FuncDefnList)
+
+
+state 7
+
+    6 FuncDefn: DEF IDENT . $@2 '(' FormalArgList ')' CompoundStmt
+
+    $default  reduce using rule 5 ($@2)
+
+    $@2  go to state 9
+
+
+state 8
+
+    3 FuncDefnList: FuncDefnList FuncDefn .
+
+    $default  reduce using rule 3 (FuncDefnList)
+
+
+state 9
+
+    6 FuncDefn: DEF IDENT $@2 . '(' FormalArgList ')' CompoundStmt
+
+    '('  shift, and go to state 10
+
+
+state 10
+
+    6 FuncDefn: DEF IDENT $@2 '(' . FormalArgList ')' CompoundStmt
+
+    VAR  shift, and go to state 11
+
+    $default  reduce using rule 10 (FormalArg)
+
+    FormalArgList  go to state 12
+    FormalArg      go to state 13
+    VarDec         go to state 14
+
+
+state 11
+
+   47 VarDec: VAR . IdList ':' Type
+
+    IDENT  shift, and go to state 15
+
+    IdList  go to state 16
+
+
+state 12
+
+    6 FuncDefn: DEF IDENT $@2 '(' FormalArgList . ')' CompoundStmt
+    7 FormalArgList: FormalArgList . ',' FormalArg
+
+    ')'  shift, and go to state 17
+    ','  shift, and go to state 18
+
+
+state 13
+
+    8 FormalArgList: FormalArg .
+
+    $default  reduce using rule 8 (FormalArgList)
+
+
+state 14
+
+    9 FormalArg: VarDec .
+
+    $default  reduce using rule 9 (FormalArg)
+
+
+state 15
+
+   50 IdList: IDENT .
+
+    $default  reduce using rule 50 (IdList)
+
+
+state 16
+
+   47 VarDec: VAR IdList . ':' Type
+   51 IdList: IdList . ',' IDENT
+
+    ':'  shift, and go to state 19
+    ','  shift, and go to state 20
+
+
+state 17
+
+    6 FuncDefn: DEF IDENT $@2 '(' FormalArgList ')' . CompoundStmt
+
+    error  shift, and go to state 21
+    '{'    shift, and go to state 22
+
+    CompoundStmt  go to state 23
+
+
+state 18
+
+    7 FormalArgList: FormalArgList ',' . FormalArg
+
+    VAR  shift, and go to state 11
+
+    $default  reduce using rule 10 (FormalArg)
+
+    FormalArg  go to state 24
+    VarDec     go to state 14
+
+
+state 19
+
+   47 VarDec: VAR IdList ':' . Type
+
+    TYPE_INT    shift, and go to state 25
+    TYPE_FLOAT  shift, and go to state 26
+
+    Type  go to state 27
+
+
+state 20
+
+   51 IdList: IdList ',' . IDENT
+
+    IDENT  shift, and go to state 28
+
+
+state 21
+
+   25 CompoundStmt: error . '}'
+
+    '}'  shift, and go to state 29
+
+
+state 22
+
+   24 CompoundStmt: '{' . $@3 StmtList $@4 '}'
+
+    $default  reduce using rule 22 ($@3)
+
+    $@3  go to state 30
+
+
+state 23
+
+    6 FuncDefn: DEF IDENT $@2 '(' FormalArgList ')' CompoundStmt .
+
+    $default  reduce using rule 6 (FuncDefn)
+
+
+state 24
+
+    7 FormalArgList: FormalArgList ',' FormalArg .
+
+    $default  reduce using rule 7 (FormalArgList)
+
+
+state 25
+
+   48 Type: TYPE_INT .
+
+    $default  reduce using rule 48 (Type)
+
+
+state 26
+
+   49 Type: TYPE_FLOAT .
+
+    $default  reduce using rule 49 (Type)
+
+
+state 27
+
+   47 VarDec: VAR IdList ':' Type .
+
+    $default  reduce using rule 47 (VarDec)
+
+
+state 28
+
+   51 IdList: IdList ',' IDENT .
+
+    $default  reduce using rule 51 (IdList)
+
+
+state 29
+
+   25 CompoundStmt: error '}' .
+
+    $default  reduce using rule 25 (CompoundStmt)
+
+
+state 30
+
+   24 CompoundStmt: '{' $@3 . StmtList $@4 '}'
+
+    error      shift, and go to state 31
+    VAR        shift, and go to state 11
+    NEW        shift, and go to state 32
+    STRUCT     shift, and go to state 33
+    IF         shift, and go to state 34
+    FOR        shift, and go to state 35
+    WHILE      shift, and go to state 36
+    SWITCH     shift, and go to state 37
+    CASE       shift, and go to state 38
+    DEFAULT    shift, and go to state 39
+    INTEGER    shift, and go to state 40
+    FLOAT      shift, and go to state 41
+    CHAR       shift, and go to state 42
+    PUBLIC     shift, and go to state 43
+    PRIVATE    shift, and go to state 44
+    PROTECTED  shift, and go to state 45
+    ';'        shift, and go to state 46
+    '{'        shift, and go to state 22
+    '('        shift, and go to state 47
+    IDENT      shift, and go to state 48
+    PP         shift, and go to state 49
+    MM         shift, and go to state 50
+    MINUS      shift, and go to state 51
+    PLUS       shift, and go to state 52
+
+    StmtList                   go to state 53
+    Stmt                       go to state 54
+    LabeledStmt                go to state 55
+    CompoundStmt               go to state 56
+    NonFuncDeclaration         go to state 57
+    ExpressionStmt             go to state 58
+    SelectionStmt              go to state 59
+    IterationStmt              go to state 60
+    BasicForStmt               go to state 61
+    ObjCreation                go to state 62
+    MethodInv                  go to state 63
+    MethodName                 go to state 64
+    VarDec                     go to state 65
+    primary_Expression         go to state 66
+    ConstExp                   go to state 67
+    Expression                 go to state 68
+    assignment_Expression      go to state 69
+    conditional_Expression     go to state 70
+    logical_or_Expression      go to state 71
+    logical_and_Expression     go to state 72
+    inclusive_or_Expression    go to state 73
+    exclusive_or_Expression    go to state 74
+    and_Expression             go to state 75
+    equality_Expression        go to state 76
+    relational_Expression      go to state 77
+    shift_Expression           go to state 78
+    additive_Expression        go to state 79
+    multiplicative_Expression  go to state 80
+    cast_Expression            go to state 81
+    unary_Expression           go to state 82
+    postfix_Expression         go to state 83
+    unary_operator             go to state 84
+    ClassDecln                 go to state 85
+    Mods                       go to state 86
+    StructDecln                go to state 87
+
+
+state 31
+
+   25 CompoundStmt: error . '}'
+   32 ExpressionStmt: error . ';'
+
+    ';'  shift, and go to state 88
+    '}'  shift, and go to state 29
+
+
+state 32
+
+   38 ObjCreation: NEW . TypeName '(' Expression ')'
+
+    IDENT  shift, and go to state 89
+
+    TypeName  go to state 90
+
+
+state 33
+
+  109 StructDecln: STRUCT . IDENT TypeParamsI ClassBody ';'
+
+    IDENT  shift, and go to state 91
+
+
+state 34
+
+   33 SelectionStmt: IF . '(' Expression ')' Stmt
+   34              | IF . '(' Expression ')' Stmt ELSE Stmt
+
+    '('  shift, and go to state 92
+
+
+state 35
+
+   37 BasicForStmt: FOR . '(' Expression ';' Expression ';' Expression ')' Stmt
+
+    '('  shift, and go to state 93
+
+
+state 36
+
+   36 IterationStmt: WHILE . '(' Expression ')' Stmt
+
+    '('  shift, and go to state 94
+
+
+state 37
+
+   35 SelectionStmt: SWITCH . '(' Expression ')' Stmt
+
+    '('  shift, and go to state 95
+
+
+state 38
+
+   20 LabeledStmt: CASE . ConstExp ':' Stmt
+
+    INTEGER  shift, and go to state 40
+    FLOAT    shift, and go to state 41
+    CHAR     shift, and go to state 42
+
+    ConstExp  go to state 96
+
+
+state 39
+
+   21 LabeledStmt: DEFAULT . ':' Stmt
+
+    ':'  shift, and go to state 97
+
+
+state 40
+
+   55 ConstExp: INTEGER .
+
+    $default  reduce using rule 55 (ConstExp)
+
+
+state 41
+
+   56 ConstExp: FLOAT .
+
+    $default  reduce using rule 56 (ConstExp)
+
+
+state 42
+
+   57 ConstExp: CHAR .
+
+    $default  reduce using rule 57 (ConstExp)
+
+
+state 43
+
+  106 Mods: PUBLIC .
+
+    $default  reduce using rule 106 (Mods)
+
+
+state 44
+
+  107 Mods: PRIVATE .
+
+    $default  reduce using rule 107 (Mods)
+
+
+state 45
+
+  108 Mods: PROTECTED .
+
+    $default  reduce using rule 108 (Mods)
+
+
+state 46
+
+   30 ExpressionStmt: ';' .
+
+    $default  reduce using rule 30 (ExpressionStmt)
+
+
+state 47
+
+   54 primary_Expression: '(' . Expression ')'
+
+    NEW      shift, and go to state 32
+    INTEGER  shift, and go to state 40
+    FLOAT    shift, and go to state 41
+    CHAR     shift, and go to state 42
+    '('      shift, and go to state 47
+    IDENT    shift, and go to state 48
+    PP       shift, and go to state 49
+    MM       shift, and go to state 50
+    MINUS    shift, and go to state 51
+    PLUS     shift, and go to state 52
+
+    ObjCreation                go to state 62
+    MethodInv                  go to state 63
+    MethodName                 go to state 64
+    primary_Expression         go to state 66
+    ConstExp                   go to state 67
+    Expression                 go to state 98
+    assignment_Expression      go to state 69
+    conditional_Expression     go to state 70
+    logical_or_Expression      go to state 71
+    logical_and_Expression     go to state 72
+    inclusive_or_Expression    go to state 73
+    exclusive_or_Expression    go to state 74
+    and_Expression             go to state 75
+    equality_Expression        go to state 76
+    relational_Expression      go to state 77
+    shift_Expression           go to state 78
+    additive_Expression        go to state 79
+    multiplicative_Expression  go to state 80
+    cast_Expression            go to state 81
+    unary_Expression           go to state 82
+    postfix_Expression         go to state 83
+    unary_operator             go to state 84
+
+
+state 48
+
+   46 MethodName: IDENT .
+   52 primary_Expression: IDENT .
+
+    '('       reduce using rule 46 (MethodName)
+    $default  reduce using rule 52 (primary_Expression)
+
+
+state 49
+
+   95 unary_Expression: PP . unary_Expression
+
+    INTEGER  shift, and go to state 40
+    FLOAT    shift, and go to state 41
+    CHAR     shift, and go to state 42
+    '('      shift, and go to state 47
+    IDENT    shift, and go to state 99
+    PP       shift, and go to state 49
+    MM       shift, and go to state 50
+    MINUS    shift, and go to state 51
+    PLUS     shift, and go to state 52
+
+    primary_Expression  go to state 66
+    ConstExp            go to state 67
+    unary_Expression    go to state 100
+    postfix_Expression  go to state 83
+    unary_operator      go to state 84
+
+
+state 50
+
+   96 unary_Expression: MM . unary_Expression
+
+    INTEGER  shift, and go to state 40
+    FLOAT    shift, and go to state 41
+    CHAR     shift, and go to state 42
+    '('      shift, and go to state 47
+    IDENT    shift, and go to state 99
+    PP       shift, and go to state 49
+    MM       shift, and go to state 50
+    MINUS    shift, and go to state 51
+    PLUS     shift, and go to state 52
+
+    primary_Expression  go to state 66
+    ConstExp            go to state 67
+    unary_Expression    go to state 101
+    postfix_Expression  go to state 83
+    unary_operator      go to state 84
+
+
+state 51
+
+  104 unary_operator: MINUS .
+
+    $default  reduce using rule 104 (unary_operator)
+
+
+state 52
+
+  103 unary_operator: PLUS .
+
+    $default  reduce using rule 103 (unary_operator)
+
+
+state 53
+
+   12 StmtList: StmtList . Stmt
+   24 CompoundStmt: '{' $@3 StmtList . $@4 '}'
+
+    error      shift, and go to state 31
+    VAR        shift, and go to state 11
+    NEW        shift, and go to state 32
+    STRUCT     shift, and go to state 33
+    IF         shift, and go to state 34
+    FOR        shift, and go to state 35
+    WHILE      shift, and go to state 36
+    SWITCH     shift, and go to state 37
+    CASE       shift, and go to state 38
+    DEFAULT    shift, and go to state 39
+    INTEGER    shift, and go to state 40
+    FLOAT      shift, and go to state 41
+    CHAR       shift, and go to state 42
+    PUBLIC     shift, and go to state 43
+    PRIVATE    shift, and go to state 44
+    PROTECTED  shift, and go to state 45
+    ';'        shift, and go to state 46
+    '{'        shift, and go to state 22
+    '('        shift, and go to state 47
+    IDENT      shift, and go to state 48
+    PP         shift, and go to state 49
+    MM         shift, and go to state 50
+    MINUS      shift, and go to state 51
+    PLUS       shift, and go to state 52
+
+    '}'  reduce using rule 23 ($@4)
+
+    Stmt                       go to state 102
+    LabeledStmt                go to state 55
+    CompoundStmt               go to state 56
+    $@4                        go to state 103
+    NonFuncDeclaration         go to state 57
+    ExpressionStmt             go to state 58
+    SelectionStmt              go to state 59
+    IterationStmt              go to state 60
+    BasicForStmt               go to state 61
+    ObjCreation                go to state 62
+    MethodInv                  go to state 63
+    MethodName                 go to state 64
+    VarDec                     go to state 65
+    primary_Expression         go to state 66
+    ConstExp                   go to state 67
+    Expression                 go to state 68
+    assignment_Expression      go to state 69
+    conditional_Expression     go to state 70
+    logical_or_Expression      go to state 71
+    logical_and_Expression     go to state 72
+    inclusive_or_Expression    go to state 73
+    exclusive_or_Expression    go to state 74
+    and_Expression             go to state 75
+    equality_Expression        go to state 76
+    relational_Expression      go to state 77
+    shift_Expression           go to state 78
+    additive_Expression        go to state 79
+    multiplicative_Expression  go to state 80
+    cast_Expression            go to state 81
+    unary_Expression           go to state 82
+    postfix_Expression         go to state 83
+    unary_operator             go to state 84
+    ClassDecln                 go to state 85
+    Mods                       go to state 86
+    StructDecln                go to state 87
+
+
+state 54
+
+   11 StmtList: Stmt .
+
+    $default  reduce using rule 11 (StmtList)
+
+
+state 55
+
+   18 Stmt: LabeledStmt .
+
+    $default  reduce using rule 18 (Stmt)
+
+
+state 56
+
+   17 Stmt: CompoundStmt .
+
+    $default  reduce using rule 17 (Stmt)
+
+
+state 57
+
+   19 Stmt: NonFuncDeclaration .
+
+    $default  reduce using rule 19 (Stmt)
+
+
+state 58
+
+   13 Stmt: ExpressionStmt .
+
+    $default  reduce using rule 13 (Stmt)
+
+
+state 59
+
+   16 Stmt: SelectionStmt .
+
+    $default  reduce using rule 16 (Stmt)
+
+
+state 60
+
+   14 Stmt: IterationStmt .
+
+    $default  reduce using rule 14 (Stmt)
+
+
+state 61
+
+   15 Stmt: BasicForStmt .
+
+    $default  reduce using rule 15 (Stmt)
+
+
+state 62
+
+   60 Expression: ObjCreation .
+
+    $default  reduce using rule 60 (Expression)
+
+
+state 63
+
+   61 Expression: MethodInv .
+
+    $default  reduce using rule 61 (Expression)
+
+
+state 64
+
+   45 MethodInv: MethodName . '(' Expression ')'
+
+    '('  shift, and go to state 104
+
+
+state 65
+
+   26 NonFuncDeclaration: VarDec .
+
+    $default  reduce using rule 26 (NonFuncDeclaration)
+
+
+state 66
+
+   98 postfix_Expression: primary_Expression .
+
+    $default  reduce using rule 98 (postfix_Expression)
+
+
+state 67
+
+   53 primary_Expression: ConstExp .
+
+    $default  reduce using rule 53 (primary_Expression)
+
+
+state 68
+
+   29 ExpressionStmt: Expression . ';'
+   31               | Expression . error ';'
+   59 Expression: Expression . ',' assignment_Expression
+
+    error  shift, and go to state 105
+    ';'    shift, and go to state 106
+    ','    shift, and go to state 107
+
+
+state 69
+
+   58 Expression: assignment_Expression .
+
+    $default  reduce using rule 58 (Expression)
+
+
+state 70
+
+   62 assignment_Expression: conditional_Expression .
+
+    $default  reduce using rule 62 (assignment_Expression)
+
+
+state 71
+
+   64 conditional_Expression: logical_or_Expression .
+   65                       | logical_or_Expression . QM Expression ':' conditional_Expression
+   67 logical_or_Expression: logical_or_Expression . BOOL_OR logical_and_Expression
+
+    BOOL_OR  shift, and go to state 108
+    QM       shift, and go to state 109
+
+    $default  reduce using rule 64 (conditional_Expression)
+
+
+state 72
+
+   66 logical_or_Expression: logical_and_Expression .
+   69 logical_and_Expression: logical_and_Expression . BOOL_AND inclusive_or_Expression
+
+    BOOL_AND  shift, and go to state 110
+
+    $default  reduce using rule 66 (logical_or_Expression)
+
+
+state 73
+
+   68 logical_and_Expression: inclusive_or_Expression .
+   71 inclusive_or_Expression: inclusive_or_Expression . BIT_OR exclusive_or_Expression
+
+    BIT_OR  shift, and go to state 111
+
+    $default  reduce using rule 68 (logical_and_Expression)
+
+
+state 74
+
+   70 inclusive_or_Expression: exclusive_or_Expression .
+   73 exclusive_or_Expression: exclusive_or_Expression . XOR and_Expression
+
+    XOR  shift, and go to state 112
+
+    $default  reduce using rule 70 (inclusive_or_Expression)
+
+
+state 75
+
+   72 exclusive_or_Expression: and_Expression .
+   75 and_Expression: and_Expression . BIT_AND equality_Expression
+
+    BIT_AND  shift, and go to state 113
+
+    $default  reduce using rule 72 (exclusive_or_Expression)
+
+
+state 76
+
+   74 and_Expression: equality_Expression .
+   77 equality_Expression: equality_Expression . BOOL_EQ relational_Expression
+   78                    | equality_Expression . NEQ relational_Expression
+
+    BOOL_EQ  shift, and go to state 114
+    NEQ      shift, and go to state 115
+
+    $default  reduce using rule 74 (and_Expression)
+
+
+state 77
+
+   76 equality_Expression: relational_Expression .
+   80 relational_Expression: relational_Expression . LT shift_Expression
+   81                      | relational_Expression . GT shift_Expression
+   82                      | relational_Expression . LE shift_Expression
+   83                      | relational_Expression . GE shift_Expression
+
+    LT  shift, and go to state 116
+    GT  shift, and go to state 117
+    LE  shift, and go to state 118
+    GE  shift, and go to state 119
+
+    $default  reduce using rule 76 (equality_Expression)
+
+
+state 78
+
+   79 relational_Expression: shift_Expression .
+   85 shift_Expression: shift_Expression . LSH additive_Expression
+   86                 | shift_Expression . RSH additive_Expression
+
+    LSH  shift, and go to state 120
+    RSH  shift, and go to state 121
+
+    $default  reduce using rule 79 (relational_Expression)
+
+
+state 79
+
+   84 shift_Expression: additive_Expression .
+   88 additive_Expression: additive_Expression . PLUS multiplicative_Expression
+   89                    | additive_Expression . MINUS multiplicative_Expression
+
+    MINUS  shift, and go to state 122
+    PLUS   shift, and go to state 123
+
+    $default  reduce using rule 84 (shift_Expression)
+
+
+state 80
+
+   87 additive_Expression: multiplicative_Expression .
+   91 multiplicative_Expression: multiplicative_Expression . MULT cast_Expression
+   92                          | multiplicative_Expression . DIV cast_Expression
+
+    DIV   shift, and go to state 124
+    MULT  shift, and go to state 125
+
+    $default  reduce using rule 87 (additive_Expression)
+
+
+state 81
+
+   90 multiplicative_Expression: cast_Expression .
+
+    $default  reduce using rule 90 (multiplicative_Expression)
+
+
+state 82
+
+   63 assignment_Expression: unary_Expression . AssOp assignment_Expression
+   93 cast_Expression: unary_Expression .
+
+    EQ        shift, and go to state 126
+    PLUS_EQ   shift, and go to state 127
+    MULT_EQ   shift, and go to state 128
+    MINUS_EQ  shift, and go to state 129
+    DIV_EQ    shift, and go to state 130
+
+    $default  reduce using rule 93 (cast_Expression)
+
+    AssOp  go to state 131
+
+
+state 83
+
+   94 unary_Expression: postfix_Expression .
+   99 postfix_Expression: postfix_Expression . '[' Expression ']'
+  100                   | postfix_Expression . '.' IDENT
+  101                   | postfix_Expression . PP
+  102                   | postfix_Expression . MM
+
+    '['  shift, and go to state 132
+    PP   shift, and go to state 133
+    MM   shift, and go to state 134
+    '.'  shift, and go to state 135
+
+    $default  reduce using rule 94 (unary_Expression)
+
+
+state 84
+
+   97 unary_Expression: unary_operator . cast_Expression
+
+    INTEGER  shift, and go to state 40
+    FLOAT    shift, and go to state 41
+    CHAR     shift, and go to state 42
+    '('      shift, and go to state 47
+    IDENT    shift, and go to state 99
+    PP       shift, and go to state 49
+    MM       shift, and go to state 50
+    MINUS    shift, and go to state 51
+    PLUS     shift, and go to state 52
+
+    primary_Expression  go to state 66
+    ConstExp            go to state 67
+    cast_Expression     go to state 136
+    unary_Expression    go to state 137
+    postfix_Expression  go to state 83
+    unary_operator      go to state 84
+
+
+state 85
+
+   27 NonFuncDeclaration: ClassDecln .
+
+    $default  reduce using rule 27 (NonFuncDeclaration)
+
+
+state 86
+
+  105 ClassDecln: Mods . CLASS IDENT TypeParamsI ClassBody ';'
+
+    CLASS  shift, and go to state 138
+
+
+state 87
+
+   28 NonFuncDeclaration: StructDecln .
+
+    $default  reduce using rule 28 (NonFuncDeclaration)
+
+
+state 88
+
+   32 ExpressionStmt: error ';' .
+
+    $default  reduce using rule 32 (ExpressionStmt)
+
+
+state 89
+
+   39 TypeName: IDENT .
+
+    $default  reduce using rule 39 (TypeName)
+
+
+state 90
+
+   38 ObjCreation: NEW TypeName . '(' Expression ')'
+
+    '('  shift, and go to state 139
+
+
+state 91
+
+  109 StructDecln: STRUCT IDENT . TypeParamsI ClassBody ';'
+
+    '['  shift, and go to state 140
+
+    $default  reduce using rule 111 (TypeParamsI)
+
+    TypeParamsI  go to state 141
+
+
+state 92
+
+   33 SelectionStmt: IF '(' . Expression ')' Stmt
+   34              | IF '(' . Expression ')' Stmt ELSE Stmt
+
+    NEW      shift, and go to state 32
+    INTEGER  shift, and go to state 40
+    FLOAT    shift, and go to state 41
+    CHAR     shift, and go to state 42
+    '('      shift, and go to state 47
+    IDENT    shift, and go to state 48
+    PP       shift, and go to state 49
+    MM       shift, and go to state 50
+    MINUS    shift, and go to state 51
+    PLUS     shift, and go to state 52
+
+    ObjCreation                go to state 62
+    MethodInv                  go to state 63
+    MethodName                 go to state 64
+    primary_Expression         go to state 66
+    ConstExp                   go to state 67
+    Expression                 go to state 142
+    assignment_Expression      go to state 69
+    conditional_Expression     go to state 70
+    logical_or_Expression      go to state 71
+    logical_and_Expression     go to state 72
+    inclusive_or_Expression    go to state 73
+    exclusive_or_Expression    go to state 74
+    and_Expression             go to state 75
+    equality_Expression        go to state 76
+    relational_Expression      go to state 77
+    shift_Expression           go to state 78
+    additive_Expression        go to state 79
+    multiplicative_Expression  go to state 80
+    cast_Expression            go to state 81
+    unary_Expression           go to state 82
+    postfix_Expression         go to state 83
+    unary_operator             go to state 84
+
+
+state 93
+
+   37 BasicForStmt: FOR '(' . Expression ';' Expression ';' Expression ')' Stmt
+
+    NEW      shift, and go to state 32
+    INTEGER  shift, and go to state 40
+    FLOAT    shift, and go to state 41
+    CHAR     shift, and go to state 42
+    '('      shift, and go to state 47
+    IDENT    shift, and go to state 48
+    PP       shift, and go to state 49
+    MM       shift, and go to state 50
+    MINUS    shift, and go to state 51
+    PLUS     shift, and go to state 52
+
+    ObjCreation                go to state 62
+    MethodInv                  go to state 63
+    MethodName                 go to state 64
+    primary_Expression         go to state 66
+    ConstExp                   go to state 67
+    Expression                 go to state 143
+    assignment_Expression      go to state 69
+    conditional_Expression     go to state 70
+    logical_or_Expression      go to state 71
+    logical_and_Expression     go to state 72
+    inclusive_or_Expression    go to state 73
+    exclusive_or_Expression    go to state 74
+    and_Expression             go to state 75
+    equality_Expression        go to state 76
+    relational_Expression      go to state 77
+    shift_Expression           go to state 78
+    additive_Expression        go to state 79
+    multiplicative_Expression  go to state 80
+    cast_Expression            go to state 81
+    unary_Expression           go to state 82
+    postfix_Expression         go to state 83
+    unary_operator             go to state 84
+
+
+state 94
+
+   36 IterationStmt: WHILE '(' . Expression ')' Stmt
+
+    NEW      shift, and go to state 32
+    INTEGER  shift, and go to state 40
+    FLOAT    shift, and go to state 41
+    CHAR     shift, and go to state 42
+    '('      shift, and go to state 47
+    IDENT    shift, and go to state 48
+    PP       shift, and go to state 49
+    MM       shift, and go to state 50
+    MINUS    shift, and go to state 51
+    PLUS     shift, and go to state 52
+
+    ObjCreation                go to state 62
+    MethodInv                  go to state 63
+    MethodName                 go to state 64
+    primary_Expression         go to state 66
+    ConstExp                   go to state 67
+    Expression                 go to state 144
+    assignment_Expression      go to state 69
+    conditional_Expression     go to state 70
+    logical_or_Expression      go to state 71
+    logical_and_Expression     go to state 72
+    inclusive_or_Expression    go to state 73
+    exclusive_or_Expression    go to state 74
+    and_Expression             go to state 75
+    equality_Expression        go to state 76
+    relational_Expression      go to state 77
+    shift_Expression           go to state 78
+    additive_Expression        go to state 79
+    multiplicative_Expression  go to state 80
+    cast_Expression            go to state 81
+    unary_Expression           go to state 82
+    postfix_Expression         go to state 83
+    unary_operator             go to state 84
+
+
+state 95
+
+   35 SelectionStmt: SWITCH '(' . Expression ')' Stmt
+
+    NEW      shift, and go to state 32
+    INTEGER  shift, and go to state 40
+    FLOAT    shift, and go to state 41
+    CHAR     shift, and go to state 42
+    '('      shift, and go to state 47
+    IDENT    shift, and go to state 48
+    PP       shift, and go to state 49
+    MM       shift, and go to state 50
+    MINUS    shift, and go to state 51
+    PLUS     shift, and go to state 52
+
+    ObjCreation                go to state 62
+    MethodInv                  go to state 63
+    MethodName                 go to state 64
+    primary_Expression         go to state 66
+    ConstExp                   go to state 67
+    Expression                 go to state 145
+    assignment_Expression      go to state 69
+    conditional_Expression     go to state 70
+    logical_or_Expression      go to state 71
+    logical_and_Expression     go to state 72
+    inclusive_or_Expression    go to state 73
+    exclusive_or_Expression    go to state 74
+    and_Expression             go to state 75
+    equality_Expression        go to state 76
+    relational_Expression      go to state 77
+    shift_Expression           go to state 78
+    additive_Expression        go to state 79
+    multiplicative_Expression  go to state 80
+    cast_Expression            go to state 81
+    unary_Expression           go to state 82
+    postfix_Expression         go to state 83
+    unary_operator             go to state 84
+
+
+state 96
+
+   20 LabeledStmt: CASE ConstExp . ':' Stmt
+
+    ':'  shift, and go to state 146
+
+
+state 97
+
+   21 LabeledStmt: DEFAULT ':' . Stmt
+
+    error      shift, and go to state 31
+    VAR        shift, and go to state 11
+    NEW        shift, and go to state 32
+    STRUCT     shift, and go to state 33
+    IF         shift, and go to state 34
+    FOR        shift, and go to state 35
+    WHILE      shift, and go to state 36
+    SWITCH     shift, and go to state 37
+    CASE       shift, and go to state 38
+    DEFAULT    shift, and go to state 39
+    INTEGER    shift, and go to state 40
+    FLOAT      shift, and go to state 41
+    CHAR       shift, and go to state 42
+    PUBLIC     shift, and go to state 43
+    PRIVATE    shift, and go to state 44
+    PROTECTED  shift, and go to state 45
+    ';'        shift, and go to state 46
+    '{'        shift, and go to state 22
+    '('        shift, and go to state 47
+    IDENT      shift, and go to state 48
+    PP         shift, and go to state 49
+    MM         shift, and go to state 50
+    MINUS      shift, and go to state 51
+    PLUS       shift, and go to state 52
+
+    Stmt                       go to state 147
+    LabeledStmt                go to state 55
+    CompoundStmt               go to state 56
+    NonFuncDeclaration         go to state 57
+    ExpressionStmt             go to state 58
+    SelectionStmt              go to state 59
+    IterationStmt              go to state 60
+    BasicForStmt               go to state 61
+    ObjCreation                go to state 62
+    MethodInv                  go to state 63
+    MethodName                 go to state 64
+    VarDec                     go to state 65
+    primary_Expression         go to state 66
+    ConstExp                   go to state 67
+    Expression                 go to state 68
+    assignment_Expression      go to state 69
+    conditional_Expression     go to state 70
+    logical_or_Expression      go to state 71
+    logical_and_Expression     go to state 72
+    inclusive_or_Expression    go to state 73
+    exclusive_or_Expression    go to state 74
+    and_Expression             go to state 75
+    equality_Expression        go to state 76
+    relational_Expression      go to state 77
+    shift_Expression           go to state 78
+    additive_Expression        go to state 79
+    multiplicative_Expression  go to state 80
+    cast_Expression            go to state 81
+    unary_Expression           go to state 82
+    postfix_Expression         go to state 83
+    unary_operator             go to state 84
+    ClassDecln                 go to state 85
+    Mods                       go to state 86
+    StructDecln                go to state 87
+
+
+state 98
+
+   54 primary_Expression: '(' Expression . ')'
+   59 Expression: Expression . ',' assignment_Expression
+
+    ')'  shift, and go to state 148
+    ','  shift, and go to state 107
+
+
+state 99
+
+   52 primary_Expression: IDENT .
+
+    $default  reduce using rule 52 (primary_Expression)
+
+
+state 100
+
+   95 unary_Expression: PP unary_Expression .
+
+    $default  reduce using rule 95 (unary_Expression)
+
+
+state 101
+
+   96 unary_Expression: MM unary_Expression .
+
+    $default  reduce using rule 96 (unary_Expression)
+
+
+state 102
+
+   12 StmtList: StmtList Stmt .
+
+    $default  reduce using rule 12 (StmtList)
+
+
+state 103
+
+   24 CompoundStmt: '{' $@3 StmtList $@4 . '}'
+
+    '}'  shift, and go to state 149
+
+
+state 104
+
+   45 MethodInv: MethodName '(' . Expression ')'
+
+    NEW      shift, and go to state 32
+    INTEGER  shift, and go to state 40
+    FLOAT    shift, and go to state 41
+    CHAR     shift, and go to state 42
+    '('      shift, and go to state 47
+    IDENT    shift, and go to state 48
+    PP       shift, and go to state 49
+    MM       shift, and go to state 50
+    MINUS    shift, and go to state 51
+    PLUS     shift, and go to state 52
+
+    ObjCreation                go to state 62
+    MethodInv                  go to state 63
+    MethodName                 go to state 64
+    primary_Expression         go to state 66
+    ConstExp                   go to state 67
+    Expression                 go to state 150
+    assignment_Expression      go to state 69
+    conditional_Expression     go to state 70
+    logical_or_Expression      go to state 71
+    logical_and_Expression     go to state 72
+    inclusive_or_Expression    go to state 73
+    exclusive_or_Expression    go to state 74
+    and_Expression             go to state 75
+    equality_Expression        go to state 76
+    relational_Expression      go to state 77
+    shift_Expression           go to state 78
+    additive_Expression        go to state 79
+    multiplicative_Expression  go to state 80
+    cast_Expression            go to state 81
+    unary_Expression           go to state 82
+    postfix_Expression         go to state 83
+    unary_operator             go to state 84
+
+
+state 105
+
+   31 ExpressionStmt: Expression error . ';'
+
+    ';'  shift, and go to state 151
+
+
+state 106
+
+   29 ExpressionStmt: Expression ';' .
+
+    $default  reduce using rule 29 (ExpressionStmt)
+
+
+state 107
+
+   59 Expression: Expression ',' . assignment_Expression
+
+    INTEGER  shift, and go to state 40
+    FLOAT    shift, and go to state 41
+    CHAR     shift, and go to state 42
+    '('      shift, and go to state 47
+    IDENT    shift, and go to state 99
+    PP       shift, and go to state 49
+    MM       shift, and go to state 50
+    MINUS    shift, and go to state 51
+    PLUS     shift, and go to state 52
+
+    primary_Expression         go to state 66
+    ConstExp                   go to state 67
+    assignment_Expression      go to state 152
+    conditional_Expression     go to state 70
+    logical_or_Expression      go to state 71
+    logical_and_Expression     go to state 72
+    inclusive_or_Expression    go to state 73
+    exclusive_or_Expression    go to state 74
+    and_Expression             go to state 75
+    equality_Expression        go to state 76
+    relational_Expression      go to state 77
+    shift_Expression           go to state 78
+    additive_Expression        go to state 79
+    multiplicative_Expression  go to state 80
+    cast_Expression            go to state 81
+    unary_Expression           go to state 82
+    postfix_Expression         go to state 83
+    unary_operator             go to state 84
+
+
+state 108
+
+   67 logical_or_Expression: logical_or_Expression BOOL_OR . logical_and_Expression
+
+    INTEGER  shift, and go to state 40
+    FLOAT    shift, and go to state 41
+    CHAR     shift, and go to state 42
+    '('      shift, and go to state 47
+    IDENT    shift, and go to state 99
+    PP       shift, and go to state 49
+    MM       shift, and go to state 50
+    MINUS    shift, and go to state 51
+    PLUS     shift, and go to state 52
+
+    primary_Expression         go to state 66
+    ConstExp                   go to state 67
+    logical_and_Expression     go to state 153
+    inclusive_or_Expression    go to state 73
+    exclusive_or_Expression    go to state 74
+    and_Expression             go to state 75
+    equality_Expression        go to state 76
+    relational_Expression      go to state 77
+    shift_Expression           go to state 78
+    additive_Expression        go to state 79
+    multiplicative_Expression  go to state 80
+    cast_Expression            go to state 81
+    unary_Expression           go to state 137
+    postfix_Expression         go to state 83
+    unary_operator             go to state 84
+
+
+state 109
+
+   65 conditional_Expression: logical_or_Expression QM . Expression ':' conditional_Expression
+
+    NEW      shift, and go to state 32
+    INTEGER  shift, and go to state 40
+    FLOAT    shift, and go to state 41
+    CHAR     shift, and go to state 42
+    '('      shift, and go to state 47
+    IDENT    shift, and go to state 48
+    PP       shift, and go to state 49
+    MM       shift, and go to state 50
+    MINUS    shift, and go to state 51
+    PLUS     shift, and go to state 52
+
+    ObjCreation                go to state 62
+    MethodInv                  go to state 63
+    MethodName                 go to state 64
+    primary_Expression         go to state 66
+    ConstExp                   go to state 67
+    Expression                 go to state 154
+    assignment_Expression      go to state 69
+    conditional_Expression     go to state 70
+    logical_or_Expression      go to state 71
+    logical_and_Expression     go to state 72
+    inclusive_or_Expression    go to state 73
+    exclusive_or_Expression    go to state 74
+    and_Expression             go to state 75
+    equality_Expression        go to state 76
+    relational_Expression      go to state 77
+    shift_Expression           go to state 78
+    additive_Expression        go to state 79
+    multiplicative_Expression  go to state 80
+    cast_Expression            go to state 81
+    unary_Expression           go to state 82
+    postfix_Expression         go to state 83
+    unary_operator             go to state 84
+
+
+state 110
+
+   69 logical_and_Expression: logical_and_Expression BOOL_AND . inclusive_or_Expression
+
+    INTEGER  shift, and go to state 40
+    FLOAT    shift, and go to state 41
+    CHAR     shift, and go to state 42
+    '('      shift, and go to state 47
+    IDENT    shift, and go to state 99
+    PP       shift, and go to state 49
+    MM       shift, and go to state 50
+    MINUS    shift, and go to state 51
+    PLUS     shift, and go to state 52
+
+    primary_Expression         go to state 66
+    ConstExp                   go to state 67
+    inclusive_or_Expression    go to state 155
+    exclusive_or_Expression    go to state 74
+    and_Expression             go to state 75
+    equality_Expression        go to state 76
+    relational_Expression      go to state 77
+    shift_Expression           go to state 78
+    additive_Expression        go to state 79
+    multiplicative_Expression  go to state 80
+    cast_Expression            go to state 81
+    unary_Expression           go to state 137
+    postfix_Expression         go to state 83
+    unary_operator             go to state 84
+
+
+state 111
+
+   71 inclusive_or_Expression: inclusive_or_Expression BIT_OR . exclusive_or_Expression
+
+    INTEGER  shift, and go to state 40
+    FLOAT    shift, and go to state 41
+    CHAR     shift, and go to state 42
+    '('      shift, and go to state 47
+    IDENT    shift, and go to state 99
+    PP       shift, and go to state 49
+    MM       shift, and go to state 50
+    MINUS    shift, and go to state 51
+    PLUS     shift, and go to state 52
+
+    primary_Expression         go to state 66
+    ConstExp                   go to state 67
+    exclusive_or_Expression    go to state 156
+    and_Expression             go to state 75
+    equality_Expression        go to state 76
+    relational_Expression      go to state 77
+    shift_Expression           go to state 78
+    additive_Expression        go to state 79
+    multiplicative_Expression  go to state 80
+    cast_Expression            go to state 81
+    unary_Expression           go to state 137
+    postfix_Expression         go to state 83
+    unary_operator             go to state 84
+
+
+state 112
+
+   73 exclusive_or_Expression: exclusive_or_Expression XOR . and_Expression
+
+    INTEGER  shift, and go to state 40
+    FLOAT    shift, and go to state 41
+    CHAR     shift, and go to state 42
+    '('      shift, and go to state 47
+    IDENT    shift, and go to state 99
+    PP       shift, and go to state 49
+    MM       shift, and go to state 50
+    MINUS    shift, and go to state 51
+    PLUS     shift, and go to state 52
+
+    primary_Expression         go to state 66
+    ConstExp                   go to state 67
+    and_Expression             go to state 157
+    equality_Expression        go to state 76
+    relational_Expression      go to state 77
+    shift_Expression           go to state 78
+    additive_Expression        go to state 79
+    multiplicative_Expression  go to state 80
+    cast_Expression            go to state 81
+    unary_Expression           go to state 137
+    postfix_Expression         go to state 83
+    unary_operator             go to state 84
+
+
+state 113
+
+   75 and_Expression: and_Expression BIT_AND . equality_Expression
+
+    INTEGER  shift, and go to state 40
+    FLOAT    shift, and go to state 41
+    CHAR     shift, and go to state 42
+    '('      shift, and go to state 47
+    IDENT    shift, and go to state 99
+    PP       shift, and go to state 49
+    MM       shift, and go to state 50
+    MINUS    shift, and go to state 51
+    PLUS     shift, and go to state 52
+
+    primary_Expression         go to state 66
+    ConstExp                   go to state 67
+    equality_Expression        go to state 158
+    relational_Expression      go to state 77
+    shift_Expression           go to state 78
+    additive_Expression        go to state 79
+    multiplicative_Expression  go to state 80
+    cast_Expression            go to state 81
+    unary_Expression           go to state 137
+    postfix_Expression         go to state 83
+    unary_operator             go to state 84
+
+
+state 114
+
+   77 equality_Expression: equality_Expression BOOL_EQ . relational_Expression
+
+    INTEGER  shift, and go to state 40
+    FLOAT    shift, and go to state 41
+    CHAR     shift, and go to state 42
+    '('      shift, and go to state 47
+    IDENT    shift, and go to state 99
+    PP       shift, and go to state 49
+    MM       shift, and go to state 50
+    MINUS    shift, and go to state 51
+    PLUS     shift, and go to state 52
+
+    primary_Expression         go to state 66
+    ConstExp                   go to state 67
+    relational_Expression      go to state 159
+    shift_Expression           go to state 78
+    additive_Expression        go to state 79
+    multiplicative_Expression  go to state 80
+    cast_Expression            go to state 81
+    unary_Expression           go to state 137
+    postfix_Expression         go to state 83
+    unary_operator             go to state 84
+
+
+state 115
+
+   78 equality_Expression: equality_Expression NEQ . relational_Expression
+
+    INTEGER  shift, and go to state 40
+    FLOAT    shift, and go to state 41
+    CHAR     shift, and go to state 42
+    '('      shift, and go to state 47
+    IDENT    shift, and go to state 99
+    PP       shift, and go to state 49
+    MM       shift, and go to state 50
+    MINUS    shift, and go to state 51
+    PLUS     shift, and go to state 52
+
+    primary_Expression         go to state 66
+    ConstExp                   go to state 67
+    relational_Expression      go to state 160
+    shift_Expression           go to state 78
+    additive_Expression        go to state 79
+    multiplicative_Expression  go to state 80
+    cast_Expression            go to state 81
+    unary_Expression           go to state 137
+    postfix_Expression         go to state 83
+    unary_operator             go to state 84
+
+
+state 116
+
+   80 relational_Expression: relational_Expression LT . shift_Expression
+
+    INTEGER  shift, and go to state 40
+    FLOAT    shift, and go to state 41
+    CHAR     shift, and go to state 42
+    '('      shift, and go to state 47
+    IDENT    shift, and go to state 99
+    PP       shift, and go to state 49
+    MM       shift, and go to state 50
+    MINUS    shift, and go to state 51
+    PLUS     shift, and go to state 52
+
+    primary_Expression         go to state 66
+    ConstExp                   go to state 67
+    shift_Expression           go to state 161
+    additive_Expression        go to state 79
+    multiplicative_Expression  go to state 80
+    cast_Expression            go to state 81
+    unary_Expression           go to state 137
+    postfix_Expression         go to state 83
+    unary_operator             go to state 84
+
+
+state 117
+
+   81 relational_Expression: relational_Expression GT . shift_Expression
+
+    INTEGER  shift, and go to state 40
+    FLOAT    shift, and go to state 41
+    CHAR     shift, and go to state 42
+    '('      shift, and go to state 47
+    IDENT    shift, and go to state 99
+    PP       shift, and go to state 49
+    MM       shift, and go to state 50
+    MINUS    shift, and go to state 51
+    PLUS     shift, and go to state 52
+
+    primary_Expression         go to state 66
+    ConstExp                   go to state 67
+    shift_Expression           go to state 162
+    additive_Expression        go to state 79
+    multiplicative_Expression  go to state 80
+    cast_Expression            go to state 81
+    unary_Expression           go to state 137
+    postfix_Expression         go to state 83
+    unary_operator             go to state 84
+
+
+state 118
+
+   82 relational_Expression: relational_Expression LE . shift_Expression
+
+    INTEGER  shift, and go to state 40
+    FLOAT    shift, and go to state 41
+    CHAR     shift, and go to state 42
+    '('      shift, and go to state 47
+    IDENT    shift, and go to state 99
+    PP       shift, and go to state 49
+    MM       shift, and go to state 50
+    MINUS    shift, and go to state 51
+    PLUS     shift, and go to state 52
+
+    primary_Expression         go to state 66
+    ConstExp                   go to state 67
+    shift_Expression           go to state 163
+    additive_Expression        go to state 79
+    multiplicative_Expression  go to state 80
+    cast_Expression            go to state 81
+    unary_Expression           go to state 137
+    postfix_Expression         go to state 83
+    unary_operator             go to state 84
+
+
+state 119
+
+   83 relational_Expression: relational_Expression GE . shift_Expression
+
+    INTEGER  shift, and go to state 40
+    FLOAT    shift, and go to state 41
+    CHAR     shift, and go to state 42
+    '('      shift, and go to state 47
+    IDENT    shift, and go to state 99
+    PP       shift, and go to state 49
+    MM       shift, and go to state 50
+    MINUS    shift, and go to state 51
+    PLUS     shift, and go to state 52
+
+    primary_Expression         go to state 66
+    ConstExp                   go to state 67
+    shift_Expression           go to state 164
+    additive_Expression        go to state 79
+    multiplicative_Expression  go to state 80
+    cast_Expression            go to state 81
+    unary_Expression           go to state 137
+    postfix_Expression         go to state 83
+    unary_operator             go to state 84
+
+
+state 120
+
+   85 shift_Expression: shift_Expression LSH . additive_Expression
+
+    INTEGER  shift, and go to state 40
+    FLOAT    shift, and go to state 41
+    CHAR     shift, and go to state 42
+    '('      shift, and go to state 47
+    IDENT    shift, and go to state 99
+    PP       shift, and go to state 49
+    MM       shift, and go to state 50
+    MINUS    shift, and go to state 51
+    PLUS     shift, and go to state 52
+
+    primary_Expression         go to state 66
+    ConstExp                   go to state 67
+    additive_Expression        go to state 165
+    multiplicative_Expression  go to state 80
+    cast_Expression            go to state 81
+    unary_Expression           go to state 137
+    postfix_Expression         go to state 83
+    unary_operator             go to state 84
+
+
+state 121
+
+   86 shift_Expression: shift_Expression RSH . additive_Expression
+
+    INTEGER  shift, and go to state 40
+    FLOAT    shift, and go to state 41
+    CHAR     shift, and go to state 42
+    '('      shift, and go to state 47
+    IDENT    shift, and go to state 99
+    PP       shift, and go to state 49
+    MM       shift, and go to state 50
+    MINUS    shift, and go to state 51
+    PLUS     shift, and go to state 52
+
+    primary_Expression         go to state 66
+    ConstExp                   go to state 67
+    additive_Expression        go to state 166
+    multiplicative_Expression  go to state 80
+    cast_Expression            go to state 81
+    unary_Expression           go to state 137
+    postfix_Expression         go to state 83
+    unary_operator             go to state 84
+
+
+state 122
+
+   89 additive_Expression: additive_Expression MINUS . multiplicative_Expression
+
+    INTEGER  shift, and go to state 40
+    FLOAT    shift, and go to state 41
+    CHAR     shift, and go to state 42
+    '('      shift, and go to state 47
+    IDENT    shift, and go to state 99
+    PP       shift, and go to state 49
+    MM       shift, and go to state 50
+    MINUS    shift, and go to state 51
+    PLUS     shift, and go to state 52
+
+    primary_Expression         go to state 66
+    ConstExp                   go to state 67
+    multiplicative_Expression  go to state 167
+    cast_Expression            go to state 81
+    unary_Expression           go to state 137
+    postfix_Expression         go to state 83
+    unary_operator             go to state 84
+
+
+state 123
+
+   88 additive_Expression: additive_Expression PLUS . multiplicative_Expression
+
+    INTEGER  shift, and go to state 40
+    FLOAT    shift, and go to state 41
+    CHAR     shift, and go to state 42
+    '('      shift, and go to state 47
+    IDENT    shift, and go to state 99
+    PP       shift, and go to state 49
+    MM       shift, and go to state 50
+    MINUS    shift, and go to state 51
+    PLUS     shift, and go to state 52
+
+    primary_Expression         go to state 66
+    ConstExp                   go to state 67
+    multiplicative_Expression  go to state 168
+    cast_Expression            go to state 81
+    unary_Expression           go to state 137
+    postfix_Expression         go to state 83
+    unary_operator             go to state 84
+
+
+state 124
+
+   92 multiplicative_Expression: multiplicative_Expression DIV . cast_Expression
+
+    INTEGER  shift, and go to state 40
+    FLOAT    shift, and go to state 41
+    CHAR     shift, and go to state 42
+    '('      shift, and go to state 47
+    IDENT    shift, and go to state 99
+    PP       shift, and go to state 49
+    MM       shift, and go to state 50
+    MINUS    shift, and go to state 51
+    PLUS     shift, and go to state 52
+
+    primary_Expression  go to state 66
+    ConstExp            go to state 67
+    cast_Expression     go to state 169
+    unary_Expression    go to state 137
+    postfix_Expression  go to state 83
+    unary_operator      go to state 84
+
+
+state 125
+
+   91 multiplicative_Expression: multiplicative_Expression MULT . cast_Expression
+
+    INTEGER  shift, and go to state 40
+    FLOAT    shift, and go to state 41
+    CHAR     shift, and go to state 42
+    '('      shift, and go to state 47
+    IDENT    shift, and go to state 99
+    PP       shift, and go to state 49
+    MM       shift, and go to state 50
+    MINUS    shift, and go to state 51
+    PLUS     shift, and go to state 52
+
+    primary_Expression  go to state 66
+    ConstExp            go to state 67
+    cast_Expression     go to state 170
+    unary_Expression    go to state 137
+    postfix_Expression  go to state 83
+    unary_operator      go to state 84
+
+
+state 126
+
+   40 AssOp: EQ .
+
+    $default  reduce using rule 40 (AssOp)
+
+
+state 127
+
+   41 AssOp: PLUS_EQ .
+
+    $default  reduce using rule 41 (AssOp)
+
+
+state 128
+
+   43 AssOp: MULT_EQ .
+
+    $default  reduce using rule 43 (AssOp)
+
+
+state 129
+
+   42 AssOp: MINUS_EQ .
+
+    $default  reduce using rule 42 (AssOp)
+
+
+state 130
+
+   44 AssOp: DIV_EQ .
+
+    $default  reduce using rule 44 (AssOp)
+
+
+state 131
+
+   63 assignment_Expression: unary_Expression AssOp . assignment_Expression
+
+    INTEGER  shift, and go to state 40
+    FLOAT    shift, and go to state 41
+    CHAR     shift, and go to state 42
+    '('      shift, and go to state 47
+    IDENT    shift, and go to state 99
+    PP       shift, and go to state 49
+    MM       shift, and go to state 50
+    MINUS    shift, and go to state 51
+    PLUS     shift, and go to state 52
+
+    primary_Expression         go to state 66
+    ConstExp                   go to state 67
+    assignment_Expression      go to state 171
+    conditional_Expression     go to state 70
+    logical_or_Expression      go to state 71
+    logical_and_Expression     go to state 72
+    inclusive_or_Expression    go to state 73
+    exclusive_or_Expression    go to state 74
+    and_Expression             go to state 75
+    equality_Expression        go to state 76
+    relational_Expression      go to state 77
+    shift_Expression           go to state 78
+    additive_Expression        go to state 79
+    multiplicative_Expression  go to state 80
+    cast_Expression            go to state 81
+    unary_Expression           go to state 82
+    postfix_Expression         go to state 83
+    unary_operator             go to state 84
+
+
+state 132
+
+   99 postfix_Expression: postfix_Expression '[' . Expression ']'
+
+    NEW      shift, and go to state 32
+    INTEGER  shift, and go to state 40
+    FLOAT    shift, and go to state 41
+    CHAR     shift, and go to state 42
+    '('      shift, and go to state 47
+    IDENT    shift, and go to state 48
+    PP       shift, and go to state 49
+    MM       shift, and go to state 50
+    MINUS    shift, and go to state 51
+    PLUS     shift, and go to state 52
+
+    ObjCreation                go to state 62
+    MethodInv                  go to state 63
+    MethodName                 go to state 64
+    primary_Expression         go to state 66
+    ConstExp                   go to state 67
+    Expression                 go to state 172
+    assignment_Expression      go to state 69
+    conditional_Expression     go to state 70
+    logical_or_Expression      go to state 71
+    logical_and_Expression     go to state 72
+    inclusive_or_Expression    go to state 73
+    exclusive_or_Expression    go to state 74
+    and_Expression             go to state 75
+    equality_Expression        go to state 76
+    relational_Expression      go to state 77
+    shift_Expression           go to state 78
+    additive_Expression        go to state 79
+    multiplicative_Expression  go to state 80
+    cast_Expression            go to state 81
+    unary_Expression           go to state 82
+    postfix_Expression         go to state 83
+    unary_operator             go to state 84
+
+
+state 133
+
+  101 postfix_Expression: postfix_Expression PP .
+
+    $default  reduce using rule 101 (postfix_Expression)
+
+
+state 134
+
+  102 postfix_Expression: postfix_Expression MM .
+
+    $default  reduce using rule 102 (postfix_Expression)
+
+
+state 135
+
+  100 postfix_Expression: postfix_Expression '.' . IDENT
+
+    IDENT  shift, and go to state 173
+
+
+state 136
+
+   97 unary_Expression: unary_operator cast_Expression .
+
+    $default  reduce using rule 97 (unary_Expression)
+
+
+state 137
+
+   93 cast_Expression: unary_Expression .
+
+    $default  reduce using rule 93 (cast_Expression)
+
+
+state 138
+
+  105 ClassDecln: Mods CLASS . IDENT TypeParamsI ClassBody ';'
+
+    IDENT  shift, and go to state 174
+
+
+state 139
+
+   38 ObjCreation: NEW TypeName '(' . Expression ')'
+
+    NEW      shift, and go to state 32
+    INTEGER  shift, and go to state 40
+    FLOAT    shift, and go to state 41
+    CHAR     shift, and go to state 42
+    '('      shift, and go to state 47
+    IDENT    shift, and go to state 48
+    PP       shift, and go to state 49
+    MM       shift, and go to state 50
+    MINUS    shift, and go to state 51
+    PLUS     shift, and go to state 52
+
+    ObjCreation                go to state 62
+    MethodInv                  go to state 63
+    MethodName                 go to state 64
+    primary_Expression         go to state 66
+    ConstExp                   go to state 67
+    Expression                 go to state 175
+    assignment_Expression      go to state 69
+    conditional_Expression     go to state 70
+    logical_or_Expression      go to state 71
+    logical_and_Expression     go to state 72
+    inclusive_or_Expression    go to state 73
+    exclusive_or_Expression    go to state 74
+    and_Expression             go to state 75
+    equality_Expression        go to state 76
+    relational_Expression      go to state 77
+    shift_Expression           go to state 78
+    additive_Expression        go to state 79
+    multiplicative_Expression  go to state 80
+    cast_Expression            go to state 81
+    unary_Expression           go to state 82
+    postfix_Expression         go to state 83
+    unary_operator             go to state 84
+
+
+state 140
+
+  110 TypeParamsI: '[' . TypeParamIList ']'
+
+    IDENT  shift, and go to state 176
+
+    TypeParamIList  go to state 177
+
+
+state 141
+
+  109 StructDecln: STRUCT IDENT TypeParamsI . ClassBody ';'
+
+    '{'  shift, and go to state 178
+
+    ClassBody  go to state 179
+
+
+state 142
+
+   33 SelectionStmt: IF '(' Expression . ')' Stmt
+   34              | IF '(' Expression . ')' Stmt ELSE Stmt
+   59 Expression: Expression . ',' assignment_Expression
+
+    ')'  shift, and go to state 180
+    ','  shift, and go to state 107
+
+
+state 143
+
+   37 BasicForStmt: FOR '(' Expression . ';' Expression ';' Expression ')' Stmt
+   59 Expression: Expression . ',' assignment_Expression
+
+    ';'  shift, and go to state 181
+    ','  shift, and go to state 107
+
+
+state 144
+
+   36 IterationStmt: WHILE '(' Expression . ')' Stmt
+   59 Expression: Expression . ',' assignment_Expression
+
+    ')'  shift, and go to state 182
+    ','  shift, and go to state 107
+
+
+state 145
+
+   35 SelectionStmt: SWITCH '(' Expression . ')' Stmt
+   59 Expression: Expression . ',' assignment_Expression
+
+    ')'  shift, and go to state 183
+    ','  shift, and go to state 107
+
+
+state 146
+
+   20 LabeledStmt: CASE ConstExp ':' . Stmt
+
+    error      shift, and go to state 31
+    VAR        shift, and go to state 11
+    NEW        shift, and go to state 32
+    STRUCT     shift, and go to state 33
+    IF         shift, and go to state 34
+    FOR        shift, and go to state 35
+    WHILE      shift, and go to state 36
+    SWITCH     shift, and go to state 37
+    CASE       shift, and go to state 38
+    DEFAULT    shift, and go to state 39
+    INTEGER    shift, and go to state 40
+    FLOAT      shift, and go to state 41
+    CHAR       shift, and go to state 42
+    PUBLIC     shift, and go to state 43
+    PRIVATE    shift, and go to state 44
+    PROTECTED  shift, and go to state 45
+    ';'        shift, and go to state 46
+    '{'        shift, and go to state 22
+    '('        shift, and go to state 47
+    IDENT      shift, and go to state 48
+    PP         shift, and go to state 49
+    MM         shift, and go to state 50
+    MINUS      shift, and go to state 51
+    PLUS       shift, and go to state 52
+
+    Stmt                       go to state 184
+    LabeledStmt                go to state 55
+    CompoundStmt               go to state 56
+    NonFuncDeclaration         go to state 57
+    ExpressionStmt             go to state 58
+    SelectionStmt              go to state 59
+    IterationStmt              go to state 60
+    BasicForStmt               go to state 61
+    ObjCreation                go to state 62
+    MethodInv                  go to state 63
+    MethodName                 go to state 64
+    VarDec                     go to state 65
+    primary_Expression         go to state 66
+    ConstExp                   go to state 67
+    Expression                 go to state 68
+    assignment_Expression      go to state 69
+    conditional_Expression     go to state 70
+    logical_or_Expression      go to state 71
+    logical_and_Expression     go to state 72
+    inclusive_or_Expression    go to state 73
+    exclusive_or_Expression    go to state 74
+    and_Expression             go to state 75
+    equality_Expression        go to state 76
+    relational_Expression      go to state 77
+    shift_Expression           go to state 78
+    additive_Expression        go to state 79
+    multiplicative_Expression  go to state 80
+    cast_Expression            go to state 81
+    unary_Expression           go to state 82
+    postfix_Expression         go to state 83
+    unary_operator             go to state 84
+    ClassDecln                 go to state 85
+    Mods                       go to state 86
+    StructDecln                go to state 87
+
+
+state 147
+
+   21 LabeledStmt: DEFAULT ':' Stmt .
+
+    $default  reduce using rule 21 (LabeledStmt)
+
+
+state 148
+
+   54 primary_Expression: '(' Expression ')' .
+
+    $default  reduce using rule 54 (primary_Expression)
+
+
+state 149
+
+   24 CompoundStmt: '{' $@3 StmtList $@4 '}' .
+
+    $default  reduce using rule 24 (CompoundStmt)
+
+
+state 150
+
+   45 MethodInv: MethodName '(' Expression . ')'
+   59 Expression: Expression . ',' assignment_Expression
+
+    ')'  shift, and go to state 185
+    ','  shift, and go to state 107
+
+
+state 151
+
+   31 ExpressionStmt: Expression error ';' .
+
+    $default  reduce using rule 31 (ExpressionStmt)
+
+
+state 152
+
+   59 Expression: Expression ',' assignment_Expression .
+
+    $default  reduce using rule 59 (Expression)
+
+
+state 153
+
+   67 logical_or_Expression: logical_or_Expression BOOL_OR logical_and_Expression .
+   69 logical_and_Expression: logical_and_Expression . BOOL_AND inclusive_or_Expression
+
+    BOOL_AND  shift, and go to state 110
+
+    $default  reduce using rule 67 (logical_or_Expression)
+
+
+state 154
+
+   59 Expression: Expression . ',' assignment_Expression
+   65 conditional_Expression: logical_or_Expression QM Expression . ':' conditional_Expression
+
+    ':'  shift, and go to state 186
+    ','  shift, and go to state 107
+
+
+state 155
+
+   69 logical_and_Expression: logical_and_Expression BOOL_AND inclusive_or_Expression .
+   71 inclusive_or_Expression: inclusive_or_Expression . BIT_OR exclusive_or_Expression
+
+    BIT_OR  shift, and go to state 111
+
+    $default  reduce using rule 69 (logical_and_Expression)
+
+
+state 156
+
+   71 inclusive_or_Expression: inclusive_or_Expression BIT_OR exclusive_or_Expression .
+   73 exclusive_or_Expression: exclusive_or_Expression . XOR and_Expression
+
+    XOR  shift, and go to state 112
+
+    $default  reduce using rule 71 (inclusive_or_Expression)
+
+
+state 157
+
+   73 exclusive_or_Expression: exclusive_or_Expression XOR and_Expression .
+   75 and_Expression: and_Expression . BIT_AND equality_Expression
+
+    BIT_AND  shift, and go to state 113
+
+    $default  reduce using rule 73 (exclusive_or_Expression)
+
+
+state 158
+
+   75 and_Expression: and_Expression BIT_AND equality_Expression .
+   77 equality_Expression: equality_Expression . BOOL_EQ relational_Expression
+   78                    | equality_Expression . NEQ relational_Expression
+
+    BOOL_EQ  shift, and go to state 114
+    NEQ      shift, and go to state 115
+
+    $default  reduce using rule 75 (and_Expression)
+
+
+state 159
+
+   77 equality_Expression: equality_Expression BOOL_EQ relational_Expression .
+   80 relational_Expression: relational_Expression . LT shift_Expression
+   81                      | relational_Expression . GT shift_Expression
+   82                      | relational_Expression . LE shift_Expression
+   83                      | relational_Expression . GE shift_Expression
+
+    LT  shift, and go to state 116
+    GT  shift, and go to state 117
+    LE  shift, and go to state 118
+    GE  shift, and go to state 119
+
+    $default  reduce using rule 77 (equality_Expression)
+
+
+state 160
+
+   78 equality_Expression: equality_Expression NEQ relational_Expression .
+   80 relational_Expression: relational_Expression . LT shift_Expression
+   81                      | relational_Expression . GT shift_Expression
+   82                      | relational_Expression . LE shift_Expression
+   83                      | relational_Expression . GE shift_Expression
+
+    LT  shift, and go to state 116
+    GT  shift, and go to state 117
+    LE  shift, and go to state 118
+    GE  shift, and go to state 119
+
+    $default  reduce using rule 78 (equality_Expression)
+
+
+state 161
+
+   80 relational_Expression: relational_Expression LT shift_Expression .
+   85 shift_Expression: shift_Expression . LSH additive_Expression
+   86                 | shift_Expression . RSH additive_Expression
+
+    LSH  shift, and go to state 120
+    RSH  shift, and go to state 121
+
+    $default  reduce using rule 80 (relational_Expression)
+
+
+state 162
+
+   81 relational_Expression: relational_Expression GT shift_Expression .
+   85 shift_Expression: shift_Expression . LSH additive_Expression
+   86                 | shift_Expression . RSH additive_Expression
+
+    LSH  shift, and go to state 120
+    RSH  shift, and go to state 121
+
+    $default  reduce using rule 81 (relational_Expression)
+
+
+state 163
+
+   82 relational_Expression: relational_Expression LE shift_Expression .
+   85 shift_Expression: shift_Expression . LSH additive_Expression
+   86                 | shift_Expression . RSH additive_Expression
+
+    LSH  shift, and go to state 120
+    RSH  shift, and go to state 121
+
+    $default  reduce using rule 82 (relational_Expression)
+
+
+state 164
+
+   83 relational_Expression: relational_Expression GE shift_Expression .
+   85 shift_Expression: shift_Expression . LSH additive_Expression
+   86                 | shift_Expression . RSH additive_Expression
+
+    LSH  shift, and go to state 120
+    RSH  shift, and go to state 121
+
+    $default  reduce using rule 83 (relational_Expression)
+
+
+state 165
+
+   85 shift_Expression: shift_Expression LSH additive_Expression .
+   88 additive_Expression: additive_Expression . PLUS multiplicative_Expression
+   89                    | additive_Expression . MINUS multiplicative_Expression
+
+    MINUS  shift, and go to state 122
+    PLUS   shift, and go to state 123
+
+    $default  reduce using rule 85 (shift_Expression)
+
+
+state 166
+
+   86 shift_Expression: shift_Expression RSH additive_Expression .
+   88 additive_Expression: additive_Expression . PLUS multiplicative_Expression
+   89                    | additive_Expression . MINUS multiplicative_Expression
+
+    MINUS  shift, and go to state 122
+    PLUS   shift, and go to state 123
+
+    $default  reduce using rule 86 (shift_Expression)
+
+
+state 167
+
+   89 additive_Expression: additive_Expression MINUS multiplicative_Expression .
+   91 multiplicative_Expression: multiplicative_Expression . MULT cast_Expression
+   92                          | multiplicative_Expression . DIV cast_Expression
+
+    DIV   shift, and go to state 124
+    MULT  shift, and go to state 125
+
+    $default  reduce using rule 89 (additive_Expression)
+
+
+state 168
+
+   88 additive_Expression: additive_Expression PLUS multiplicative_Expression .
+   91 multiplicative_Expression: multiplicative_Expression . MULT cast_Expression
+   92                          | multiplicative_Expression . DIV cast_Expression
+
+    DIV   shift, and go to state 124
+    MULT  shift, and go to state 125
+
+    $default  reduce using rule 88 (additive_Expression)
+
+
+state 169
+
+   92 multiplicative_Expression: multiplicative_Expression DIV cast_Expression .
+
+    $default  reduce using rule 92 (multiplicative_Expression)
+
+
+state 170
+
+   91 multiplicative_Expression: multiplicative_Expression MULT cast_Expression .
+
+    $default  reduce using rule 91 (multiplicative_Expression)
+
+
+state 171
+
+   63 assignment_Expression: unary_Expression AssOp assignment_Expression .
+
+    $default  reduce using rule 63 (assignment_Expression)
+
+
+state 172
+
+   59 Expression: Expression . ',' assignment_Expression
+   99 postfix_Expression: postfix_Expression '[' Expression . ']'
+
+    ']'  shift, and go to state 187
+    ','  shift, and go to state 107
+
+
+state 173
+
+  100 postfix_Expression: postfix_Expression '.' IDENT .
+
+    $default  reduce using rule 100 (postfix_Expression)
+
+
+state 174
+
+  105 ClassDecln: Mods CLASS IDENT . TypeParamsI ClassBody ';'
+
+    '['  shift, and go to state 140
+
+    $default  reduce using rule 111 (TypeParamsI)
+
+    TypeParamsI  go to state 188
+
+
+state 175
+
+   38 ObjCreation: NEW TypeName '(' Expression . ')'
+   59 Expression: Expression . ',' assignment_Expression
+
+    ')'  shift, and go to state 189
+    ','  shift, and go to state 107
+
+
+state 176
+
+  112 TypeParamIList: IDENT .
+
+    $default  reduce using rule 112 (TypeParamIList)
+
+
+state 177
+
+  110 TypeParamsI: '[' TypeParamIList . ']'
+  113 TypeParamIList: TypeParamIList . ',' IDENT
+  114               | TypeParamIList . ','
+
+    ']'  shift, and go to state 190
+    ','  shift, and go to state 191
+
+
+state 178
+
+  119 ClassBody: '{' . ClassMemberDeclns '}'
+
+    DEF  shift, and go to state 192
+
+    ClassMemberDeclns  go to state 193
+    ClassMemberDecln   go to state 194
+    CtorDecln          go to state 195
+
+
+state 179
+
+  109 StructDecln: STRUCT IDENT TypeParamsI ClassBody . ';'
+
+    ';'  shift, and go to state 196
+
+
+state 180
+
+   33 SelectionStmt: IF '(' Expression ')' . Stmt
+   34              | IF '(' Expression ')' . Stmt ELSE Stmt
+
+    error      shift, and go to state 31
+    VAR        shift, and go to state 11
+    NEW        shift, and go to state 32
+    STRUCT     shift, and go to state 33
+    IF         shift, and go to state 34
+    FOR        shift, and go to state 35
+    WHILE      shift, and go to state 36
+    SWITCH     shift, and go to state 37
+    CASE       shift, and go to state 38
+    DEFAULT    shift, and go to state 39
+    INTEGER    shift, and go to state 40
+    FLOAT      shift, and go to state 41
+    CHAR       shift, and go to state 42
+    PUBLIC     shift, and go to state 43
+    PRIVATE    shift, and go to state 44
+    PROTECTED  shift, and go to state 45
+    ';'        shift, and go to state 46
+    '{'        shift, and go to state 22
+    '('        shift, and go to state 47
+    IDENT      shift, and go to state 48
+    PP         shift, and go to state 49
+    MM         shift, and go to state 50
+    MINUS      shift, and go to state 51
+    PLUS       shift, and go to state 52
+
+    Stmt                       go to state 197
+    LabeledStmt                go to state 55
+    CompoundStmt               go to state 56
+    NonFuncDeclaration         go to state 57
+    ExpressionStmt             go to state 58
+    SelectionStmt              go to state 59
+    IterationStmt              go to state 60
+    BasicForStmt               go to state 61
+    ObjCreation                go to state 62
+    MethodInv                  go to state 63
+    MethodName                 go to state 64
+    VarDec                     go to state 65
+    primary_Expression         go to state 66
+    ConstExp                   go to state 67
+    Expression                 go to state 68
+    assignment_Expression      go to state 69
+    conditional_Expression     go to state 70
+    logical_or_Expression      go to state 71
+    logical_and_Expression     go to state 72
+    inclusive_or_Expression    go to state 73
+    exclusive_or_Expression    go to state 74
+    and_Expression             go to state 75
+    equality_Expression        go to state 76
+    relational_Expression      go to state 77
+    shift_Expression           go to state 78
+    additive_Expression        go to state 79
+    multiplicative_Expression  go to state 80
+    cast_Expression            go to state 81
+    unary_Expression           go to state 82
+    postfix_Expression         go to state 83
+    unary_operator             go to state 84
+    ClassDecln                 go to state 85
+    Mods                       go to state 86
+    StructDecln                go to state 87
+
+
+state 181
+
+   37 BasicForStmt: FOR '(' Expression ';' . Expression ';' Expression ')' Stmt
+
+    NEW      shift, and go to state 32
+    INTEGER  shift, and go to state 40
+    FLOAT    shift, and go to state 41
+    CHAR     shift, and go to state 42
+    '('      shift, and go to state 47
+    IDENT    shift, and go to state 48
+    PP       shift, and go to state 49
+    MM       shift, and go to state 50
+    MINUS    shift, and go to state 51
+    PLUS     shift, and go to state 52
+
+    ObjCreation                go to state 62
+    MethodInv                  go to state 63
+    MethodName                 go to state 64
+    primary_Expression         go to state 66
+    ConstExp                   go to state 67
+    Expression                 go to state 198
+    assignment_Expression      go to state 69
+    conditional_Expression     go to state 70
+    logical_or_Expression      go to state 71
+    logical_and_Expression     go to state 72
+    inclusive_or_Expression    go to state 73
+    exclusive_or_Expression    go to state 74
+    and_Expression             go to state 75
+    equality_Expression        go to state 76
+    relational_Expression      go to state 77
+    shift_Expression           go to state 78
+    additive_Expression        go to state 79
+    multiplicative_Expression  go to state 80
+    cast_Expression            go to state 81
+    unary_Expression           go to state 82
+    postfix_Expression         go to state 83
+    unary_operator             go to state 84
+
+
+state 182
+
+   36 IterationStmt: WHILE '(' Expression ')' . Stmt
+
+    error      shift, and go to state 31
+    VAR        shift, and go to state 11
+    NEW        shift, and go to state 32
+    STRUCT     shift, and go to state 33
+    IF         shift, and go to state 34
+    FOR        shift, and go to state 35
+    WHILE      shift, and go to state 36
+    SWITCH     shift, and go to state 37
+    CASE       shift, and go to state 38
+    DEFAULT    shift, and go to state 39
+    INTEGER    shift, and go to state 40
+    FLOAT      shift, and go to state 41
+    CHAR       shift, and go to state 42
+    PUBLIC     shift, and go to state 43
+    PRIVATE    shift, and go to state 44
+    PROTECTED  shift, and go to state 45
+    ';'        shift, and go to state 46
+    '{'        shift, and go to state 22
+    '('        shift, and go to state 47
+    IDENT      shift, and go to state 48
+    PP         shift, and go to state 49
+    MM         shift, and go to state 50
+    MINUS      shift, and go to state 51
+    PLUS       shift, and go to state 52
+
+    Stmt                       go to state 199
+    LabeledStmt                go to state 55
+    CompoundStmt               go to state 56
+    NonFuncDeclaration         go to state 57
+    ExpressionStmt             go to state 58
+    SelectionStmt              go to state 59
+    IterationStmt              go to state 60
+    BasicForStmt               go to state 61
+    ObjCreation                go to state 62
+    MethodInv                  go to state 63
+    MethodName                 go to state 64
+    VarDec                     go to state 65
+    primary_Expression         go to state 66
+    ConstExp                   go to state 67
+    Expression                 go to state 68
+    assignment_Expression      go to state 69
+    conditional_Expression     go to state 70
+    logical_or_Expression      go to state 71
+    logical_and_Expression     go to state 72
+    inclusive_or_Expression    go to state 73
+    exclusive_or_Expression    go to state 74
+    and_Expression             go to state 75
+    equality_Expression        go to state 76
+    relational_Expression      go to state 77
+    shift_Expression           go to state 78
+    additive_Expression        go to state 79
+    multiplicative_Expression  go to state 80
+    cast_Expression            go to state 81
+    unary_Expression           go to state 82
+    postfix_Expression         go to state 83
+    unary_operator             go to state 84
+    ClassDecln                 go to state 85
+    Mods                       go to state 86
+    StructDecln                go to state 87
+
+
+state 183
+
+   35 SelectionStmt: SWITCH '(' Expression ')' . Stmt
+
+    error      shift, and go to state 31
+    VAR        shift, and go to state 11
+    NEW        shift, and go to state 32
+    STRUCT     shift, and go to state 33
+    IF         shift, and go to state 34
+    FOR        shift, and go to state 35
+    WHILE      shift, and go to state 36
+    SWITCH     shift, and go to state 37
+    CASE       shift, and go to state 38
+    DEFAULT    shift, and go to state 39
+    INTEGER    shift, and go to state 40
+    FLOAT      shift, and go to state 41
+    CHAR       shift, and go to state 42
+    PUBLIC     shift, and go to state 43
+    PRIVATE    shift, and go to state 44
+    PROTECTED  shift, and go to state 45
+    ';'        shift, and go to state 46
+    '{'        shift, and go to state 22
+    '('        shift, and go to state 47
+    IDENT      shift, and go to state 48
+    PP         shift, and go to state 49
+    MM         shift, and go to state 50
+    MINUS      shift, and go to state 51
+    PLUS       shift, and go to state 52
+
+    Stmt                       go to state 200
+    LabeledStmt                go to state 55
+    CompoundStmt               go to state 56
+    NonFuncDeclaration         go to state 57
+    ExpressionStmt             go to state 58
+    SelectionStmt              go to state 59
+    IterationStmt              go to state 60
+    BasicForStmt               go to state 61
+    ObjCreation                go to state 62
+    MethodInv                  go to state 63
+    MethodName                 go to state 64
+    VarDec                     go to state 65
+    primary_Expression         go to state 66
+    ConstExp                   go to state 67
+    Expression                 go to state 68
+    assignment_Expression      go to state 69
+    conditional_Expression     go to state 70
+    logical_or_Expression      go to state 71
+    logical_and_Expression     go to state 72
+    inclusive_or_Expression    go to state 73
+    exclusive_or_Expression    go to state 74
+    and_Expression             go to state 75
+    equality_Expression        go to state 76
+    relational_Expression      go to state 77
+    shift_Expression           go to state 78
+    additive_Expression        go to state 79
+    multiplicative_Expression  go to state 80
+    cast_Expression            go to state 81
+    unary_Expression           go to state 82
+    postfix_Expression         go to state 83
+    unary_operator             go to state 84
+    ClassDecln                 go to state 85
+    Mods                       go to state 86
+    StructDecln                go to state 87
+
+
+state 184
+
+   20 LabeledStmt: CASE ConstExp ':' Stmt .
+
+    $default  reduce using rule 20 (LabeledStmt)
+
+
+state 185
+
+   45 MethodInv: MethodName '(' Expression ')' .
+
+    $default  reduce using rule 45 (MethodInv)
+
+
+state 186
+
+   65 conditional_Expression: logical_or_Expression QM Expression ':' . conditional_Expression
+
+    INTEGER  shift, and go to state 40
+    FLOAT    shift, and go to state 41
+    CHAR     shift, and go to state 42
+    '('      shift, and go to state 47
+    IDENT    shift, and go to state 99
+    PP       shift, and go to state 49
+    MM       shift, and go to state 50
+    MINUS    shift, and go to state 51
+    PLUS     shift, and go to state 52
+
+    primary_Expression         go to state 66
+    ConstExp                   go to state 67
+    conditional_Expression     go to state 201
+    logical_or_Expression      go to state 71
+    logical_and_Expression     go to state 72
+    inclusive_or_Expression    go to state 73
+    exclusive_or_Expression    go to state 74
+    and_Expression             go to state 75
+    equality_Expression        go to state 76
+    relational_Expression      go to state 77
+    shift_Expression           go to state 78
+    additive_Expression        go to state 79
+    multiplicative_Expression  go to state 80
+    cast_Expression            go to state 81
+    unary_Expression           go to state 137
+    postfix_Expression         go to state 83
+    unary_operator             go to state 84
+
+
+state 187
+
+   99 postfix_Expression: postfix_Expression '[' Expression ']' .
+
+    $default  reduce using rule 99 (postfix_Expression)
+
+
+state 188
+
+  105 ClassDecln: Mods CLASS IDENT TypeParamsI . ClassBody ';'
+
+    '{'  shift, and go to state 178
+
+    ClassBody  go to state 202
+
+
+state 189
+
+   38 ObjCreation: NEW TypeName '(' Expression ')' .
+
+    $default  reduce using rule 38 (ObjCreation)
+
+
+state 190
+
+  110 TypeParamsI: '[' TypeParamIList ']' .
+
+    $default  reduce using rule 110 (TypeParamsI)
+
+
+state 191
+
+  113 TypeParamIList: TypeParamIList ',' . IDENT
+  114               | TypeParamIList ',' .
+
+    IDENT  shift, and go to state 203
+
+    $default  reduce using rule 114 (TypeParamIList)
+
+
+state 192
+
+  123 CtorDecln: DEF . THIS TypeParams HasResultType CtorBody
+
+    THIS  shift, and go to state 204
+
+
+state 193
+
+  119 ClassBody: '{' ClassMemberDeclns . '}'
+  121 ClassMemberDeclns: ClassMemberDeclns . ClassMemberDecln
+
+    DEF  shift, and go to state 192
+    '}'  shift, and go to state 205
+
+    ClassMemberDecln  go to state 206
+    CtorDecln         go to state 195
+
+
+state 194
+
+  120 ClassMemberDeclns: ClassMemberDecln .
+
+    $default  reduce using rule 120 (ClassMemberDeclns)
+
+
+state 195
+
+  122 ClassMemberDecln: CtorDecln .
+
+    $default  reduce using rule 122 (ClassMemberDecln)
+
+
+state 196
+
+  109 StructDecln: STRUCT IDENT TypeParamsI ClassBody ';' .
+
+    $default  reduce using rule 109 (StructDecln)
+
+
+state 197
+
+   33 SelectionStmt: IF '(' Expression ')' Stmt .
+   34              | IF '(' Expression ')' Stmt . ELSE Stmt
+
+    ELSE  shift, and go to state 207
+
+    $default  reduce using rule 33 (SelectionStmt)
+
+
+state 198
+
+   37 BasicForStmt: FOR '(' Expression ';' Expression . ';' Expression ')' Stmt
+   59 Expression: Expression . ',' assignment_Expression
+
+    ';'  shift, and go to state 208
+    ','  shift, and go to state 107
+
+
+state 199
+
+   36 IterationStmt: WHILE '(' Expression ')' Stmt .
+
+    $default  reduce using rule 36 (IterationStmt)
+
+
+state 200
+
+   35 SelectionStmt: SWITCH '(' Expression ')' Stmt .
+
+    $default  reduce using rule 35 (SelectionStmt)
+
+
+state 201
+
+   65 conditional_Expression: logical_or_Expression QM Expression ':' conditional_Expression .
+
+    $default  reduce using rule 65 (conditional_Expression)
+
+
+state 202
+
+  105 ClassDecln: Mods CLASS IDENT TypeParamsI ClassBody . ';'
+
+    ';'  shift, and go to state 209
+
+
+state 203
+
+  113 TypeParamIList: TypeParamIList ',' IDENT .
+
+    $default  reduce using rule 113 (TypeParamIList)
+
+
+state 204
+
+  123 CtorDecln: DEF THIS . TypeParams HasResultType CtorBody
+
+    '['  shift, and go to state 210
+
+    TypeParams  go to state 211
+
+
+state 205
+
+  119 ClassBody: '{' ClassMemberDeclns '}' .
+
+    $default  reduce using rule 119 (ClassBody)
+
+
+state 206
+
+  121 ClassMemberDeclns: ClassMemberDeclns ClassMemberDecln .
+
+    $default  reduce using rule 121 (ClassMemberDeclns)
+
+
+state 207
+
+   34 SelectionStmt: IF '(' Expression ')' Stmt ELSE . Stmt
+
+    error      shift, and go to state 31
+    VAR        shift, and go to state 11
+    NEW        shift, and go to state 32
+    STRUCT     shift, and go to state 33
+    IF         shift, and go to state 34
+    FOR        shift, and go to state 35
+    WHILE      shift, and go to state 36
+    SWITCH     shift, and go to state 37
+    CASE       shift, and go to state 38
+    DEFAULT    shift, and go to state 39
+    INTEGER    shift, and go to state 40
+    FLOAT      shift, and go to state 41
+    CHAR       shift, and go to state 42
+    PUBLIC     shift, and go to state 43
+    PRIVATE    shift, and go to state 44
+    PROTECTED  shift, and go to state 45
+    ';'        shift, and go to state 46
+    '{'        shift, and go to state 22
+    '('        shift, and go to state 47
+    IDENT      shift, and go to state 48
+    PP         shift, and go to state 49
+    MM         shift, and go to state 50
+    MINUS      shift, and go to state 51
+    PLUS       shift, and go to state 52
+
+    Stmt                       go to state 212
+    LabeledStmt                go to state 55
+    CompoundStmt               go to state 56
+    NonFuncDeclaration         go to state 57
+    ExpressionStmt             go to state 58
+    SelectionStmt              go to state 59
+    IterationStmt              go to state 60
+    BasicForStmt               go to state 61
+    ObjCreation                go to state 62
+    MethodInv                  go to state 63
+    MethodName                 go to state 64
+    VarDec                     go to state 65
+    primary_Expression         go to state 66
+    ConstExp                   go to state 67
+    Expression                 go to state 68
+    assignment_Expression      go to state 69
+    conditional_Expression     go to state 70
+    logical_or_Expression      go to state 71
+    logical_and_Expression     go to state 72
+    inclusive_or_Expression    go to state 73
+    exclusive_or_Expression    go to state 74
+    and_Expression             go to state 75
+    equality_Expression        go to state 76
+    relational_Expression      go to state 77
+    shift_Expression           go to state 78
+    additive_Expression        go to state 79
+    multiplicative_Expression  go to state 80
+    cast_Expression            go to state 81
+    unary_Expression           go to state 82
+    postfix_Expression         go to state 83
+    unary_operator             go to state 84
+    ClassDecln                 go to state 85
+    Mods                       go to state 86
+    StructDecln                go to state 87
+
+
+state 208
+
+   37 BasicForStmt: FOR '(' Expression ';' Expression ';' . Expression ')' Stmt
+
+    NEW      shift, and go to state 32
+    INTEGER  shift, and go to state 40
+    FLOAT    shift, and go to state 41
+    CHAR     shift, and go to state 42
+    '('      shift, and go to state 47
+    IDENT    shift, and go to state 48
+    PP       shift, and go to state 49
+    MM       shift, and go to state 50
+    MINUS    shift, and go to state 51
+    PLUS     shift, and go to state 52
+
+    ObjCreation                go to state 62
+    MethodInv                  go to state 63
+    MethodName                 go to state 64
+    primary_Expression         go to state 66
+    ConstExp                   go to state 67
+    Expression                 go to state 213
+    assignment_Expression      go to state 69
+    conditional_Expression     go to state 70
+    logical_or_Expression      go to state 71
+    logical_and_Expression     go to state 72
+    inclusive_or_Expression    go to state 73
+    exclusive_or_Expression    go to state 74
+    and_Expression             go to state 75
+    equality_Expression        go to state 76
+    relational_Expression      go to state 77
+    shift_Expression           go to state 78
+    additive_Expression        go to state 79
+    multiplicative_Expression  go to state 80
+    cast_Expression            go to state 81
+    unary_Expression           go to state 82
+    postfix_Expression         go to state 83
+    unary_operator             go to state 84
+
+
+state 209
+
+  105 ClassDecln: Mods CLASS IDENT TypeParamsI ClassBody ';' .
+
+    $default  reduce using rule 105 (ClassDecln)
+
+
+state 210
+
+  115 TypeParams: '[' . TypeParamList ']'
+
+    IDENT  shift, and go to state 214
+
+    TypeParamList  go to state 215
+    TypeParam      go to state 216
+
+
+state 211
+
+  123 CtorDecln: DEF THIS TypeParams . HasResultType CtorBody
+
+    ':'  shift, and go to state 217
+
+    HasResultType  go to state 218
+
+
+state 212
+
+   34 SelectionStmt: IF '(' Expression ')' Stmt ELSE Stmt .
+
+    $default  reduce using rule 34 (SelectionStmt)
+
+
+state 213
+
+   37 BasicForStmt: FOR '(' Expression ';' Expression ';' Expression . ')' Stmt
+   59 Expression: Expression . ',' assignment_Expression
+
+    ')'  shift, and go to state 219
+    ','  shift, and go to state 107
+
+
+state 214
+
+  118 TypeParam: IDENT .
+
+    $default  reduce using rule 118 (TypeParam)
+
+
+state 215
+
+  115 TypeParams: '[' TypeParamList . ']'
+  117 TypeParamList: TypeParamList . ',' TypeParam
+
+    ']'  shift, and go to state 220
+    ','  shift, and go to state 221
+
+
+state 216
+
+  116 TypeParamList: TypeParam .
+
+    $default  reduce using rule 116 (TypeParamList)
+
+
+state 217
+
+  124 HasResultType: ':' . Type
+
+    TYPE_INT    shift, and go to state 25
+    TYPE_FLOAT  shift, and go to state 26
+
+    Type  go to state 222
+
+
+state 218
+
+  123 CtorDecln: DEF THIS TypeParams HasResultType . CtorBody
+
+    ';'  shift, and go to state 223
+    '{'  shift, and go to state 224
+    '='  shift, and go to state 225
+
+    CtorBody   go to state 226
+    CtorBlock  go to state 227
+
+
+state 219
+
+   37 BasicForStmt: FOR '(' Expression ';' Expression ';' Expression ')' . Stmt
+
+    error      shift, and go to state 31
+    VAR        shift, and go to state 11
+    NEW        shift, and go to state 32
+    STRUCT     shift, and go to state 33
+    IF         shift, and go to state 34
+    FOR        shift, and go to state 35
+    WHILE      shift, and go to state 36
+    SWITCH     shift, and go to state 37
+    CASE       shift, and go to state 38
+    DEFAULT    shift, and go to state 39
+    INTEGER    shift, and go to state 40
+    FLOAT      shift, and go to state 41
+    CHAR       shift, and go to state 42
+    PUBLIC     shift, and go to state 43
+    PRIVATE    shift, and go to state 44
+    PROTECTED  shift, and go to state 45
+    ';'        shift, and go to state 46
+    '{'        shift, and go to state 22
+    '('        shift, and go to state 47
+    IDENT      shift, and go to state 48
+    PP         shift, and go to state 49
+    MM         shift, and go to state 50
+    MINUS      shift, and go to state 51
+    PLUS       shift, and go to state 52
+
+    Stmt                       go to state 228
+    LabeledStmt                go to state 55
+    CompoundStmt               go to state 56
+    NonFuncDeclaration         go to state 57
+    ExpressionStmt             go to state 58
+    SelectionStmt              go to state 59
+    IterationStmt              go to state 60
+    BasicForStmt               go to state 61
+    ObjCreation                go to state 62
+    MethodInv                  go to state 63
+    MethodName                 go to state 64
+    VarDec                     go to state 65
+    primary_Expression         go to state 66
+    ConstExp                   go to state 67
+    Expression                 go to state 68
+    assignment_Expression      go to state 69
+    conditional_Expression     go to state 70
+    logical_or_Expression      go to state 71
+    logical_and_Expression     go to state 72
+    inclusive_or_Expression    go to state 73
+    exclusive_or_Expression    go to state 74
+    and_Expression             go to state 75
+    equality_Expression        go to state 76
+    relational_Expression      go to state 77
+    shift_Expression           go to state 78
+    additive_Expression        go to state 79
+    multiplicative_Expression  go to state 80
+    cast_Expression            go to state 81
+    unary_Expression           go to state 82
+    postfix_Expression         go to state 83
+    unary_operator             go to state 84
+    ClassDecln                 go to state 85
+    Mods                       go to state 86
+    StructDecln                go to state 87
+
+
+state 220
+
+  115 TypeParams: '[' TypeParamList ']' .
+
+    $default  reduce using rule 115 (TypeParams)
+
+
+state 221
+
+  117 TypeParamList: TypeParamList ',' . TypeParam
+
+    IDENT  shift, and go to state 214
+
+    TypeParam  go to state 229
+
+
+state 222
+
+  124 HasResultType: ':' Type .
+
+    $default  reduce using rule 124 (HasResultType)
+
+
+state 223
+
+  127 CtorBody: ';' .
+
+    $default  reduce using rule 127 (CtorBody)
+
+
+state 224
+
+  128 CtorBlock: '{' . StmtList '}'
+
+    error      shift, and go to state 31
+    VAR        shift, and go to state 11
+    NEW        shift, and go to state 32
+    STRUCT     shift, and go to state 33
+    IF         shift, and go to state 34
+    FOR        shift, and go to state 35
+    WHILE      shift, and go to state 36
+    SWITCH     shift, and go to state 37
+    CASE       shift, and go to state 38
+    DEFAULT    shift, and go to state 39
+    INTEGER    shift, and go to state 40
+    FLOAT      shift, and go to state 41
+    CHAR       shift, and go to state 42
+    PUBLIC     shift, and go to state 43
+    PRIVATE    shift, and go to state 44
+    PROTECTED  shift, and go to state 45
+    ';'        shift, and go to state 46
+    '{'        shift, and go to state 22
+    '('        shift, and go to state 47
+    IDENT      shift, and go to state 48
+    PP         shift, and go to state 49
+    MM         shift, and go to state 50
+    MINUS      shift, and go to state 51
+    PLUS       shift, and go to state 52
+
+    StmtList                   go to state 230
+    Stmt                       go to state 54
+    LabeledStmt                go to state 55
+    CompoundStmt               go to state 56
+    NonFuncDeclaration         go to state 57
+    ExpressionStmt             go to state 58
+    SelectionStmt              go to state 59
+    IterationStmt              go to state 60
+    BasicForStmt               go to state 61
+    ObjCreation                go to state 62
+    MethodInv                  go to state 63
+    MethodName                 go to state 64
+    VarDec                     go to state 65
+    primary_Expression         go to state 66
+    ConstExp                   go to state 67
+    Expression                 go to state 68
+    assignment_Expression      go to state 69
+    conditional_Expression     go to state 70
+    logical_or_Expression      go to state 71
+    logical_and_Expression     go to state 72
+    inclusive_or_Expression    go to state 73
+    exclusive_or_Expression    go to state 74
+    and_Expression             go to state 75
+    equality_Expression        go to state 76
+    relational_Expression      go to state 77
+    shift_Expression           go to state 78
+    additive_Expression        go to state 79
+    multiplicative_Expression  go to state 80
+    cast_Expression            go to state 81
+    unary_Expression           go to state 82
+    postfix_Expression         go to state 83
+    unary_operator             go to state 84
+    ClassDecln                 go to state 85
+    Mods                       go to state 86
+    StructDecln                go to state 87
+
+
+state 225
+
+  125 CtorBody: '=' . CtorBlock
+
+    '{'  shift, and go to state 224
+
+    CtorBlock  go to state 231
+
+
+state 226
+
+  123 CtorDecln: DEF THIS TypeParams HasResultType CtorBody .
+
+    $default  reduce using rule 123 (CtorDecln)
+
+
+state 227
+
+  126 CtorBody: CtorBlock .
+
+    $default  reduce using rule 126 (CtorBody)
+
+
+state 228
+
+   37 BasicForStmt: FOR '(' Expression ';' Expression ';' Expression ')' Stmt .
+
+    $default  reduce using rule 37 (BasicForStmt)
+
+
+state 229
+
+  117 TypeParamList: TypeParamList ',' TypeParam .
+
+    $default  reduce using rule 117 (TypeParamList)
+
+
+state 230
+
+   12 StmtList: StmtList . Stmt
+  128 CtorBlock: '{' StmtList . '}'
+
+    error      shift, and go to state 31
+    VAR        shift, and go to state 11
+    NEW        shift, and go to state 32
+    STRUCT     shift, and go to state 33
+    IF         shift, and go to state 34
+    FOR        shift, and go to state 35
+    WHILE      shift, and go to state 36
+    SWITCH     shift, and go to state 37
+    CASE       shift, and go to state 38
+    DEFAULT    shift, and go to state 39
+    INTEGER    shift, and go to state 40
+    FLOAT      shift, and go to state 41
+    CHAR       shift, and go to state 42
+    PUBLIC     shift, and go to state 43
+    PRIVATE    shift, and go to state 44
+    PROTECTED  shift, and go to state 45
+    ';'        shift, and go to state 46
+    '{'        shift, and go to state 22
+    '}'        shift, and go to state 232
+    '('        shift, and go to state 47
+    IDENT      shift, and go to state 48
+    PP         shift, and go to state 49
+    MM         shift, and go to state 50
+    MINUS      shift, and go to state 51
+    PLUS       shift, and go to state 52
+
+    Stmt                       go to state 102
+    LabeledStmt                go to state 55
+    CompoundStmt               go to state 56
+    NonFuncDeclaration         go to state 57
+    ExpressionStmt             go to state 58
+    SelectionStmt              go to state 59
+    IterationStmt              go to state 60
+    BasicForStmt               go to state 61
+    ObjCreation                go to state 62
+    MethodInv                  go to state 63
+    MethodName                 go to state 64
+    VarDec                     go to state 65
+    primary_Expression         go to state 66
+    ConstExp                   go to state 67
+    Expression                 go to state 68
+    assignment_Expression      go to state 69
+    conditional_Expression     go to state 70
+    logical_or_Expression      go to state 71
+    logical_and_Expression     go to state 72
+    inclusive_or_Expression    go to state 73
+    exclusive_or_Expression    go to state 74
+    and_Expression             go to state 75
+    equality_Expression        go to state 76
+    relational_Expression      go to state 77
+    shift_Expression           go to state 78
+    additive_Expression        go to state 79
+    multiplicative_Expression  go to state 80
+    cast_Expression            go to state 81
+    unary_Expression           go to state 82
+    postfix_Expression         go to state 83
+    unary_operator             go to state 84
+    ClassDecln                 go to state 85
+    Mods                       go to state 86
+    StructDecln                go to state 87
+
+
+state 231
+
+  125 CtorBody: '=' CtorBlock .
+
+    $default  reduce using rule 125 (CtorBody)
+
+
+state 232
+
+  128 CtorBlock: '{' StmtList '}' .
+
+    $default  reduce using rule 128 (CtorBlock)

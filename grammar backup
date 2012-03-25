@@ -1,0 +1,15 @@
+Expression	:ConstExp			{ $$=$1;}		
+		|IDENT				{ $$=id(search(current_st,yytext));}
+	  	|Assignment			{$$=$1;}
+		|Expression PLUS Expression	{ $$=opr(PLUS,2,$1,$3); }
+		|Expression MINUS Expression	{ $$=opr(MINUS,2,$1,$3); }
+		|Expression MULT Expression	{ $$=opr(MULT,2,$1,$3); }
+		|Expression DIV Expression	{ $$=opr(DIV,2,$1,$3); }
+		|Expression POW Expression	{ $$=opr(POW,2,$1,$3);}			
+		|MINUS Expression %prec NEG	{ $$=opr(NEG,1,$2); }
+		|'('Expression')'		{ $$=$2; }
+		;
+ConstExp	:INTEGER	{$$=con($1);}
+		|FLOAT		{$$=con($1);}
+		|CHAR		{$$=con($1);}
+		;

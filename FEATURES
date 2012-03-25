@@ -1,0 +1,24 @@
+basic programming features like loops functions etc
+	while loop,for loops
+	switch case
+	if else
+	various assops += -= etc
+	post/pre increment
+	ternery operation
+	access modifiers public private 
+
+proper scoping of variables within blocks using nested symbol table
+
+expressions with several different operators
+
+val vs var 
+
+warnings for typecasting
+
+error recovery and handling
+
+type checking  
+
+method invoc
+
+class,object creation
