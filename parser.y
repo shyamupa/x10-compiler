@@ -26,7 +26,7 @@ extern char* yytext;
 extern int yywrap();
 typedef union nodeTypeTag nodeType;	
 /*prototypes start*/
-nodeType* id(struct sym_record* i);	// node creator function for identifiers
+nodeType* id(struct sym_record* symrec);	// node creator function for identifiers
 nodeType* con_i(int value); // node creator function for constants integer
 nodeType* con_f(float value); // node creator function for constants floats
 nodeType* con_c(char value); // node creator function for constants character
@@ -518,14 +518,14 @@ nodeType* con_c(char value)
 
 // Having installed a ident in the symbol table we call id() with its sym_record pointer
 // this creates a node for the ident which will be used in the Syntax Tree
-nodeType *id(struct sym_record* i)	 
+nodeType *id(struct sym_record* symrec)	 
 {
 	//printf("name is %s\n",i->sym_name);
 	nodeType *p;
 	if ((p = malloc(sizeof(idNodeType))) == NULL)
 		yyerror("out of memory");
 	p->type = typeId;
-	p->id.i = i;
+	p->id.symrec = symrec;
 	return p;
 }
 nodeType *opr(int oper, int nops, ...) 
@@ -588,17 +588,17 @@ void dist_type(nodeType* nptr)
 	int TypeToAssign=get_operand(nptr,1)->con_i.value;
 	nodeType* idlist=get_operand(nptr,0);
 	if(idlist->type==typeId)
-		idlist->id.i->type=TypeToAssign;		
+		idlist->id.symrec->type=TypeToAssign;		
 	else
 	{
 		while(idlist->type!=typeId)
 		{
 			nodeType* leftnode=get_operand(idlist,0);
 			nodeType* rightnode=get_operand(idlist,1);
-			rightnode->id.i->type=TypeToAssign;
+			rightnode->id.symrec->type=TypeToAssign;
 			idlist=leftnode;
 		}
-		idlist->id.i->type=TypeToAssign;
+		idlist->id.symrec->type=TypeToAssign;
 	}	
 }
 int get_type(nodeType* data_type_ptr)
@@ -617,7 +617,7 @@ int get_type(nodeType* data_type_ptr)
 	}
 	else if(data_type_ptr->type==typeId)
 	{
-		return data_type_ptr->id.i->type;
+		return data_type_ptr->id.symrec->type;
 	}
 }
 

@@ -1,7 +1,7 @@
 #include "ll_sym_table.h"
 #ifndef node_def_h_included
 #define node_def_h_included
-typedef enum { typeConI,typeConF,typeConC, typeId, typeOpr} nodeEnum;
+typedef enum { typeConI,typeConF,typeConC,typeId,typeOpr } nodeEnum;
 
 // for constants int
 typedef struct 
@@ -29,7 +29,7 @@ typedef struct
 typedef struct 
 {
 	nodeEnum type;
-	struct sym_record* i;
+	struct sym_record* symrec;
 	struct symbol_table* st;
 }idNodeType;
 
