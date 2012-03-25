@@ -89,7 +89,7 @@ when		{return WHEN;}
 "-="		{return MINUS_EQ;}
 "*="		{return MULT_EQ;}
 "/="		{return DIV_EQ;}
-"="		{return EQ;}
+"="		{/*printf("!%s!",yytext)*/;return EQ;}
 "?"		{return QM;}
 "||"		{return BOOL_OR;}
 "|"		{return BIT_OR;}
@@ -104,7 +104,7 @@ when		{return WHEN;}
 "++"		{return PP;}
 "--"		{return MM;}
 ;		{return ';';}
-","		{return ',';}
+","		{/*printf("!%s!",yytext);*/return ',';}
 \{		{return '{';}
 \}		{return '}';}
 \(		{return '(';}
@@ -128,6 +128,7 @@ new		{return NEW;}
 {comment}	{/* no action */}
 {line_comment}	{/* no action */}
 {id}		{
+			//printf("!%s!",yytext);
 			return IDENT;
 		}
 '{letter}'	{

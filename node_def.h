@@ -8,18 +8,21 @@ typedef struct
 {
 	nodeEnum type;
 	int value;
+	int datatype;
 }con_iNodeType;
 
 typedef struct 
 {
 	nodeEnum type;
 	float value;
+	int datatype;
 }con_fNodeType;
 
 typedef struct 
 {
 	nodeEnum type;
 	char value;
+	int datatype;
 }con_cNodeType;
 
 // for identifiers
