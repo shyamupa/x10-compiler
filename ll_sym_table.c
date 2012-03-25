@@ -73,3 +73,77 @@ void print_st(symbol_table* st)
 	}
 	printf("####################\n");
 }
+int search_keywords(char* sym_name)
+{
+	int i;
+	char* keywords[]=
+	{
+	"abstract",
+	"as",
+	"assert",
+	"async",
+	"athome",
+	"ateach",
+	"atomic",
+	"break",
+	"catch",
+	"class",
+	"clocked",
+	"continue",
+	"default",
+	"do",
+	"else",
+	"extends",
+	"final",
+	"finally",
+	"finish",
+	"for",
+	"haszero",
+	"here",
+	"if",
+	"implements",
+	"in",
+	"instanceof",
+	"interface",
+	"native",
+	"null",
+	"offer",
+	"offers",
+	"operator",
+	"private",
+	"property",
+	"protected",
+	"public",
+	"self",
+	"static",
+	"struct",
+	"super",
+	"this",
+	"throw",
+	"transient",
+	"true",
+	"type",
+	"val",
+	"var",
+	"void",
+	"while",
+	"at",
+	"case",
+	"def",
+	"false",
+	"goto",
+	"import",
+	"new",
+	"package",
+	"return",
+	"switch",
+	"try",
+	"when"
+};
+	 for(i=0;i<61;i++)
+	 {
+		if(strcmp(sym_name,keywords[i])==0)
+		return 1;
+	 }
+	 return 0;
+}

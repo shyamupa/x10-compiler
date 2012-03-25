@@ -7,7 +7,6 @@
 extern YYSTYPE yylval;
 extern struct symbol_table* current_st;
 %}
-
 delim 		[ \t\n]
 ws		{delim}+
 letter 		[A-Za-z_]
@@ -19,12 +18,11 @@ float		[-+]?{digit}*\.{digit}+([eE][-+]?{digit}+)?
 comment 	"/*"(.|\n)*"*/"
 %%
 ^\n$		{}
-{ws}		{printf("");}
+{ws}		{/* no action */}
 \"(\\.|[^"])*\"	{
-			printf("STRING %s",yytext);	/*need to handle \" containing strings*/
+			/*need to handle \" containing strings*/
 			return *yytext;
 		}
-
 if		{return IF;}
 then		{return THEN;}
 else		{return ELSE;}
@@ -43,108 +41,78 @@ default		{return DEFAULT;}
 true		{return TRUE;}
 false		{return FALSE;}
 
-abstract		{return ABSTRACT;} 
-as				{return AS;}
-async			{return ASYNC;}
-at				{return AT;}
-athome			{return ATHOME;}
-ateach			{return ATEACH;}
-atomic			{return ATOMIC;}
-catch			{return CATCH;}
-class			{return CLASS;}
-clocked			{return CLOCKED;}
-extends			{return EXTENDS;}
-final			{return FINAL;}
-finally			{return FINALLY;}
-finish			{return FINISH;}
-goto			{return GOTO;}
-haszero			{return HASZERO;}
-here			{return HERE;}
-implements		{return IMPLEMENTS;}
-import			{return IMPORT;}
-instanceof		{return INSTANCEOF;}
-interface		{return INTERFACE;}
-native			{return NATIVE;}
-offer			{return OFFER;}
-offers			{return OFFERS;}
-operator		{return OPERATOR;}
-package			{return PACKAGE;}
-property		{return PROPERTY;}
-self			{return SELF;}
-static			{return STATIC;}
-struct			{return STRUCT;}
-super			{return SUPER;}
-this			{return THIS;}
-throw			{return THROW;}
-transient		{return TRANSIENT;}
-try 			{return TRY;}
-void			{return VOID;}
-when			{return WHEN;}
-
+abstract	{return ABSTRACT;} 
+as		{return AS;}
+async		{return ASYNC;}
+at		{return AT;}
+athome		{return ATHOME;}
+ateach		{return ATEACH;}
+atomic		{return ATOMIC;}
+catch		{return CATCH;}
+class		{return CLASS;}
+clocked		{return CLOCKED;}
+extends		{return EXTENDS;}
+final		{return FINAL;}
+finally		{return FINALLY;}
+finish		{return FINISH;}
+goto		{return GOTO;}
+haszero		{return HASZERO;}
+here		{return HERE;}
+implements	{return IMPLEMENTS;}
+import		{return IMPORT;}
+instanceof	{return INSTANCEOF;}
+interface	{return INTERFACE;}
+native		{return NATIVE;}
+null		{return MY_NULL;}
+offer		{return OFFER;}
+offers		{return OFFERS;}
+operator	{return OPERATOR;}
+package		{return PACKAGE;}
+property	{return PROPERTY;}
+self		{return SELF;}
+static		{return STATIC;}
+struct		{return STRUCT;}
+super		{return SUPER;}
+this		{return THIS;}
+throw		{return THROW;}
+transient	{return TRANSIENT;}
+try 		{return TRY;}
+void		{return VOID;}
+when		{return WHEN;}
 "=="		{return BEQ;}
+"!="		{return NEQ;}
 ">="		{return GE;}
 ">"		{return GT;}
 "<="		{return LE;}
 "<"		{return LT;}
-
 "+="		{return PLUS_EQ;}
 "-="		{return MINUS_EQ;}
 "*="		{return MULT_EQ;}
 "/="		{return DIV_EQ;}
 "="		{return EQ;}
+"?"		{return QM;}
+"||"		{return BOOL_OR;}
+"|"		{return BIT_OR;}
+"&&"		{return BOOL_AND;}
+"&"		{return BIT_AND;}
 
-"+"		{
-			return PLUS;
-		}
-"-"		{
-			return MINUS;
-		}
-"*"		{
-			return MULT;
-		}
-"/"		{
-			return DIV;
-		}
-"**"		{
-			return POW;
-		}
-"++"		{
-			return PP;
-		}
-"--"		{
-			return MM;
-		}
-;		{
-			return ';';
-		}
-","		{
-			return ',';
-		}
-
-\{		{
-			return '{';
-		}
-\}		{
-			return '}';
-		}
-\(		{
-			return '(';
-		}
-\)		{
-			return ')';
-		}
-"["		{
-			return '[';
-		}
-"]"		{
-			return ']';
-		}
-":"		{
-			return ':';
-		}
-val		{
-			return VAL;
-		}
+"+"		{return PLUS;}
+"-"		{return MINUS;}
+"*"		{return MULT;}
+"/"		{return DIV;}
+"**"		{return POW;}
+"++"		{return PP;}
+"--"		{return MM;}
+;		{return ';';}
+","		{return ',';}
+\{		{return '{';}
+\}		{return '}';}
+\(		{return '(';}
+\)		{return ')';}
+"["		{return '[';}
+"]"		{return ']';}
+":"		{return ':';}
+val		{return VAL;}
 int		{return TYPE_INT;}
 float		{return TYPE_FLOAT;}
 char 		{return TYPE_CHAR;}
@@ -158,7 +126,7 @@ return		{return RETURN;}
 assert		{return ASSERT;}
 new		{return NEW;}
 {comment}	{/* no action */}
-{line_comment}	{printf("\n");}
+{line_comment}	{/* no action */}
 {id}		{
 			return IDENT;
 		}
@@ -172,7 +140,7 @@ new		{return NEW;}
 		}
 {float}		{
 			yylval.fVal=atof(yytext);
-			return INTEGER;
+			return FLOAT;
 		}		
 %%
 int yywrap()

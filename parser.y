@@ -19,14 +19,12 @@
 #define TYPE 1345
 #define YYDEBUG 1	//enable debugging
 
-struct symbol_table* current_st=NULL;	// global current st 
 extern struct sym_record sym_table;
 extern yylineno;
 extern int yylex();
 extern char* yytext;
 extern int yywrap();
-typedef union nodeTypeTag nodeType;	// 
-
+typedef union nodeTypeTag nodeType;	
 /*prototypes start*/
 nodeType* id(struct sym_record* i);	// node creator function for identifiers
 nodeType* con(int value); // node creator function for constants
@@ -39,6 +37,8 @@ nodeType* get_operand(nodeType* opnode,int index);
 void type_check_assign(nodeType* lhs, nodeType* rhs);
 /*prototypes end*/
 /*global variables*/
+struct symbol_table* current_st=NULL;	// global current st 
+int seen_func=0;
 /*global variables*/
 %}
 %union 
@@ -54,10 +54,15 @@ void type_check_assign(nodeType* lhs, nodeType* rhs);
 %token ABSTRACT
 %token AS
 %token ASYNC
-%token  AT
+%token AT
 %token ATHOME
 %token ATEACH
 %token ATOMIC
+%token BOOL_EQ
+%token BOOL_OR
+%token BOOL_AND
+%token BIT_AND
+%token BIT_OR
 %token CATCH
 %token CLASS
 %token CLOCKED
@@ -72,12 +77,18 @@ void type_check_assign(nodeType* lhs, nodeType* rhs);
 %token IMPORT
 %token INSTANCEOF
 %token INTERFACE
+%token LSH
 %token NATIVE
-%token  OFFER
+%token NEQ
+%token NEW
+%token MY_NULL
+%token OFFER
 %token OFFERS
 %token OPERATOR
 %token PACKAGE
 %token PROPERTY
+%token QM
+%token RSH
 %token SELF
 %token STATIC
 %token STRUCT
@@ -88,28 +99,28 @@ void type_check_assign(nodeType* lhs, nodeType* rhs);
 %token TRY
 %token VOID
 %token WHEN
+%token XOR
 %token IF THEN ELSE
 %token FOR IN WHILE CONTINUE BREAK DO
 %token SWITCH CASE DEFAULT
 %token INTEGER FLOAT CHAR TYPE_INT TYPE_FLOAT TYPE_CHAR
 %token RETURN DEF
-%token NEW
 %token PUBLIC PRIVATE PROTECTED
-%token NEQ BEQ LT GT LE GE TRUE FALSE 
+%token BEQ LT GT LE GE TRUE FALSE 
 %token ';' '{' '}' '(' ')' '[' ']' ':'
 %token IDENT
 %token ARRAY ELLIPSIS ASSERT
 %token EQ PLUS_EQ MULT_EQ MINUS_EQ  DIV_EQ PP MM
-%type <iVal> INTEGER TYPE_INT HasResultType EQ PLUS_EQ MULT_EQ MINUS_EQ  DIV_EQ Mods
+%type <iVal> INTEGER TYPE_INT EQ PLUS_EQ MULT_EQ MINUS_EQ  DIV_EQ 
 %type <fVal> FLOAT TYPE_FLOAT
 %type <cVal> CHAR TYPE_CHAR
-%type <sPtr> IDENT
-
-%type <nPtr> ArgList
-%type <nPtr> Assignment
+%type <nPtr> assignment_Expression
+%type <nPtr> and_Expression
+%type <nPtr> additive_Expression
 %type <nPtr> AssOp
 %type <nPtr> BasicForStmt
-%type <nPtr> BoolExpression
+%type <nPtr> cast_Expression
+%type <nPtr> conditional_Expression
 %type <nPtr> CompoundStmt 
 %type <nPtr> ConstExp 
 %type <nPtr> ClassDecln
@@ -119,28 +130,33 @@ void type_check_assign(nodeType* lhs, nodeType* rhs);
 %type <nPtr> CtorDecln 
 %type <nPtr> CtorBody 
 %type <nPtr> CtorBlock
-%type <nPtr> Declaration
 %type <nPtr> Defn_or_Decln
+%type <nPtr> equality_Expression
+%type <nPtr> exclusive_or_Expression
 %type <nPtr> Expression
 %type <nPtr> ExpressionStmt
 %type <nPtr> FuncDefnList 
 %type <nPtr> FuncDefn 
-%type <nPtr> ForInit 
-%type <nPtr> ForUpdate
 %type <nPtr> FormalArg
 %type <nPtr> FormalArgList
+%type <nPtr> HasResultType
+%type <nPtr> inclusive_or_Expression
+%type <nPtr> IDENT
 %type <nPtr> IdList
 %type <nPtr> IterationStmt
-%type <nPtr> LHS
+%type <nPtr> logical_or_Expression
+%type <nPtr> logical_and_Expression
 %type <nPtr> LabeledStmt
-%type <nPtr> MethodInv  MethodName
+%type <nPtr> multiplicative_Expression
+%type <nPtr> MethodInv  MethodName Mods
+%type <nPtr> NonFuncDeclaration
+%type <nPtr> primary_Expression
+%type <nPtr> postfix_Expression
 %type <nPtr> ObjCreation
-%type <nPtr> PreincrementExp
-%type <nPtr> PostincrementExp
+%type <nPtr> relational_Expression
+%type <nPtr> shift_Expression
 %type <nPtr> StmtList
 %type <nPtr> Stmt 
-%type <nPtr> StmtExp 
-%type <nPtr> StmtExpList
 %type <nPtr> SelectionStmt
 %type <nPtr> StructDecln
 %type <nPtr> Type
@@ -150,6 +166,7 @@ void type_check_assign(nodeType* lhs, nodeType* rhs);
 %type <nPtr> TypeParam 
 %type <nPtr> TypeParamList   
 %type <nPtr> TypeName   
+%type <nPtr> unary_Expression
 %type <nPtr> VarDec   
                    
 %nonassoc IFX
@@ -160,191 +177,276 @@ void type_check_assign(nodeType* lhs, nodeType* rhs);
 %right POW
 %start Defn_or_Decln
 %%
-Defn_or_Decln	:	{
-				if(current_st==NULL)
-				{
-					printf("first sym table created\n");
-					current_st=new_sym_table(current_st);
-					printf("$$$$$$$$$$$$$$$$$$$$$$$$$$$$\n");
-				}	
+Defn_or_Decln	
+	:	{
+			if(current_st==NULL)
+			{
+				printf("first sym table created\n");
+				current_st=new_sym_table(current_st);
+				printf("$$$$$$$$$$$$$$$$$$$$$$$$$$$$\n");
 			}	
-		FuncDefnList	{$$=$2;}
-		;
-FuncDefnList	: FuncDefnList FuncDefn
-		|FuncDefn
-		;
-FuncDefn	:DEF IDENT 	{
-					// make ident point to the new sym tab
-					printf("%s\n",yytext);
-					
-				}
-		'(' FormalArgList ')' Stmt	{$$=opr(FUN,3,$2,$5,$7);} 
-		;
-FormalArgList	:FormalArgList ',' FormalArg	{$$=opr(COMMA,2,$1,$3);}
-		|FormalArg	{$$=$1;}
-		;
-FormalArg	:VarDec	{$$=$1; /*THIS IS INCOMPLETE*/}
-		|{$$=NULL;}	
-		;
-StmtList	:	
-		Stmt	{$$=$1;} 			
-		|StmtList Stmt {$$=opr(';',2,$1,$2);}	
-		;
+		}	
+	FuncDefnList	{$$=$2;print_st(current_st);}
+	;
+FuncDefnList
+	:FuncDefnList FuncDefn
+	|FuncDefn
+	;
+FuncDefn
+	:DEF IDENT 	{
+				// make ident point to the new sym tab
+				printf("%s\n",yytext);
+				struct sym_record* s=install(yytext);
+				s->is_proc_name=1;
+				st_push(current_st);
+				current_st=new_sym_table(current_st);
+				//printf("%d",current_st);
+				//printf("%d",s->proc_st);
+				s->proc_st=current_st;
+				seen_func=1;
+
+			}
+	'(' FormalArgList ')' CompoundStmt	{$$=opr(FUN,3,$2,$5,$7);} 
+	;
+FormalArgList	
+	:FormalArgList ',' FormalArg	{$$=opr(COMMA,2,$1,$3);}
+	|FormalArg	{$$=$1;}
+	;
+FormalArg
+	:VarDec	{$$=$1; /*THIS IS INCOMPLETE*/}
+	|	{$$=NULL;}	
+	;
+StmtList
+	:Stmt	{$$=$1;} 			
+	|StmtList Stmt {$$=opr(';',2,$1,$2);}	
+	;
 		
-Stmt	:ExpressionStmt	{$$=$1;}
+Stmt	
+	:ExpressionStmt	{$$=$1;}
 	|IterationStmt 	{$$=$1;}
 	|BasicForStmt 	{$$=$1;}
 	|SelectionStmt	{$$=$1;}
-	|PreincrementExp{$$=$1;}
-	|MethodInv 	{$$=$1;}
-	|ObjCreation 	{$$=$1;}
 	|CompoundStmt	{$$=$1;}
 	|LabeledStmt	{$$=$1;}
-	|Declaration	{$$=$1;}
+	|NonFuncDeclaration	{$$=$1;}
 	;
 
-LabeledStmt	:CASE ConstExp ':' Stmt	{$$=opr(CASE,2,$2,$4);}
-		|DEFAULT ':' Stmt	{$$=opr(CASE,1,$3);}
-		;
+LabeledStmt	
+	:CASE ConstExp ':' Stmt	{$$=opr(CASE,2,$2,$4);}
+	|DEFAULT ':' Stmt	{$$=opr(CASE,1,$3);}
+	;
 		
-CompoundStmt	:'{'
-			{	
+CompoundStmt	
+	:'{'
+		{	
+			if(seen_func==1)	// sym_table already made 
+				seen_func=0;
+			else	
+			{
 				st_push(current_st);
 				current_st=new_sym_table(current_st);
-				//current_st->parent=st_examine_top();
-			}
-			
-			 StmtList 
-			
-			{	
-				print_st(current_st);
-				current_st=st_pop();
-			}
-		'}'	{$$=$3;}
-		;
-Declaration	:VarDec	{$$=$1;}
-		|ClassDecln  {$$=$1;}
-		|StructDecln {$$=$1;}
-		;
-ExpressionStmt	:Expression ';'	{$$=$1;}
-		|';'	{$$=NULL;}
-		;
-SelectionStmt	:IF '(' Expression ')' Stmt %prec IFX	{$$=opr(IF,2,$3,$5);}
-		|IF '(' Expression ')' Stmt ELSE Stmt	{$$=opr(IF,3,$3,$5,$7);}
-		|SWITCH '(' Expression ')' Stmt	{$$=opr(SWITCH,2,$3,$5);}
-		;
-IterationStmt	:WHILE '(' Expression ')' Stmt	{ $$ = opr(WHILE, 2, $3, $5);}
-		;
+			}	
+		}
+		 StmtList 
+		{	
+			print_st(current_st);
+			current_st=st_pop();
+		}
+	  '}'	{$$=$3;}
+	| error '}'	{yyerror("error in compound stmt\n");}
+	;
+NonFuncDeclaration	:VarDec	{$$=$1;}
+			|ClassDecln  {$$=$1;}
+			|StructDecln {$$=$1;}
+			;
+ExpressionStmt	
+	:Expression ';'	{$$=$1;}
+	|';'		{$$=NULL;}
+	|Expression error ';'	{yyerror("error in exp stmt\n");}
+	|error ';'	{yyerror("error in empty stmt");}
+	;
+SelectionStmt	
+	:IF '(' Expression ')' Stmt %prec IFX	{$$=opr(IF,2,$3,$5);}
+	|IF '(' Expression ')' Stmt ELSE Stmt	{$$=opr(IF,3,$3,$5,$7);}
+	|SWITCH '(' Expression ')' Stmt	{$$=opr(SWITCH,2,$3,$5);}
+	;
+IterationStmt	
+	:WHILE '(' Expression ')' Stmt	{ $$ = opr(WHILE, 2, $3, $5);}
+	;
 
-BasicForStmt	:FOR '(' ForInit ';' Expression ';' ForUpdate ')' Stmt {$$=opr(FOR,4,$3,$5,$7,$9);}
-		;
-ForInit		:StmtExpList  {$$=$1;}	
-		;
-ForUpdate	:StmtExpList  {$$=$1;}	
-		;
-StmtExpList	:StmtExp  {$$=$1;}
-		|StmtExpList ',' StmtExp  {$$=opr(FOR_STMT,2,$1,$3);}
-		;
-StmtExp		:Assignment		{$$=$1;}	
-		|PreincrementExp	{$$=$1;}
-		|PostincrementExp	{$$=$1;}
-		|MethodInv		{$$=$1;}	
-		|ObjCreation		{$$=$1;}
-		;
-ObjCreation	:NEW TypeName '(' ArgList ')'	{$$=opr(NEW,2,$2,$4);}	
-		;
-TypeName	:IDENT	{$$=id($1);}
-		;
-PreincrementExp	:PP IDENT	{$$=opr(PP,2,$2,0);}	
-		;
-PostincrementExp:IDENT PP	{$$=opr(PP,2,$1,1);}		
+BasicForStmt	
+	:FOR '(' Expression ';' Expression ';' Expression ')' Stmt {$$=opr(FOR,4,$3,$5,$7,$9);}
+	;
+ObjCreation	
+	:NEW TypeName '(' Expression ')' {$$=opr(NEW,2,$2,$4);}	
+	;
+TypeName
+	:IDENT	{$$=$1;}
+	;
 
-Assignment	:LHS AssOp Expression	{
-						$$=opr(ASSIGN,3,$1,$2,$3);
-						//type_check_assign($1,$3);
-					}
-		|LHS EQ	ObjCreation	{$$=$1;}
-		;
-LHS		:IDENT	{
-				struct sym_record*s=search(current_st,yytext);
-				if(s!=NULL)
-				{
-					printf("%s is name\n",s->sym_name);/*right now jsut searhc curr later we will serach till parent*/
-					$$=id(search(current_st,yytext));/*right now jsut searhc curr later we will serach till parent*/
-				}
-				else
-					printf("sym_name %s not found in symbol table\n",yytext);
-			}
-		;
-AssOp		:EQ		{$$=con($1);}	
-		|PLUS_EQ	{$$=con($1);}
-		|MINUS_EQ	{$$=con($1);}
-		|MULT_EQ	{$$=con($1);}
-		|DIV_EQ		{$$=con($1);}
-		;
-MethodInv	:MethodName '(' ArgList ')' {$$=opr(INVOC,2,$1,$3);}
-		;
-ArgList		:Expression
-		|ArgList ',' Expression	{$$=opr(ARGS,2,$1,$3);}
-		;
-MethodName	:IDENT	{	
+AssOp	
+	:EQ		{$$=con($1);}	
+	|PLUS_EQ	{$$=con($1);}
+	|MINUS_EQ	{$$=con($1);}
+	|MULT_EQ	{$$=con($1);}
+	|DIV_EQ		{$$=con($1);}
+	;
+MethodInv	
+	:MethodName '(' Expression ')' {$$=opr(INVOC,2,$1,$3);}
+	;
+MethodName	
+	:IDENT	{	
 				/*search and return from st the ptr to method*/
 				/*do some type check here*/
-			}
-		;
-BoolExpression	:TRUE	{$$=con(1);}
-		|FALSE	{$$=con(0);}
-		;
-Expression	:ConstExp			{ $$=$1;}		
-		|IDENT				{ $$=id($1);}
-	  	|Assignment			{$$=$1;}
-		| Expression PLUS Expression	{ $$=opr(PLUS,2,$1,$3); }
-		| Expression MINUS Expression	{ $$=opr(MINUS,2,$1,$3); }
-		| Expression MULT Expression	{ $$=opr(MULT,2,$1,$3); }
-		| Expression DIV Expression	{ $$=opr(DIV,2,$1,$3); }
-		| Expression POW Expression	{ $$=opr(POW,2,$1,$3);}			
-		| MINUS Expression %prec NEG	{ $$=opr(NEG,1,$2); }
-		| '('Expression')'		{ $$=$2; }
-		;
-ConstExp	:INTEGER	{$$=con($1);}
-		|FLOAT		{$$=con($1);}
-		|CHAR		{$$=con($1);}
-		;
-VarDec	:VAR IdList ':' Type {$$=opr(TYPE,2,$2,$4);dist_type($$);/*printf("%d",$$->opr.nops);*/}
-	;
-Type	:TYPE_INT	{$$=con(133);}	
-	|TYPE_FLOAT	{$$=con(134);}	
-	;
-IdList	:IDENT	{struct sym_record* s=install(yytext);$$=id(s);}
-	|IdList ',' IDENT {struct sym_record* s=install(yytext);$$=opr(COMMA,2,$1,id(s));printf("%s is last ident now\n",$$->opr.op[1]->id.i->sym_name);}
+		}
 	;
 
-ClassDecln 	: Mods CLASS IDENT TypeParamsI ClassBody ';'	{
-									nodeType* n=id($3);
+VarDec	
+	:VAR IdList ':' Type {$$=opr(TYPE,2,$2,$4);dist_type($$);/*printf("%d",$$->opr.nops);*/}
+	;
+Type	
+	:TYPE_INT	{$$=con(133);}	
+	|TYPE_FLOAT	{$$=con(134);}	
+	;
+IdList	
+	:IDENT			{struct sym_record* s=install(yytext);$$=id(s);}
+	|IdList ',' IDENT 	{
+				struct sym_record* s=install(yytext);$$=opr(COMMA,2,$1,id(s));
+				}
+	;
+primary_Expression	
+	:IDENT
+	|ConstExp
+	|'(' Expression ')' 	{$$=$2;}
+	;
+ConstExp	
+	:INTEGER	{$$=con($1);}
+	|FLOAT		{$$=con($1);}
+	|CHAR		{$$=con($1);}
+
+Expression
+	:assignment_Expression
+	|Expression ',' assignment_Expression
+	|ObjCreation
+	|MethodInv
+	;
+
+assignment_Expression	
+	:conditional_Expression
+	|unary_Expression AssOp assignment_Expression
+	;
+
+conditional_Expression	
+	:logical_or_Expression
+	|logical_or_Expression QM Expression ':' conditional_Expression
+	;
+
+logical_or_Expression	
+	:logical_and_Expression
+	|logical_or_Expression BOOL_OR logical_and_Expression
+	;
+
+logical_and_Expression
+	:inclusive_or_Expression
+	|logical_and_Expression BOOL_AND inclusive_or_Expression
+	;
+
+inclusive_or_Expression
+	:exclusive_or_Expression
+	|inclusive_or_Expression BIT_OR exclusive_or_Expression
+	;
+
+exclusive_or_Expression
+	:and_Expression
+	|exclusive_or_Expression XOR and_Expression
+	;
+
+and_Expression
+	:equality_Expression
+	|and_Expression BIT_AND equality_Expression
+	;
+
+equality_Expression
+	:relational_Expression		{/*$$=$1;*/}	
+	|equality_Expression BOOL_EQ relational_Expression	{/*$$=opr(BOOL_EQ,2,$1,$3);*/}
+	|equality_Expression NEQ relational_Expression
+	;
+
+relational_Expression
+	:shift_Expression
+	|relational_Expression LT shift_Expression
+	|relational_Expression GT shift_Expression
+	|relational_Expression LE shift_Expression
+	|relational_Expression GE shift_Expression
+	;
+
+shift_Expression
+	:additive_Expression
+	|shift_Expression LSH additive_Expression
+	|shift_Expression RSH additive_Expression
+	;
+
+additive_Expression
+	:multiplicative_Expression
+	|additive_Expression PLUS multiplicative_Expression
+	|additive_Expression MINUS multiplicative_Expression
+	;
+
+multiplicative_Expression
+	: cast_Expression
+	| multiplicative_Expression MULT cast_Expression
+	| multiplicative_Expression DIV cast_Expression
+	;
+
+cast_Expression
+	: unary_Expression
+	;
+
+unary_Expression
+	: postfix_Expression
+	| PP unary_Expression	{$$=$2;}
+	| MM unary_Expression	{$$=$2;}
+	| unary_operator cast_Expression	{$$=$2;}
+	;
+postfix_Expression
+	: primary_Expression
+	| postfix_Expression '[' Expression ']'
+	| postfix_Expression '.' IDENT
+	| postfix_Expression PP
+	| postfix_Expression MM
+	;
+unary_operator
+	:PLUS
+	|MINUS
+	;
+	
+ClassDecln
+	:Mods CLASS IDENT TypeParamsI ClassBody ';'	{
+									//nodeType* n=id($3);
 									//do some type checking here
-									$$=opr(CLASS,4,$1,n,$4,$5);
+									$$=opr(CLASS,4,$1,$3,$4,$5);
 								/*here $1 will contain enum type which will be handled by the traversal function*/
 								}
 		;						
-Mods		:PUBLIC		{$$=modPUBLIC;}
-		|PRIVATE	{$$=modPRIVATE;}
-		|PROTECTED	{$$=modPROTECTED;}
+Mods		:PUBLIC		{$$=con(modPUBLIC);}
+		|PRIVATE	{$$=con(modPRIVATE);}
+		|PROTECTED	{$$=con(modPROTECTED);}
 		;
-StructDecln	:STRUCT IDENT TypeParamsI ClassBody ';' {$$=opr(STRUCT,3,id($2),$3,$4);}
+StructDecln	:STRUCT IDENT TypeParamsI ClassBody ';' {$$=opr(STRUCT,3,$2,$3,$4);}
 		;	
 TypeParamsI 	: '[' TypeParamIList ']' {$$=$2;}
 		|	{/* empty */}	
 		;
-TypeParamIList 	:IDENT	{$$=id($1);}
-		| TypeParamIList ',' IDENT	
-		| TypeParamIList ','
+TypeParamIList 	:IDENT	{$$=$1;}
+		|TypeParamIList ',' IDENT	
+		|TypeParamIList ','
 		;		
 TypeParams 	: '[' TypeParamList ']'	{$$=$2;}
 		;
 TypeParamList 	: TypeParam
 		| TypeParamList ',' TypeParam				
 		;
-TypeParam	:IDENT	{$$=id($1);}
+TypeParam	:IDENT	{$$=$1;}
 		;
 ClassBody	: '{' ClassMemberDeclns '}'	{$$=$2;}
 		;
@@ -416,15 +518,21 @@ struct sym_record* install(char* sym_name)
 {
 	printf("installing %s\n",sym_name);
 	struct sym_record* r;
-	r=search(current_st,sym_name);
-	if(r==NULL)	// sym_name not already in table add it
+	int rv=search_keywords(sym_name);
+	if(rv==1)
+		printf("using reserved keyword\n");
+	else
 	{
-		r=insert(current_st,sym_name);
-		return r;
-	}
-	else	// oops the name already exists
-	{
+		r=search(current_st,sym_name);
+		if(r==NULL)	// sym_name not already in table add it
+		{
+			r=insert(current_st,sym_name);
+			return r;
+		}
+		else	// oops the name already exists
+		{
 		// what to do here?? do we check scope or not
+		}
 	}
 }
 void yyerror(char*s)  

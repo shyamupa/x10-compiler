@@ -1,15 +1,15 @@
 def myfunc0(var a:int)
 {
-	var i:int;
+	var i,j,k,l,m:int;
 	var f:float;
+	var for:float;
 	i=f;		// should geive mismatch
-	i=new myclass(16);
 	for(i=0;10+10;i++)
 		i=i*i;
 	if(1111)
 		a=11;
 }
-def myfunc1()
+def myfunc1(var b:float)
 {
 	while(12) 
 	{
@@ -22,6 +22,7 @@ def myfunc2()
 	if(34)
 	{
 		var z,i:int;
+		var x,x1,y:float;
 		z=i;
 	}
 }
