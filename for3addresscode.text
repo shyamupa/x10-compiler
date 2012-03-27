@@ -1,0 +1,70 @@
+char* ir_negexp(nodeType* E,nodeType* E1)
+{
+	E->opr.place = newtmp();
+	sprintf(E->opr.code, "%s\n%s%s%s", E1->opr.code, E->opr.place, " = - ", E1->opr.place);
+	return(E->opr.code);
+}
+
+
+char* ir_booleq(nodeType* E,nodeType* id1,nodeType* id2)
+{
+	sprintf(E->opr.code, "", "if ", id1->opr.places, relop, id2->opr.places, " goto ", E->opr.true, " goto ", E->opr.false);
+	return(E->opr.code);
+}
+
+char* ir_booleq(nodeType* E,nodeType* id1,nodeType* id2)
+{
+	
+}
+
+
+char* ir_bitand(nodeType* E,nodeType* E1,nodeType* E2)
+{
+	
+}
+
+
+char* ir_bitor(nodeType* E,nodeType* E1,nodeType* E2)
+{
+	
+}
+
+char* ir_xor(nodeType* E,nodeType* E1,nodeType* E2)
+{
+	
+}
+
+char* ir_lt(nodeType* E,nodeType* E1,nodeType* E2)
+{
+	
+}
+
+char* ir_gt(nodeType* E,nodeType* E1,nodeType* E2)
+{
+	
+}
+
+char* ir_le(nodeType* E,nodeType* E1,nodeType* E2)
+{
+	
+}
+
+char* ir_ge(nodeType* E,nodeType* E1,nodeType* E2)
+{
+	
+}
+
+char* ir_lhs(nodeType* E,nodeType* E1,nodeType* E2)
+{
+	
+}
+
+char* ir_rhs(nodeType* E,nodeType* E1,nodeType* E2)
+{
+	
+}
+
+char* ternary(nodeType* E,nodeType* E1,nodeType* S1,nodeType* S2)
+{
+	
+}

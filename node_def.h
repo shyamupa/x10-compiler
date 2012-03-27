@@ -7,22 +7,22 @@ typedef enum { typeConI,typeConF,typeConC,typeId,typeOpr } nodeEnum;
 typedef struct 
 {
 	nodeEnum type;
-	int value;
 	int datatype;
+	int value;
 }con_iNodeType;
 
 typedef struct 
 {
 	nodeEnum type;
-	float value;
 	int datatype;
+	float value;
 }con_fNodeType;
 
 typedef struct 
 {
 	nodeEnum type;
-	char value;
 	int datatype;
+	char value;
 }con_cNodeType;
 
 // for identifiers
@@ -31,6 +31,7 @@ typedef struct
 	nodeEnum type;
 	struct sym_record* symrec;
 	struct symbol_table* st;
+	//char* place = symrec->sym_name;
 }idNodeType;
 
 // for operators
@@ -40,6 +41,12 @@ typedef struct
 	int oper;
 	int nops;
 	union nodeTypeTag *op[1];
+	char* begin;
+	char* next;
+	char* true;
+	char* false;
+	char* place;
+	char* code;
 }oprNodeType;
 
 union nodeTypeTag 

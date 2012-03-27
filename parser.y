@@ -2,6 +2,7 @@
 #include<stdio.h>
 #include<ctype.h>
 #include<stdlib.h>
+#include<string.h>
 #include<math.h>
 #include<stdarg.h>	// for variable arguments
 #include "ll_sym_table.h"	// definitions of the symbol table
@@ -18,7 +19,11 @@
 #define COMMA 1344
 #define TYPE 1345
 #define YYDEBUG 1	//enable debugging
+#define BUFFSIZE 40000
 
+char buffer[BUFFSIZE];
+int labelno = 1;
+int tempno = 1;
 extern struct sym_record sym_table;
 extern yylineno;
 extern int yylex();
@@ -37,13 +42,27 @@ struct sym_record* install(char* sym_name);
 void dist_type(nodeType* nptr);
 nodeType* get_operand(nodeType* opnode,int index);
 void type_check_assign(nodeType* lhs, nodeType* rhs);
-void type_check_relational(nodeType* lhs, nodeType* rhs);
+void type_check_reladdmult(nodeType* lhs, nodeType* rhs);
 void type_check_int(nodeType* node);
 void type_check_char(nodeType* node);
 void type_check_float(nodeType* node);
 void type_check_division(nodeType* lhs,nodeType* rhs);
 void type_check_prepostfix(nodeType* node);
 void type_check_typeid(nodeType* node);
+char* newlabel();
+char* newtmp();
+char* ir_if(nodeType* S,nodeType* E,nodeType* S1);
+char* ir_ifelse(nodeType* S,nodeType* E,nodeType* S1,nodeType* S2);
+char* ir_while(nodeType* S,nodeType* E,nodeType* S1);
+char* ir_boolor(nodeType* E,nodeType* E1,nodeType* E2);
+char* ir_booland(nodeType* E,nodeType* E1,nodeType* E2);
+char* ir_plus(nodeType* E,nodeType* E1,nodeType* E2);
+char* ir_minus(nodeType* E,nodeType* E1,nodeType* E2);
+char* ir_mult(nodeType* E,nodeType* E1,nodeType* E2);
+char* ir_div(nodeType* E,nodeType* E1,nodeType* E2);
+char* ir_ident(nodeType* E,nodeType* id);
+char* ir_compound(nodeType* E,nodeType* E1);
+char* ir_negexp(nodeType* E,nodeType* E1);
 /*prototypes end*/
 /*global variables*/
 struct symbol_table* current_st=NULL;	// global current st 
@@ -281,7 +300,7 @@ SelectionStmt
 	|SWITCH '(' Expression ')' Stmt	{$$=opr(SWITCH,2,$3,$5);}
 	;
 IterationStmt	
-	:WHILE '(' Expression ')' Stmt	{ $$ = opr(WHILE, 2, $3, $5);}
+	:WHILE '(' Expression ')' Stmt			{$$ = opr(WHILE, 2, $3, $5);}
 	;
 
 BasicForStmt	
@@ -336,7 +355,7 @@ Expression
 
 assignment_Expression	
 	:conditional_Expression		{$$=$1;}
-	|unary_Expression AssOp assignment_Expression
+	|unary_Expression AssOp assignment_Expression	
 	{/*type_check_assign($1,$3);*/}
 	;
 
@@ -378,10 +397,10 @@ equality_Expression
 
 relational_Expression
 	:shift_Expression
-	|relational_Expression LT shift_Expression	{type_check_relational($1,$3);}
-	|relational_Expression GT shift_Expression	{type_check_relational($1,$3);}
-	|relational_Expression LE shift_Expression	{type_check_relational($1,$3);}
-	|relational_Expression GE shift_Expression	{type_check_relational($1,$3);}
+	|relational_Expression LT shift_Expression	{type_check_reladdmult($1,$3);}
+	|relational_Expression GT shift_Expression	{type_check_reladdmult($1,$3);}
+	|relational_Expression LE shift_Expression	{type_check_reladdmult($1,$3);}
+	|relational_Expression GE shift_Expression	{type_check_reladdmult($1,$3);}
 	;
 
 shift_Expression
@@ -392,13 +411,13 @@ shift_Expression
 
 additive_Expression
 	:multiplicative_Expression
-	|additive_Expression PLUS multiplicative_Expression	{type_check_relational($1,$3);}
-	|additive_Expression MINUS multiplicative_Expression	{type_check_relational($1,$3);}
+	|additive_Expression PLUS multiplicative_Expression		{type_check_reladdmult($1,$3);}
+	|additive_Expression MINUS multiplicative_Expression	{type_check_reladdmult($1,$3);}
 	;
 
 multiplicative_Expression
 	: cast_Expression
-	| multiplicative_Expression MULT cast_Expression	{type_check_relational($1,$3);}
+	| multiplicative_Expression MULT cast_Expression	{type_check_reladdmult($1,$3);}
 	| multiplicative_Expression DIV cast_Expression			{type_check_division($1,$3);}
 	;
 
@@ -631,7 +650,7 @@ void type_check_assign(nodeType* lhs,nodeType* rhs)
 	return;
 }
 
-void type_check_relational(nodeType* lhs,nodeType* rhs)
+void type_check_reladdmult(nodeType* lhs,nodeType* rhs)
 {	
 	//printf("HELLO %d",get_type(lhs));
 	if(get_type(lhs)==133 || get_type(lhs)==134)
@@ -715,4 +734,122 @@ void type_check_typeid(nodeType* node)
 		exit(0);
 	}
 	return;
+}
+
+char* newlabel()
+{
+	bzero(buffer,BUFFSIZE);
+	sprintf(buffer,"l%d:",labelno++);
+	return(buffer);
+}
+
+char* newtmp()
+{
+	bzero(buffer,BUFFSIZE);
+	sprintf(buffer,"t%d:",tempno++);
+	return(buffer);
+}
+
+char* ir_if(nodeType* S,nodeType* E,nodeType* S1)
+{
+	E->opr.true = newlabel();
+	E->opr.false = S->opr.next;
+	S1->opr.next = S->opr.next;
+	printf(S->opr.code,"%s\n%s\n%s", E->opr.code, E->opr.true, S1->opr.code);
+	return(S->opr.code);
+}
+
+char* ir_ifelse(nodeType* S,nodeType* E,nodeType* S1,nodeType* S2)
+{
+	E->opr.true = newlabel();
+	E->opr.false = newlabel();
+	S1->opr.next = S->opr.next;
+	S2->opr.next = S->opr.next;
+	sprintf(S->opr.code,"%s\n%s\n%s\n%s%s\n%s\n%s",E->opr.code,E->opr.true,S1->opr.code,"goto ",S->opr.next,E->opr.false,S2->opr.code);
+	return(S->opr.code);
+	
+}
+
+char* ir_while(nodeType* S,nodeType* E,nodeType* S1)
+{
+	S->opr.begin = newlabel();
+	E->opr.true = newlabel();
+	E->opr.false = S->opr.next;
+	S1->opr.next = S->opr.begin;
+	sprintf(S->opr.code,"%s\n%s\n%s\n%s\n%s%s", S->opr.begin, E->opr.code, E->opr.true, S1->opr.code, "goto ", S->opr.begin);
+	return(S->opr.code);
+}												
+
+char* ir_boolor(nodeType* E,nodeType* E1,nodeType* E2)
+{
+	E1->opr.true = E->opr.true;
+	E1->opr.false = newlabel();
+	E2->opr.true = E->opr.true;
+	E2->opr.false = E->opr.false;
+	sprintf(E->opr.code,"",E1->opr.code,E1->opr.false,E2->opr.code);
+	return(E->opr.code);
+}
+
+char* ir_booland(nodeType* E,nodeType* E1,nodeType* E2)
+{
+	E1->opr.true = newlabel();
+	E1->opr.false = E->opr.false;
+	E2->opr.true = E->opr.true;
+	E2->opr.false = E->opr.false;
+	sprintf(E->opr.code,"",E1->opr.code,E1->opr.true,E2->opr.code);
+	return(E->opr.code);
+}
+
+char* ir_plus(nodeType* E,nodeType* E1,nodeType* E2)
+{
+	E->opr.place = newtmp();
+	sprintf(E->opr.code, "%s\n%s\n%s%s%s%s%s", E1->opr.code, E2->opr.code, E->opr.place, " = ", E1->opr.place, " + ", E2->opr.place);
+	return(E->opr.code);
+}
+
+char* ir_minus(nodeType* E,nodeType* E1,nodeType* E2)
+{
+	E->opr.place = newtmp();
+	sprintf(E->opr.code, "%s\n%s\n%s%s%s%s%s", E1->opr.code, E2->opr.code, E->opr.place, " = ", E1->opr.place, " - ", E2->opr.place);
+	return(E->opr.code);
+}
+
+char* ir_mult(nodeType* E,nodeType* E1,nodeType* E2)
+{
+	E->opr.place = newtmp();
+	sprintf(E->opr.code, "%s\n%s\n%s%s%s%s%s", E1->opr.code, E2->opr.code, E->opr.place, " = ", E1->opr.place, " + ", E2->opr.place);
+	return(E->opr.code);
+}
+
+char* ir_div(nodeType* E,nodeType* E1,nodeType* E2)
+{
+	E->opr.place = newtmp();
+	sprintf(E->opr.code, "%s\n%s\n%s%s%s%s%s", E1->opr.code, E2->opr.code, E->opr.place, " = ", E1->opr.place, " / ", E2->opr.place);
+	return(E->opr.code);
+}
+
+char* ir_compound(nodeType* E,nodeType* E1)
+{
+	E->opr.place = E1->opr.place;
+	sprintf(E->opr.code, "%s", E1->opr.code);
+	return(E->opr.code);
+}
+
+char* ir_ident(nodeType* E,nodeType* id)
+{
+	E->opr.place = id->opr.place;
+	E->opr.code = "";
+	return(E->opr.code);
+}
+
+char* ir_pp(nodeType* E,nodeType* E1)
+{
+	sprintf(E->opr.code, "%s\n%s%s%s%s", E1->opr.code, E->opr.place, " = ", E1->opr.place, " + 1");
+	return(E->opr.code);
+}
+
+char* ir_mm(nodeType* E,nodeType* E1)
+{
+	sprintf(E->opr.code, "%s\n%s%s%s%s", E1->opr.code, E->opr.place, " = ", E1->opr.place, " - 1");
+	return(E->opr.code);
 }
