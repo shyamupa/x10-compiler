@@ -336,7 +336,7 @@ TypeName
 	;
 
 AssOp	
-	:EQ		{$$=con_i(EQ);}	
+	:EQ		{$$=con_i(EQ);printf("PQPWWWWWWWWWWWWWWQPQPQPQ %d",EQ);}	
 	|PLUS_EQ	{$$=con_i(PLUS_EQ);}
 	|MINUS_EQ	{$$=con_i(MINUS_EQ);}
 	|MULT_EQ	{$$=con_i(MULT_EQ);}
@@ -367,7 +367,7 @@ primary_Expression
 	|'(' Expression ')' 	{$$=$2;}
 	;
 ConstExp	
-	:INTEGER	{$$=con_i($1);}
+	:INTEGER	{$$=con_i($1);printf("PQPQQQQQQQQQQPQPQPQ %d",$1);}
 	|FLOAT		{$$=con_f($1);}
 	|CHAR		{$$=con_c($1);}
 	|TRUE		{$$=con_i($1);}	
@@ -382,7 +382,7 @@ Expression
 
 assignment_Expression	
 	:conditional_Expression		{$$=$1;}
-	|unary_Expression AssOp assignment_Expression	{$$=opr(ASSIGN,3,$1,$2,$3) ; type_check_assign($1,$3);}
+	|unary_Expression AssOp assignment_Expression	{$$=opr(ASSIGN,3,$1,$2,$3) ; /*type_check_assign($1,$3)*/;}
 	;
 
 conditional_Expression	
@@ -430,21 +430,21 @@ relational_Expression
 	;
 
 shift_Expression
-	:additive_Expression
+	:additive_Expression						{$$ = $1;}
 	|shift_Expression LSH additive_Expression			{$$=opr(LSH,2,$1,$3);type_check_int($3);}
 	|shift_Expression RSH additive_Expression			{$$=opr(RSH,2,$1,$3);type_check_int($3);}
 	;
 
 additive_Expression
-	:multiplicative_Expression
-	|additive_Expression PLUS multiplicative_Expression	{$$=opr(PLUS,2,$1,$3);type_check_addmult($1,$3);}
-	|additive_Expression MINUS multiplicative_Expression	{$$=opr(MINUS,2,$1,$3);type_check_addmult($1,$3);}
+	:multiplicative_Expression				{$$ = $1;}
+	|additive_Expression PLUS multiplicative_Expression	{$$=opr(PLUS,2,$1,$3);/*type_check_addmult($1,$3)*/;}
+	|additive_Expression MINUS multiplicative_Expression	{$$=opr(MINUS,2,$1,$3);/*type_check_addmult($1,$3)*/;}
 	;
 
 multiplicative_Expression
-	: cast_Expression
-	| multiplicative_Expression MULT cast_Expression	{$$=opr(MULT,2,$1,$3);type_check_addmult($1,$3);}
-	| multiplicative_Expression DIV cast_Expression		{$$=opr(DIV,2,$1,$3);type_check_division($1,$3);}
+	: cast_Expression					{$$ = $1;}
+	| multiplicative_Expression MULT cast_Expression	{$$=opr(MULT,2,$1,$3);/*type_check_addmult($1,$3)*/;}
+	| multiplicative_Expression DIV cast_Expression		{$$=opr(DIV,2,$1,$3);/*type_check_division($1,$3)*/;}
 	;
 
 cast_Expression
@@ -458,7 +458,7 @@ unary_Expression
 	| unary_operator cast_Expression	{$$=opr(CAST,2,$1,$2);}
 	;
 postfix_Expression
-	: primary_Expression
+	: primary_Expression				{$$ = $1;}
 	| postfix_Expression '[' Expression ']'		{type_check_typeid($1);}
 	| postfix_Expression '.' IDENT 							
 	| postfix_Expression PP			{$$=opr(POSTFIX,2,$1,con_i($2));type_check_prepostfix($1);}
@@ -521,7 +521,6 @@ int main()
 	return 0;
 }
 
-
 nodeType* con_i(int value)
 {
 	nodeType *p;
@@ -532,6 +531,11 @@ nodeType* con_i(int value)
 	p->type=typeConI;
 	p->con_i.value=value;
 	p->con_i.datatype=133;
+	bzero(buffer,BUFFSIZE);
+	sprintf(buffer,"%d",value);
+	p->con_i.place = strdup(buffer);
+	p->con_i.code = strdup(buffer);
+	
 	return p;
 }
 
@@ -545,6 +549,10 @@ nodeType* con_f(float value)
 	p->type=typeConF;
 	p->con_f.value=value;
 	p->con_f.datatype=134;
+	bzero(buffer,BUFFSIZE);
+	sprintf(buffer,"%f",value);
+	p->con_f.place = strdup(buffer);
+	p->con_f.code = strdup(buffer);
 	return p;
 }
 
@@ -558,6 +566,10 @@ nodeType* con_c(char value)
 	p->type=typeConC;
 	p->con_c.value=value;
 	p->con_c.datatype=135;
+	bzero(buffer,BUFFSIZE);
+	sprintf(buffer,"%d",value);
+	p->con_c.place = strdup(buffer);
+	p->con_c.code = strdup(buffer);
 	return p;
 }
 
@@ -572,6 +584,7 @@ nodeType *id(struct sym_record* symrec)
 	p->type = typeId;
 	p->id.symrec = symrec;
 	p->id.code = strdup(symrec->sym_name);
+	p->id.place = strdup(symrec->sym_name);
 	printf("ffffffffffffffffffffffffffffffffffffffffffffffffffff\n");
 	printf("%s\n",p->id.symrec->sym_name);
 	return p;
@@ -639,6 +652,7 @@ void yyerror(char*s)
 
 int generate(nodeType *n)
 {
+	printf("GENERATE BEGINS\n");
 	char* _code;
 	if(!n) 
 	{
@@ -648,13 +662,23 @@ int generate(nodeType *n)
 	switch(n->type)
 	{
 	case typeConI:
+		printf("MATCHED typeConI\n");
+		/*if(n->con_i.datatype==133 || n->con_i.datatype == 134)
+		{
+			n->con_i.place = strdup(newtmp());
+			bzero(buffer,BUFFSIZE);
+			sprintf(buffer,"%s=%s", n->con_i.place, n->con_i.place);
+			n->con_i.code =  strdup(buffer);
+			
+			printf("CONSTANT NUMBER CODE: %s",n->con_i.code);
+		}*/
 		break;
 	case typeConC:
 		break;
 	case typeConF:
 		break;
 	case typeId : 
-		
+			
 			printf("Matched typeId:\n");
 			//printf("%s\n",n->id.symrec->sym_name);
 			printf("%s\n",n->id.code);
@@ -708,7 +732,7 @@ int generate(nodeType *n)
 			 break;
 		case EMPTY:
 			 printf("Matched EMPTY\n");
-			 n->opr.code = strdup(" ");;
+			 n->opr.code = strdup(" ");
 			break;
 		case EXP_LIST:
 			//_code=strdup(ir_explist(n));
@@ -726,6 +750,7 @@ int generate(nodeType *n)
 			//_code=strup(ir_cast(n));
 			break;
 		case ASSIGN:
+			printf("MATCHED ASSIGN\n");
 			_code=strdup(ir_assign(n));
 			break;
 	
@@ -740,43 +765,53 @@ int generate(nodeType *n)
 			break;
 	
 		case BIT_OR:
-		break;
+			break;
 		case BIT_AND:
-		break;
-	case XOR:
-		break;
-
-	case LT:
-		break;
-	case GT:
-		break;
-	case LE:
-		break;
-	case GE:
-		break;
+			break;
+		case XOR:
+			break;
+		case LT:
+			printf("Matched LT\n");
+		case GT:
+			printf("Matched GT\n");
+		case LE:
+			printf("Matched LE\n");
+		case GE:
+			printf("Matched GE\n");
+			_code = strdup(ir_relop(n));
+			printf("RELOP CODE:%s",_code);
+			break;
+		case LSH:
+			break;
+		case RSH:
+			break;
 	
-	case LSH:
-		break;
-	case RSH:
-		break;
+		case PLUS:
+			printf("Matched PLUS\n");
+			_code = strdup(ir_arithmetic(n));
+			break;
+		case MINUS:
+   			printf("Matched MINUS\n");
+   			_code = strdup(ir_arithmetic(n));
+   			break;
+		case MULT:
+			printf("Matched MULT\n");
+			_code = strdup(ir_arithmetic(n));
+			break;
+		case DIV:
+			printf("Matched DIV\n");
+			_code = strdup(ir_arithmetic(n));
+			break;
 	
-	case PLUS:
-		
-	case MINUS:
-	
-	case MULT:
-
-	case DIV:
-		_code = strdup(ir_arithmetic(n));
-		break;
-	
-	default :
-		printf("entered default\n"); 
+		default :
+			printf("entered default\n"); 
 	}
+	break;
 default:
 	printf("entered DEFAULT\n");
 }
 }	
+
 
 
 

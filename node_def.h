@@ -10,6 +10,8 @@ typedef struct
 	int datatype;
 	int value;
 	char* code;
+	char* place;
+
 }con_iNodeType;
 
 typedef struct 
@@ -17,6 +19,9 @@ typedef struct
 	nodeEnum type;
 	int datatype;
 	float value;
+	char* place;
+	char *code;
+
 }con_fNodeType;
 
 typedef struct 
@@ -24,6 +29,9 @@ typedef struct
 	nodeEnum type;
 	int datatype;
 	char value;
+	char* place;
+	char *code;
+
 }con_cNodeType;
 
 // for identifiers
@@ -33,6 +41,8 @@ typedef struct
 	struct sym_record* symrec;
 	struct symbol_table* st;
 	char *code;
+	char* place;
+	
 	//char* place = symrec->sym_name;
 }idNodeType;
 

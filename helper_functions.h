@@ -11,5 +11,7 @@ char* newtmp();
 nodeType* get_operand(nodeType* opnode,int index);
 void dist_type(nodeType* nptr);
 int get_type(nodeType* data_type_ptr);
+char* get_place(nodeType* n);
+char* get_code(nodeType* n);
 
 #endif

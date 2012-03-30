@@ -17,7 +17,7 @@ char* concat(char* c1,char* c2)
 char* newtmp()
 {
 	bzero(buffer,BUFFSIZE);
-	sprintf(buffer,"t%d:",tempno++);
+	sprintf(buffer,"t%d",tempno++);
 	return(buffer);
 }
 // Generates a newlabel and returns the string 
@@ -76,3 +76,53 @@ int get_type(nodeType* data_type_ptr)
 		return data_type_ptr->id.symrec->type;
 	}
 }
+
+char* get_code(nodeType* n)
+{
+ switch(n->type)
+ {
+  case typeConI:
+		return n->con_i.code;
+		break;
+  case typeConC:
+		return n->con_c.code;
+		break;
+  case typeConF:
+		return n->con_f.code;
+		break;
+  case typeOpr:
+		return n->opr.code;
+		break;
+  case typeId:
+		return n->id.code;
+		break;
+
+  default:
+			printf("Can't get code for unknown node type\n");
+}
+}
+
+char* get_place(nodeType* n)
+{
+ switch(n->type)
+ {
+  case typeConI:
+		return n->con_i.place;
+		break;
+  case typeConC:
+		return n->con_c.place;
+		break;
+  case typeConF:
+		return n->con_f.place;
+		break;
+  case typeOpr:
+		return n->opr.place;
+		break;
+  case typeId:
+		return n->id.place;
+		break;
+  default:
+			printf("Can't get place for unknown node type\n");
+}
+}
+
