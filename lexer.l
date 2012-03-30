@@ -38,8 +38,8 @@ do		{return DO;}
 switch		{return SWITCH;}
 case		{return CASE;}
 default		{return DEFAULT;}
-true		{return TRUE;}
-false		{return FALSE;}
+"true"		{return TRUE;}
+"false"		{return FALSE;}
 
 abstract	{return ABSTRACT;} 
 as		{return AS;}

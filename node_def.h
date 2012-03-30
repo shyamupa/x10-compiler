@@ -9,6 +9,7 @@ typedef struct
 	nodeEnum type;
 	int datatype;
 	int value;
+	char* code;
 }con_iNodeType;
 
 typedef struct 
@@ -31,6 +32,7 @@ typedef struct
 	nodeEnum type;
 	struct sym_record* symrec;
 	struct symbol_table* st;
+	char *code;
 	//char* place = symrec->sym_name;
 }idNodeType;
 
@@ -43,8 +45,8 @@ typedef struct
 	union nodeTypeTag *op[1];
 	char* begin;
 	char* next;
-	char* true;
-	char* false;
+	char* T;
+	char* F;
 	char* place;
 	char* code;
 }oprNodeType;
