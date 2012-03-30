@@ -82,7 +82,11 @@ char* ir_fun_def(nodeType* n);
 char* ir_fun_def_list(nodeType* n);
 char* ir_var_dec(nodeType* n);
 char* ir_idlist(nodeType* n);
+char* ir_assign(nodeType* n);
+char* ir_ternary(nodeType* n);
+char* ir_arithmetic(nodeType* n);
 char* ir_stmtlist(nodeType* n);
+
 
 void type_check_assign(nodeType* lhs, nodeType* rhs);
 void type_check_int(nodeType* node);
@@ -735,7 +739,6 @@ int generate(nodeType *n)
 			 //concat(CODE,_code);
 			 printf("%s",_code);
 			 break;
-
 		case ID_LIST:
  			 printf("Matched ID_LIST\n");
  			 _code=strdup(ir_idlist(n));
@@ -745,21 +748,28 @@ int generate(nodeType *n)
 		case EMPTY:
 			 printf("Matched EMPTY\n");
 			 n->opr.code = strdup(" ");;
-			 break;
+			break;
 		case EXP_LIST:
+			//_code=strdup(ir_explist(n));
 			break;
 		case TERNERY:
+			//_code=strdup(ir_ternery(n));
 			break;
 		case POSTFIX:
+			//_code=strup(ir_postfix(n));
 			break;
 		case PREFIX:
+			//_code=strup(ir_prefix(n));
 			break;
 		case CAST:
+			//_code=strup(ir_cast(n));
 			break;
 		case ASSIGN:
+			_code=strdup(ir_assign(n));
 			break;
 	
 		case BOOL_OR:
+			//_code=strup(ir_boolor(n));
 			break;
 		case BOOL_AND:
 			break;
@@ -790,12 +800,13 @@ int generate(nodeType *n)
 		break;
 	
 	case PLUS:
-		break;
+		
 	case MINUS:
-		break;
+	
 	case MULT:
-		break;
+
 	case DIV:
+		_code = strdup(ir_arithmetic(n));
 		break;
 	
 	default :
@@ -870,6 +881,7 @@ nodeType* get_operand(nodeType* opnode,int index)
 {
 	return opnode->opr.op[index];
 }
+
 	
 char* concat(char* c1,char* c2)
 {
@@ -879,13 +891,67 @@ char* concat(char* c1,char* c2)
 	printf("jbdsah\n");
 	return c1;
 }
-
+char* ir_explist(nodeType* N)
+{
+	nodeType* exp=get_operand(N,0);
+	nodeType* assexp=get_operand(N,1);
+	generate(exp);
+	generate(assexp);
+	bzero(buffer,BUFFSIZE);
+	sprintf(buffer,"%s\n%s", exp->opr.code, assexp->opr.T);
+	return(buffer);
+}
+char* ir_ternery(nodeType* N)
+{
+	nodeType* log_or_exp=get_operand(N,0);
+	nodeType* exp=get_operand(N,1);
+	nodeType* cond_exp=get_operand(N,2);
+	generate(log_or_exp);
+	generate(exp);
+	generate(cond_exp);
+	//Incomplete
+}
+char* ir_assign(nodeType* N)
+{
+	nodeType* unary_exp = get_operand(N,0);
+	nodeType* assop = get_operand(N,1);
+	nodeType* ass_exp = get_operand(N,2);
+	generate(unary_exp);
+	//generate(assop);
+	generate(ass_exp);
+	switch(assop->con_i.value)
+	{
+	case EQ:
+		bzero(buffer,BUFFSIZE);
+		sprintf(buffer,"%s\n%s\n%s=%s", unary_exp->opr.code, ass_exp->opr.code,unary_exp->opr.place,ass_exp->opr.place);
+		break;
+	case PLUS_EQ:
+		bzero(buffer,BUFFSIZE);
+		sprintf(buffer,"%s\n%s\n%s=%s+%s", unary_exp->opr.code, ass_exp->opr.code,unary_exp->opr.place,unary_exp->opr.place,ass_exp->opr.place);
+		break;
+	case MINUS_EQ:
+		bzero(buffer,BUFFSIZE);
+		sprintf(buffer,"%s\n%s\n%s=%s-%s", unary_exp->opr.code, ass_exp->opr.code,unary_exp->opr.place,unary_exp->opr.place,ass_exp->opr.place);
+		break;
+	case MULT_EQ:
+		bzero(buffer,BUFFSIZE);
+		sprintf(buffer,"%s\n%s\n%s=%s*%s", unary_exp->opr.code, ass_exp->opr.code,unary_exp->opr.place,unary_exp->opr.place,ass_exp->opr.place);
+		break;
+	case DIV_EQ:
+		bzero(buffer,BUFFSIZE);
+		sprintf(buffer,"%s\n%s\n%s=%s/%s", unary_exp->opr.code, ass_exp->opr.code,unary_exp->opr.place,unary_exp->opr.place,ass_exp->opr.place);
+		break;
+	default: printf("ASSOP DEAFAULT\n");
+	}
+	return buffer;
+}
 char* ir_if(nodeType* S,nodeType* E,nodeType* S1)
 {
-	bzero(buffer,BUFFSIZE);
 	E->opr.T = newlabel();
 	E->opr.F = S->opr.next;
 	S1->opr.next = S->opr.next;
+	bzero(buffer,BUFFSIZE);
+
 	sprintf(buffer,"%s\n%s\n%s", E->opr.code, E->opr.T, S1->opr.code);
 	return(buffer);
 }
@@ -941,35 +1007,39 @@ char* ir_boolneg(nodeType* B,nodeType* B1)
 	return(B->opr.code);
 }
 
-char* ir_plus(nodeType* E,nodeType* E1,nodeType* E2)
+char* ir_arithmetic(nodeType* n)
 {
-	bzero(buffer,BUFFSIZE);
-	E->opr.place = newtmp();
-	sprintf(buffer, "%s\n%s\n%s%s%s%s%s", E1->opr.code, E2->opr.code, E->opr.place, " = ", E1->opr.place, " + ", E2->opr.place);
-	return(buffer);
-}
-
-char* ir_minus(nodeType* E,nodeType* E1,nodeType* E2)
-{
-	bzero(buffer,BUFFSIZE);
-	E->opr.place = newtmp();
-	sprintf(buffer, "%s\n%s\n%s%s%s%s%s", E1->opr.code, E2->opr.code, E->opr.place, " = ", E1->opr.place, " - ", E2->opr.place);
-	return(buffer);
-}
-
-char* ir_mult(nodeType* E,nodeType* E1,nodeType* E2)
-{
-	bzero(buffer,BUFFSIZE);
-	E->opr.place = newtmp();
-	sprintf(buffer, "%s\n%s\n%s%s%s%s%s", E1->opr.code, E2->opr.code, E->opr.place, " = ", E1->opr.place, " + ", E2->opr.place);
-	return(buffer);
-}
-
-char* ir_div(nodeType* E,nodeType* E1,nodeType* E2)
-{
-	bzero(buffer,BUFFSIZE);
-	E->opr.place = newtmp();
-	sprintf(buffer, "%s\n%s\n%s%s%s%s%s", E1->opr.code, E2->opr.code, E->opr.place, " = ", E1->opr.place, " / ", E2->opr.place);
+	nodeType* E1 = get_operand(n,0);
+	nodeType* E2 = get_operand(n,1);
+	generate(E1);
+	generate(E2);
+	switch(n->opr.oper)
+	{
+	case PLUS:
+		
+		bzero(buffer,BUFFSIZE);
+		n->opr.place = newtmp();
+		sprintf(buffer, "%s\n%s\n%s=%s+%s", E1->opr.code, E2->opr.code, n->opr.place, E1->opr.place,  E2->opr.place);
+		
+	case MINUS:
+		
+		bzero(buffer,BUFFSIZE);
+		n->opr.place = newtmp();
+		sprintf(buffer, "%s\n%s\n%s=%s-%s", E1->opr.code, E2->opr.code, n->opr.place, E1->opr.place,  E2->opr.place);
+	case MULT:
+		
+		bzero(buffer,BUFFSIZE);
+		n->opr.place = newtmp();
+		sprintf(buffer, "%s\n%s\n%s=%s*%s", E1->opr.code, E2->opr.code, n->opr.place, E1->opr.place,  E2->opr.place);
+	case DIV:
+		
+		bzero(buffer,BUFFSIZE);
+		n->opr.place = newtmp();
+		sprintf(buffer, "%s\n%s\n%s=%s/%s", E1->opr.code, E2->opr.code, n->opr.place, E1->opr.place,  E2->opr.place);
+	
+	default:
+		printf("arithmetic default\n");
+	}
 	return(buffer);
 }
 
