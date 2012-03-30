@@ -219,6 +219,7 @@ Defn_or_Decln
 					print_st(current_st);
 					printf("Starting code Gen\n");
 					generate($$);
+					printf("\n$$$$$$$$$$$$$$$$$$$$$$$$$$$$\n");
 					printf("FINAL CODE:\n");
 					printf("%s\n",$$->opr.code);
 					}
@@ -402,7 +403,7 @@ logical_and_Expression
 
 inclusive_or_Expression
 	:exclusive_or_Expression	{$$=$1;}
-	|inclusive_or_Expression BIT_OR exclusive_or_Expression	{$$=opr(BIT_OR,2,$1,$3);}
+	|inclusive_or_Expression BIT_OR exclusive_or_Expression		{$$=opr(BIT_OR,2,$1,$3);}
 	;
 
 exclusive_or_Expression
@@ -423,21 +424,21 @@ equality_Expression
 
 relational_Expression
 	:shift_Expression	{$$=$1;}
-	|relational_Expression LT shift_Expression	{$$=opr(LT,2,$1,$3);type_check_rel($1,$3);}
-	|relational_Expression GT shift_Expression	{$$=opr(GT,2,$1,$3);type_check_rel($1,$3);}
-	|relational_Expression LE shift_Expression	{$$=opr(LE,2,$1,$3);type_check_rel($1,$3);}
-	|relational_Expression GE shift_Expression	{$$=opr(GE,2,$1,$3);type_check_rel($1,$3);}
+	|relational_Expression LT shift_Expression	{$$=opr(LT,2,$1,$3);/*type_check_rel($1,$3)*/;}
+	|relational_Expression GT shift_Expression	{$$=opr(GT,2,$1,$3);/*type_check_rel($1,$3)*/;}
+	|relational_Expression LE shift_Expression	{$$=opr(LE,2,$1,$3);/*type_check_rel($1,$3)*/;}
+	|relational_Expression GE shift_Expression	{$$=opr(GE,2,$1,$3);/*type_check_rel($1,$3)*/;}
 	;
 
 shift_Expression
 	:additive_Expression						{$$ = $1;}
-	|shift_Expression LSH additive_Expression			{$$=opr(LSH,2,$1,$3);type_check_int($3);}
-	|shift_Expression RSH additive_Expression			{$$=opr(RSH,2,$1,$3);type_check_int($3);}
+	|shift_Expression LSH additive_Expression			{$$=opr(LSH,2,$1,$3);/*type_check_int($3)*/;}
+	|shift_Expression RSH additive_Expression			{$$=opr(RSH,2,$1,$3);/*type_check_int($3)*/;}
 	;
 
 additive_Expression
 	:multiplicative_Expression				{$$ = $1;}
-	|additive_Expression PLUS multiplicative_Expression	{$$=opr(PLUS,2,$1,$3);/*type_check_addmult($1,$3)*/;}
+	|additive_Expression PLUS multiplicative_Expression		{$$=opr(PLUS,2,$1,$3);/*type_check_addmult($1,$3)*/;}
 	|additive_Expression MINUS multiplicative_Expression	{$$=opr(MINUS,2,$1,$3);/*type_check_addmult($1,$3)*/;}
 	;
 
@@ -765,25 +766,41 @@ int generate(nodeType *n)
 			break;
 	
 		case BIT_OR:
+			printf("Matched BIT_OR\n");
+			_code = strdup(ir_arithmetic(n));
 			break;
 		case BIT_AND:
+			printf("Matched BIT_AND\n");
+			_code = strdup(ir_arithmetic(n));
 			break;
 		case XOR:
+			printf("Matched XOR\n");
+			_code = strdup(ir_arithmetic(n));
 			break;
 		case LT:
 			printf("Matched LT\n");
+			_code = strdup(ir_relop(n));
+			printf("RELOP LT CODE:%s\n",_code);
 		case GT:
 			printf("Matched GT\n");
+			_code = strdup(ir_relop(n));
+			printf("RELOP GT CODE:%s\n",_code);
 		case LE:
 			printf("Matched LE\n");
+			_code = strdup(ir_relop(n));
+			printf("RELOP LE CODE:%s\n",_code);
 		case GE:
 			printf("Matched GE\n");
 			_code = strdup(ir_relop(n));
-			printf("RELOP CODE:%s",_code);
+			printf("RELOP GE CODE:%s\n",_code);
 			break;
 		case LSH:
+			printf("Matched LSH\n");
+			_code = strdup(ir_arithmetic(n));
 			break;
 		case RSH:
+			printf("Matched RSH\n");
+			_code = strdup(ir_arithmetic(n));
 			break;
 	
 		case PLUS:

@@ -85,6 +85,8 @@ when		{return WHEN;}
 ">"		{return GT;}
 "<="		{return LE;}
 "<"		{return LT;}
+"<<"	{return LSH;}
+">>"	{return RSH;}
 "+="		{return PLUS_EQ;}
 "-="		{return MINUS_EQ;}
 "*="		{return MULT_EQ;}
@@ -95,7 +97,7 @@ when		{return WHEN;}
 "|"		{return BIT_OR;}
 "&&"		{return BOOL_AND;}
 "&"		{return BIT_AND;}
-
+"$"		{return XOR;}
 "+"		{return PLUS;}
 "-"		{return MINUS;}
 "*"		{return MULT;}

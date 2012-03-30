@@ -68,7 +68,6 @@ char* ir_arithmetic(nodeType* n)
 	switch(n->opr.oper)
 	{
 	case PLUS:
-		
 		bzero(buffer,BUFFSIZE);
 		n->opr.place = strdup(newtmp());
 		printf("QQQQQQQQ777:%s",get_place(n));
@@ -76,25 +75,52 @@ char* ir_arithmetic(nodeType* n)
 		printf("QQQQQQQQQQQ:%s",buffer);
 		break;
 	case MINUS:
-		
 		bzero(buffer,BUFFSIZE);
 		n->opr.place = strdup(newtmp());
 		printf("QQQQQQQQ778:%s",get_place(n));
 		sprintf(buffer, "%s\n%s\n%s=%s-%s", get_code(E1), get_code(E2), get_place(n), get_place(E1),  get_place(E2));
 		break;
 	case MULT:
-		
 		bzero(buffer,BUFFSIZE);
 		n->opr.place = strdup(newtmp());
 		printf("QQQQQQQQ779:%s",get_place(n));
 		sprintf(buffer, "%s\n%s\n%s=%s*%s", get_code(E1), get_code(E2), get_place(n), get_place(E1),  get_place(E2));
 		break;
 	case DIV:
-		
 		bzero(buffer,BUFFSIZE);
 		n->opr.place = strdup(newtmp());
 		printf("QQQQQQQQ790:%s",get_place(n));
 		sprintf(buffer, "%s\n%s\n%s=%s/%s", get_code(E1), get_code(E2), get_place(n), get_place(E1),  get_place(E2));
+		break;
+	case BIT_AND:
+		bzero(buffer,BUFFSIZE);
+		n->opr.place = strdup(newtmp());
+		printf("QQQQQQQQ790:%s",get_place(n));
+		sprintf(buffer, "%s\n%s\n%s=%s&%s", get_code(E1), get_code(E2), get_place(n), get_place(E1),  get_place(E2));
+		break;
+	case BIT_OR:
+		bzero(buffer,BUFFSIZE);
+		n->opr.place = strdup(newtmp());
+		printf("QQQQQQQQ790:%s",get_place(n));
+		sprintf(buffer, "%s\n%s\n%s=%s|%s", get_code(E1), get_code(E2), get_place(n), get_place(E1),  get_place(E2));
+		break;
+	case XOR:
+		bzero(buffer,BUFFSIZE);
+		n->opr.place = strdup(newtmp());
+		printf("QQQQQQQQ790:%s",get_place(n));
+		sprintf(buffer, "%s\n%s\n%s=%s$%s", get_code(E1), get_code(E2), get_place(n), get_place(E1),  get_place(E2));
+		break;
+	case LSH:
+		bzero(buffer,BUFFSIZE);
+		n->opr.place = strdup(newtmp());
+		printf("QQQQQQQQ790:%s",get_place(n));
+		sprintf(buffer, "%s\n%s\n%s=%s<<%s", get_code(E1), get_code(E2), get_place(n), get_place(E1),  get_place(E2));
+		break;
+	case RSH:
+		bzero(buffer,BUFFSIZE);
+		n->opr.place = strdup(newtmp());
+		printf("QQQQQQQQ790:%s",get_place(n));
+		sprintf(buffer, "%s\n%s\n%s=%s>>%s", get_code(E1), get_code(E2), get_place(n), get_place(E1),  get_place(E2));
 		break;
 	default:
 		printf("arithmetic default\n");
@@ -107,34 +133,50 @@ char* ir_arithmetic(nodeType* n)
 
 char* ir_relop(nodeType* n)
 {
+	//printf("Entered Relational\n");
 	nodeType* E1 = get_operand(n,0);
 	nodeType* E2 = get_operand(n,1);
 	generate(E1);
+	//printf("E1 code:%s\n",get_code(E1));
 	generate(E2);
+	//printf("E2 code:%s\n",get_code(E2));
 	switch(n->opr.oper)
 	{
 	case LT:
+		printf("Relational LT\n");
 		bzero(buffer,BUFFSIZE);
-		n->opr.place = newtmp();
+		n->opr.place = strdup(newtmp());
+		//printf("Rel:%s\n",get_place(n));
 		sprintf(buffer, "%s\n%s\n%s=%s<%s", get_code(E1), get_code(E2), get_place(n), get_place(E1),  get_place(E2));
+		//printf("%s\n",buffer);
+		//printf("End Relational LT\n");
 		break;
 
 	case GT:
+		printf("Relational GT\n");
 		bzero(buffer,BUFFSIZE);
-		n->opr.place = newtmp();
+		n->opr.place = strdup(newtmp());
+		//printf("Rel:%s\n",get_place(n));
 		sprintf(buffer, "%s\n%s\n%s=%s>%s", get_code(E1), get_code(E2), get_place(n), get_place(E1),  get_place(E2));
+		//printf("End Relational GT\n");
 		break;
 		
 	case LE:
+		printf("Relational LE\n");
 		bzero(buffer,BUFFSIZE);
-		n->opr.place = newtmp();
+		n->opr.place = strdup(newtmp());
+		//printf("Rel:%s\n",get_place(n));
 		sprintf(buffer, "%s\n%s\n%s=%s<=%s", get_code(E1), get_code(E2), get_place(n), get_place(E1),  get_place(E2));
+		//printf("End Relational LE\n");
 		break;
 
 	case GE:
+		printf("Relational GE\n");
 		bzero(buffer,BUFFSIZE);
-		n->opr.place = newtmp();
+		n->opr.place = strdup(newtmp());
+		//printf("Rel:%s\n",get_place(n));
 		sprintf(buffer, "%s\n%s\n%s=%s>=%s", get_code(E1), get_code(E2), get_place(n), get_place(E1),  get_place(E2));
+		//printf("End Relational GE\n");
 		break;
 
 	default:
