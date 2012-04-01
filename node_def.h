@@ -11,6 +11,8 @@ typedef struct
 	int value;
 	char* code;
 	char* place;
+	char* T;
+	char* F;
 
 }con_iNodeType;
 
@@ -21,6 +23,9 @@ typedef struct
 	float value;
 	char* place;
 	char *code;
+	char* T;
+	char* F;
+
 
 }con_fNodeType;
 
@@ -31,6 +36,9 @@ typedef struct
 	char value;
 	char* place;
 	char *code;
+	char* T;
+	char* F;
+	
 
 }con_cNodeType;
 
@@ -42,6 +50,8 @@ typedef struct
 	struct symbol_table* st;
 	char *code;
 	char* place;
+	char* T;
+	char* F;
 	
 	//char* place = symrec->sym_name;
 }idNodeType;

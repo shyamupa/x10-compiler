@@ -127,7 +127,7 @@ int tempno = 1;
 %token IF THEN ELSE
 %token FOR IN WHILE CONTINUE BREAK DO
 %token SWITCH CASE DEFAULT
-%token INTEGER FLOAT CHAR TYPE_INT TYPE_FLOAT TYPE_CHAR
+%token INTEGER FLOAT CHAR TYPE_INT TYPE_FLOAT TYPE_CHAR TYPE_VOID
 %token RETURN DEF
 %token PUBLIC PRIVATE PROTECTED
 %token BEQ LT GT LE GE TRUE FALSE 
@@ -171,6 +171,7 @@ int tempno = 1;
 %type <nPtr> IDENT
 %type <nPtr> IdList
 %type <nPtr> IterationStmt
+%type <nPtr> JumpStmt
 %type <nPtr> logical_or_Expression
 %type <nPtr> logical_and_Expression
 %type <nPtr> LabeledStmt
@@ -181,6 +182,7 @@ int tempno = 1;
 %type <nPtr> postfix_Expression
 %type <nPtr> ObjCreation
 %type <nPtr> relational_Expression
+%type <nPtr> ReturnType
 %type <nPtr> shift_Expression
 %type <nPtr> StmtList
 %type <nPtr> Stmt 
@@ -243,8 +245,13 @@ FuncDefn
 				seen_func=1;
 
 			}
-	'(' FormalArgLIST ')' CompoundStmt	{$$=opr(FUNC,3,$2,$5,$7);} 
+	'(' FormalArgLIST ')' ':' ReturnType CompoundStmt	{$$=opr(FUNC,4,$2,$5,$8,$9);} 
 	;
+
+ReturnType
+	:Type	{$$=$1;}
+	;
+	
 FormalArgLIST : FormalArgList	{ $$ = $1;}
               | {$$= empty(EMPTY);/*empty production*/} 
 	      ;	
@@ -254,12 +261,12 @@ FormalArgList
 	;
 FormalArg
 	: IDENT {
-		struct sym_record* s = install(yytext);
-		$1 = id(s);
+			struct sym_record* s = install(yytext);
+			$1 = id(s);
 		}
 	 ':' Type{
-		 $$=opr(FORMAL_ARG,2,$1,$4); /*THIS IS INCOMPLETE*/
-		 $1->id.symrec->type = $4->con_i.datatype;
+		 	$$=opr(FORMAL_ARG,2,$1,$4); /*THIS IS INCOMPLETE*/
+		 	$1->id.symrec->type = $4->con_i.datatype;
 		 }
 	;
 	
@@ -278,8 +285,16 @@ Stmt
 	|LabeledStmt		{$$=$1;}
 	|NonFuncDeclaration	{$$=$1;}
 	|AsyncStmt		{$$=$1;}
+	|JumpStmt		{$$=$1;}
 	;
 
+JumpStmt
+	:CONTINUE ';'		{$$=con_i(CONTINUE);}	
+	|BREAK ';'		{$$=con_i(BREAK);}
+	|RETURN ';'		{$$=con_i(RETURN);}
+	|RETURN Expression ';'	{$$=opr(RETURN,1,$2);}
+	;
+	
 AsyncStmt
 	:ASYNC Stmt		{$$=opr(ASYNC,2,$2);}
 	;
@@ -304,7 +319,7 @@ CompoundStmt
 			print_st(current_st);
 			current_st=st_pop();
 		}
-	  '}'	{$$=$3;}
+	  '}'		{$$=opr(COMPOUND,1,$3);}
 	| error '}'	{yyerror("error in compound stmt\n");}
 	;
 NonFuncDeclaration	:VarDec	{$$=$1;}
@@ -347,8 +362,10 @@ VarDec
 	:VAR IdList ':' Type {$$=opr(VAR_DEC,2,$2,$4);dist_type($$);/*printf("%d",$$->opr.nops);*/}
 	;
 Type	
-	:TYPE_INT	{$$=con_i(133);}	
-	|TYPE_FLOAT	{$$=con_i(134);}	
+	:TYPE_INT	{$$=con_i(MY_INT);}	
+	|TYPE_FLOAT	{$$=con_i(MY_FLOAT);}
+	|TYPE_CHAR	{$$=con_i(MY_CHAR);}
+	|TYPE_VOID	{$$=con_i(MY_VOID);}
 	;
 IdList	
 	:IDENT			{struct sym_record* s=install(yytext);$$=id(s);}

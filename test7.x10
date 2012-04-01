@@ -1,4 +1,4 @@
-def add()
+def add(x:int,y:int,z:int):int
 {
 	var a,b:int;
 	a=2;
@@ -6,7 +6,7 @@ def add()
 	a=a+b+a;
 
 }
-def main()
+def main(w:int):void
 {
 	add();
 }

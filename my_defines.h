@@ -21,7 +21,14 @@
 #define CAST 1354
 #define POSTFIX 1355
 #define PREFIX 1356
+#define ARGEXPLIST 1357
+#define COMPOUND 1358
 #define YYDEBUG 1	//enable debugging
+
+#define MY_INT 133
+#define MY_FLOAT 134
+#define MY_CHAR 135
+#define MY_VOID 136
 
 #define BUFFSIZE 40000
 #include "y.tab.h"

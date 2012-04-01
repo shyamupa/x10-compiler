@@ -77,7 +77,6 @@ this		{return THIS;}
 throw		{return THROW;}
 transient	{return TRANSIENT;}
 try 		{return TRY;}
-void		{return VOID;}
 when		{return WHEN;}
 "=="		{return BEQ;}
 "!="		{return NEQ;}
@@ -115,9 +114,12 @@ when		{return WHEN;}
 "]"		{return ']';}
 ":"		{return ':';}
 val		{return VAL;}
+
 int		{return TYPE_INT;}
 float		{return TYPE_FLOAT;}
 char 		{return TYPE_CHAR;}
+void		{return TYPE_VOID;}
+
 var		{return VAR;}
 def		{return DEF;}
 public		{return PUBLIC;}

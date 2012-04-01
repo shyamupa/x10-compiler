@@ -4,6 +4,9 @@ extern char buffer[BUFFSIZE];
 extern int tempno;
 extern int labelno;
 extern int generate(nodeType *n);
+
+int main_found=0;
+int main_was_found=0;
 /* make a global flag for assgn bool 
  * make a function get_operator which retireives operator if node of oper type else returns false
  * in ir_assign chcek oper of assexp(which is right_child)using the above func 
@@ -57,7 +60,18 @@ char* ir_explist(nodeType* N)
 	sprintf(buffer,"%s\n%s", get_code(exp), get_code(assexp));
 	return(buffer);
 }
-
+void ir_compound_stmt(nodeType* n)
+{
+	
+	if(main_found==1)
+	{
+		printf(" .entrypoint\n");
+		main_found=0;
+	}
+	printf("{\n");
+	generate(get_operand(n,0));
+	printf("}\n");
+}
 char* ir_assign(nodeType* N)
 {
 	nodeType* unary_exp = get_operand(N,0);
@@ -236,8 +250,8 @@ char* ir_relop(nodeType* n)
 
 char* ir_fun_def_list(nodeType* n)
 {
-	nodeType* fun_def_list = n->opr.op[0];
-	nodeType* fun_def = n->opr.op[1];
+	nodeType* fun_def_list = get_operand(n,0);
+	nodeType* fun_def = get_operand(n,1);
 	generate(fun_def_list);
 	if(n->opr.oper == FUNC_DEF_LIST)
 		{
@@ -254,32 +268,80 @@ char* ir_fun_def_list(nodeType* n)
 	return buffer;
 	
 }
+void print_type(nodeType* n)
+{
+	switch(n->con_i.value)
+	{
+		case MY_INT:
+			printf("int32 ");
+			break;
+		case MY_FLOAT:	
+			printf("float32 ");
+			break;
+		case MY_CHAR:
+			printf("char ");
+			break;
+		case MY_VOID:
+			printf("void ");
+			break;
+		default:
+			printf("IN DEFAULT OF PRINT RET TYPE\n");
+	}
+	return;
+}
+void print_formal_args(nodeType* n)
+{
+	if(n->opr.oper==EMPTY)
+		return;
+	nodeType* lc=get_operand(n,0);
+	nodeType* rc=get_operand(n,1);
+	if(n->opr.oper==FORMAL_ARG)
+	{
+		print_type(get_operand(n,1));// 
+		return;
+	}
+	else
+	{
+		print_formal_args(lc);
+		printf(",");
+	}	
+	print_formal_args(rc);
+	return;
+}
 char* ir_fun_def(nodeType* n)
 {
 	
-	nodeType* fun_name = n->opr.op[0];
-	nodeType* formal_arguments = n->opr.op[1];
-	nodeType* stmt_list = n->opr.op[2];
-	//printf("hi\n");
-	generate(fun_name);
-	generate(formal_arguments);
-	printf("1pupa \n");
+	nodeType* fun_name = get_operand(n,0);	
+	nodeType* formal_arguments = get_operand(n,1);
+	nodeType* return_type =get_operand(n,2);
+	nodeType* stmt_list =get_operand(n,3);
+	// only static for time being
+	printf(".method static ");
+	
+	print_type(return_type);
+	printf("%s",fun_name->id.symrec->sym_name);
+	if(strcmp(fun_name->id.symrec->sym_name,"main")==0)
+	{
+		main_found=1;
+		main_was_found=1;
+	}	
+	printf("(");
+	print_formal_args(formal_arguments);
+	printf(") cil managed\n");
 	generate(stmt_list);
-	printf("2pupa \n");
-	//printf("1:%s\n",fun_name->id.code);
-	//printf("2:%d\n",formal_arguments==NULL);
-	//printf("3:%s\n",stmt_list->opr.code);
+	/*
 	if(formal_arguments->opr.oper != EMPTY)
-		{
-			bzero(buffer,BUFFSIZE);
-			sprintf(buffer,"%s\n%s\n%s",get_code(fun_name) , get_code(formal_arguments) , get_code(stmt_list));
-		}
+	{
+		bzero(buffer,BUFFSIZE);
+		sprintf(buffer,"%s\n%s\n%s",get_code(fun_name) , get_code(formal_arguments) , get_code(stmt_list));
+	}
 	else
-		{
-			bzero(buffer,BUFFSIZE);
-			sprintf(buffer,"%s\n%s",get_code(fun_name) , get_code(stmt_list));
-		}
+	{
+		bzero(buffer,BUFFSIZE);
+		sprintf(buffer,"%s\n%s",get_code(fun_name) , get_code(stmt_list));
+	}
 	n->opr.code = strdup(buffer);
+	*/
 	return buffer;
 
 }
@@ -312,23 +374,23 @@ char*  ir_idlist(nodeType* n)
 
 char*  ir_stmtlist(nodeType* n)
 {
-	nodeType* Stmtlist = n->opr.op[0];
-	nodeType* Stmt = n->opr.op[1];
+	nodeType* Stmtlist = get_operand(n,0);
+	nodeType* Stmt = get_operand(n,1);
 	generate(Stmtlist);
-	printf("wjbsadoulaJSBHDONJSA\n");
+	//printf("wjbsadoulaJSBHDONJSA\n");
 	if(Stmtlist->opr.oper == STMT_LIST)
-			{
-			printf("WWWjbsadoulaJSBHDONJSA\n");
-			generate(Stmt);
-			bzero(buffer,BUFFSIZE);
-			sprintf(buffer,"%s\n%s", get_code(Stmtlist), get_code(Stmt));
-			}
+	{
+		//printf("WWWjbsadoulaJSBHDONJSA\n");
+		generate(Stmt);
+		bzero(buffer,BUFFSIZE);
+		sprintf(buffer,"%s\n%s", get_code(Stmtlist), get_code(Stmt));
+	}
 	else
-		{
+	{
 		bzero(buffer,BUFFSIZE);
 		sprintf(buffer,"%s", get_code(Stmtlist));
-		}
+	}
 	n->opr.code = strdup(buffer);
-	printf("wjbsadoulaJSBHDONJSA\n");
+	//printf("wjbsadoulaJSBHDONJSA\n");
 	return buffer;
 }
