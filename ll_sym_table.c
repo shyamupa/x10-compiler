@@ -52,13 +52,17 @@ sym_record* insert(symbol_table* st,char* sym_name)	// inserts a record and retu
 sym_record* search(symbol_table* st,char* target_name)	//searches for a record and returns a ptr to it
 {
 	sym_record* p;
-	p=st->Head;	// first sym_record
-	while(p!=NULL)
+	while(st!=NULL)
 	{
-		if(strcmp(p->sym_name,target_name)==0)
-			return p;
-		p=p->next;	
-	}
+		p=st->Head;	// first sym_record
+		while(p!=NULL)
+		{
+			if(strcmp(p->sym_name,target_name)==0)
+				return p;
+			p=p->next;	
+		}
+		st=st->parent;
+	}	
 	return NULL;
 }
 void print_st(symbol_table* st)

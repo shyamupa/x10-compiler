@@ -29,4 +29,5 @@ char* ir_idlist(nodeType* n);
 char* ir_assign(nodeType* N);
 //char* ir_ternary(nodeType* n);
 char* ir_stmtlist(nodeType* n);
+char* ir_bool_flow(nodeType* n);
 #endif

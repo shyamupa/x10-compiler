@@ -97,7 +97,7 @@ when		{return WHEN;}
 "|"		{return BIT_OR;}
 "&&"		{return BOOL_AND;}
 "&"		{return BIT_AND;}
-"$"		{return XOR;}
+"^"		{return XOR;}
 "+"		{return PLUS;}
 "-"		{return MINUS;}
 "*"		{return MULT;}

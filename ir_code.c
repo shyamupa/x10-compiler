@@ -4,7 +4,49 @@ extern char buffer[BUFFSIZE];
 extern int tempno;
 extern int labelno;
 extern int generate(nodeType *n);
-
+/* make a global flag for assgn bool 
+ * make a function get_operator which retireives operator if node of oper type else returns false
+ * in ir_assign chcek oper of assexp(which is right_child)using the above func 
+ * if operator is BOOL_AND||BOOL_OR||BOOLEQ etc then send the unaryexp.place to new func boolarithm
+ * in boolarithm put SIR's grammar
+ * 
+*/
+char* ir_bool_flow(nodeType* n)
+{
+	nodeType* B1 = get_operand(n,0);
+	nodeType* B2 = get_operand(n,1);
+	generate(B1);
+	generate(B2);
+	switch(n->opr.oper)
+	{
+	case NEQ:
+		sprintf(buffer,"%s\n%s\n%s%s%s",get_code(B1), get_code(B2), get_place(B1), " != ", get_place(B2));
+		break;
+	case BOOL_EQ:
+		sprintf(buffer,"%s\n%s\n%s%s%s",get_code(B1), get_code(B2), get_place(B1), " == ", get_place(B2));
+		break;
+	case BOOL_OR:
+		bzero(buffer,BUFFSIZE);
+		B1->opr.T = get_T(n);
+		B1->opr.F = strdup(newlabel());
+		B2->opr.T = get_T(n);
+		B2->opr.F = get_F(n);
+		sprintf(buffer,"%s\n%s\n%s",get_code(B1),get_F(B1),get_code(B2));
+		break;
+	case BOOL_AND:
+		bzero(buffer,BUFFSIZE);
+		B1->opr.T = strdup(newlabel());
+		B1->opr.F = get_F(n);
+		B2->opr.T = get_T(n);
+		B2->opr.F = get_F(n);
+		sprintf(buffer,"%s\n%s\n%s",get_code(B1),get_T(B1),get_code(B2));
+		break;
+	default: printf("Bool DEFAULT\n");
+	}
+	n->opr.code = strdup(buffer);
+	return buffer;
+	
+}
 char* ir_explist(nodeType* N)
 {
 	nodeType* exp=get_operand(N,0);
@@ -27,12 +69,17 @@ char* ir_assign(nodeType* N)
 	printf("ASSIGN FLAG 2\n:");
 	generate(ass_exp);
 	printf("OOOOOOOOOOOOLAAAA!!\n") ;  //segmentation fault here
-	printf("ASSIGNMENT EXP CODE:\n%s",get_code(ass_exp));
+	printf("ASSIGNMENT EXP CODE:\n**%s**",get_code(ass_exp));
 	switch(assop->con_i.value)
 	{
 	case EQ:
 		bzero(buffer,BUFFSIZE);
 		sprintf(buffer,"%s\n%s\n%s=%s", get_code(unary_exp), get_code(ass_exp),get_place(unary_exp),get_place(ass_exp));
+		printf("\n@@@@@@@@@@@@@@@@@@@@@@@@@\n");
+		printf("UUUU%s\n",get_code(unary_exp));
+		printf("AAAA%s\n",get_code(ass_exp));
+		printf("UUUU%s\n",get_place(unary_exp));
+		printf("AAAA%s\n",get_place(ass_exp));
 		break;
 	case PLUS_EQ:
 		bzero(buffer,BUFFSIZE);

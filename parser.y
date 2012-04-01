@@ -4,7 +4,6 @@
 #include<stdlib.h>
 #include<string.h>
 #include<math.h>
-#include<stdarg.h>				// for variable arguments
 #include "ll_sym_table.h"		// definitions of the symbol table
 #include "st_stack.h"			// sym_tab stack
 #include "my_defines.h"
@@ -143,6 +142,7 @@ int tempno = 1;
 %type <nPtr> and_Expression
 %type <nPtr> additive_Expression
 %type <nPtr> AssOp
+%type <nPtr> ArgExpList
 %type <nPtr> AsyncStmt
 %type <nPtr> BasicForStmt
 %type <nPtr> cast_Expression
@@ -337,7 +337,7 @@ TypeName
 	;
 
 AssOp	
-	:EQ		{$$=con_i(EQ);printf("PQPWWWWWWWWWWWWWWQPQPQPQ %d",EQ);}	
+	:EQ		{$$=con_i(EQ);printf("EQ %d",EQ);}	
 	|PLUS_EQ	{$$=con_i(PLUS_EQ);}
 	|MINUS_EQ	{$$=con_i(MINUS_EQ);}
 	|MULT_EQ	{$$=con_i(MULT_EQ);}
@@ -360,15 +360,16 @@ IdList
 	;
 primary_Expression	
 	:IDENT			{
-					printf("%s\n",yytext);					
+					//printf("THIS CAN BE IT %s\n",yytext);					
 					struct sym_record*s =search(current_st,yytext);					
+					//printf("THIS IS TRUE %d\n",s==NULL);
 					$$=id(s);
 				}
 	|ConstExp		{$$=$1;}
 	|'(' Expression ')' 	{$$=$2;}
 	;
 ConstExp	
-	:INTEGER	{$$=con_i($1);printf("PQPQQQQQQQQQQPQPQPQ %d",$1);}
+	:INTEGER	{$$=con_i($1);printf("INTEGER %d",$1);}
 	|FLOAT		{$$=con_f($1);}
 	|CHAR		{$$=con_c($1);}
 	|TRUE		{$$=con_i($1);}	
@@ -461,9 +462,16 @@ unary_Expression
 postfix_Expression
 	: primary_Expression				{$$ = $1;}
 	| postfix_Expression '[' Expression ']'		{type_check_typeid($1);}
+	| postfix_Expression '('ArgExpList ')'		{$$=opr(INVOC,2,$1,$3);}
+	| postfix_Expression '(' ')'			{$$=opr(INVOC,1,$1);}
 	| postfix_Expression '.' IDENT 							
 	| postfix_Expression PP			{$$=opr(POSTFIX,2,$1,con_i($2));type_check_prepostfix($1);}
 	| postfix_Expression MM			{$$=opr(POSTFIX,2,$1,con_i($2));type_check_prepostfix($1);}
+	;
+
+ArgExpList
+	: conditional_Expression	{$$=$1;}
+	| ArgExpList ',' conditional_Expression	{$$=opr(ARGEXPLIST,2,$1,$3);}
 	;
 unary_operator
 	:PLUS		{$$=con_i($1);}
@@ -522,128 +530,7 @@ int main()
 	return 0;
 }
 
-nodeType* con_i(int value)
-{
-	nodeType *p;
-	if((p=malloc(sizeof(con_iNodeType)))==NULL)
-	{
-		yyerror("out of memory");
-	}
-	p->type=typeConI;
-	p->con_i.value=value;
-	p->con_i.datatype=133;
-	bzero(buffer,BUFFSIZE);
-	sprintf(buffer,"%d",value);
-	p->con_i.place = strdup(buffer);
-	p->con_i.code = strdup(buffer);
-	
-	return p;
-}
 
-nodeType* con_f(float value)
-{
-	nodeType *p;
-	if((p=malloc(sizeof(con_fNodeType)))==NULL)
-	{
-		yyerror("out of memory");
-	}
-	p->type=typeConF;
-	p->con_f.value=value;
-	p->con_f.datatype=134;
-	bzero(buffer,BUFFSIZE);
-	sprintf(buffer,"%f",value);
-	p->con_f.place = strdup(buffer);
-	p->con_f.code = strdup(buffer);
-	return p;
-}
-
-nodeType* con_c(char value)
-{
-	nodeType *p;
-	if((p=malloc(sizeof(con_cNodeType)))==NULL)
-	{
-		yyerror("out of memory");
-	}
-	p->type=typeConC;
-	p->con_c.value=value;
-	p->con_c.datatype=135;
-	bzero(buffer,BUFFSIZE);
-	sprintf(buffer,"%d",value);
-	p->con_c.place = strdup(buffer);
-	p->con_c.code = strdup(buffer);
-	return p;
-}
-
-// Having installed a ident in the symbol table we call id() with its sym_record pointer
-// this creates a node for the ident which will be used in the Syntax Tree
-nodeType *id(struct sym_record* symrec)	 
-{
-	//printf("name is %s\n",i->sym_name);
-	nodeType *p;
-	if ((p = malloc(sizeof(idNodeType))) == NULL)
-		yyerror("out of memory");
-	p->type = typeId;
-	p->id.symrec = symrec;
-	p->id.code = strdup(symrec->sym_name);
-	p->id.place = strdup(symrec->sym_name);
-	printf("ffffffffffffffffffffffffffffffffffffffffffffffffffff\n");
-	printf("%s\n",p->id.symrec->sym_name);
-	return p;
-}
-
-nodeType* empty(int value)
-{
-	nodeType *p;
-	if((p=malloc(sizeof(oprNodeType)))==NULL)
-	{
-		yyerror("out of memory");
-	}
-	p->type = typeOpr;
-	p->opr.oper = value;
-	return p;
-}
-//
-// 
-nodeType *opr(int oper, int nops, ...) 
-{
-	va_list ap;
-	nodeType *p;
-	size_t size;
-	int i;
-	size = sizeof(oprNodeType) + (nops - 1) * sizeof(nodeType*);
-	if ((p = malloc(size)) == NULL)
-		yyerror("out of memory");
-	p->type = typeOpr;
-	p->opr.oper = oper;
-	p->opr.nops = nops;
-	va_start(ap, nops);
-	for (i = 0; i < nops; i++)
-		p->opr.op[i] = va_arg(ap, nodeType*);
-	va_end(ap);
-	return p;
-}
-
-struct sym_record* install(char* sym_name)
-{
-	printf("installing %s\n",sym_name);
-	struct sym_record* r;
-	int rv=search_keywords(sym_name);
-	if(rv==1)
-		printf("using reserved keyword\n");
-	else
-	{
-		r=search(current_st,sym_name);
-		if(r==NULL)	// sym_name not already in table add it
-		{
-			r=insert(current_st,sym_name);
-			return r;
-		}
-		else	// oops the name already exists
-		{
-		// what to do here?? do we check scope or not
-		}
-	}
-}
 
 void yyerror(char*s)  
 {
@@ -756,15 +643,22 @@ int generate(nodeType *n)
 			break;
 	
 		case BOOL_OR:
-			//_code=strup(ir_boolor(n));
+			printf("Matched BOOL_OR\n");
+			//_code=strdup(ir_bool_(n));
 			break;
 		case BOOL_AND:
+			printf("Matched BOOL_AND\n");
+			//_code=strdup(ir_bool(n));
 			break;
 		case BOOL_EQ:
+			printf("Matched BOOL_EQ\n");
+			//_code=strdup(ir_bool(n));
 			break;
 		case NEQ:
+			printf("Matched BOOL_NEQ\n");
+			//_code=strdup(ir_bool(n));
 			break;
-	
+			
 		case BIT_OR:
 			printf("Matched BIT_OR\n");
 			_code = strdup(ir_arithmetic(n));
