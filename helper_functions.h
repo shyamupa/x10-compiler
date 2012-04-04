@@ -12,6 +12,7 @@ char* newlabel();
 char* newtmp();
 nodeType* get_operand(nodeType* opnode,int index);
 void dist_type(nodeType* nptr);
+void print_header();
 int get_type(nodeType* data_type_ptr);
 char* get_place(nodeType* n);
 char* get_code(nodeType* n);

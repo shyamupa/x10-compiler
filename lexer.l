@@ -144,6 +144,7 @@ new		{return NEW;}
 			return INTEGER;
 		}
 {float}		{
+			//printf("%s FLOAT lexer",yytext);
 			yylval.fVal=atof(yytext);
 			return FLOAT;
 		}		

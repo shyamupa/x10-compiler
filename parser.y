@@ -23,12 +23,7 @@ extern int yywrap();
 
 
 /*prototypes start*/
-nodeType* id(struct sym_record* symrec);	// node creator function for identifiers
-nodeType* con_i(int value); // node creator function for constants integer
-nodeType* con_f(float value); // node creator function for constants floats
-nodeType* con_c(char value); // node creator function for constants character
-nodeType* opr(int oper, int nops, ...);
-nodeType* empty(int value);
+
 void FreeNode(nodeType *p);	// frees node
 void yyerror(char*s);  
 struct sym_record* install(char* sym_name);
@@ -42,15 +37,6 @@ int generate(nodeType *n);
 
 
 
-void type_check_assign(nodeType* lhs, nodeType* rhs);
-void type_check_int(nodeType* node);
-void type_check_addmult(nodeType* lhs, nodeType* rhs);
-void type_check_rel(nodeType* lhs, nodeType* rhs);
-void type_check_char(nodeType* node);
-void type_check_float(nodeType* node);
-void type_check_division(nodeType* lhs,nodeType* rhs);
-void type_check_prepostfix(nodeType* node);
-void type_check_typeid(nodeType* node);
 
 /*prototypes end*/
 
@@ -58,6 +44,7 @@ void type_check_typeid(nodeType* node);
 
 struct symbol_table* current_st=NULL;	// global current st 
 int seen_func=0;
+int seen_class=0;
 char *CODE;
 char buffer[BUFFSIZE];
 int labelno = 1;
@@ -149,13 +136,9 @@ int tempno = 1;
 %type <nPtr> conditional_Expression
 %type <nPtr> CompoundStmt 
 %type <nPtr> ConstExp 
+%type <nPtr> ClassDeclnList
 %type <nPtr> ClassDecln
 %type <nPtr> ClassBody 
-%type <nPtr> ClassMemberDeclns 
-%type <nPtr> ClassMemberDecln 
-%type <nPtr> CtorDecln 
-%type <nPtr> CtorBody 
-%type <nPtr> CtorBlock
 %type <nPtr> Defn_or_Decln
 %type <nPtr> equality_Expression
 %type <nPtr> exclusive_or_Expression
@@ -166,7 +149,6 @@ int tempno = 1;
 %type <nPtr> FormalArgLIST
 %type <nPtr> FuncDefn
 %type <nPtr> FuncDefnList
-%type <nPtr> HasResultType
 %type <nPtr> inclusive_or_Expression
 %type <nPtr> IDENT
 %type <nPtr> IdList
@@ -187,13 +169,7 @@ int tempno = 1;
 %type <nPtr> StmtList
 %type <nPtr> Stmt 
 %type <nPtr> SelectionStmt
-%type <nPtr> StructDecln
 %type <nPtr> Type
-%type <nPtr> TypeParamsI 
-%type <nPtr> TypeParamIList 
-%type <nPtr> TypeParams 
-%type <nPtr> TypeParam 
-%type <nPtr> TypeParamList   
 %type <nPtr> TypeName   
 %type <nPtr> unary_Expression
 %type <nPtr> unary_operator
@@ -209,27 +185,62 @@ int tempno = 1;
 %%
 Defn_or_Decln	
 	:	{
+			print_header();
 			if(current_st==NULL)
 			{
 				printf("first sym table created\n");
 				current_st=new_sym_table(current_st);
-				printf("$$$$$$$$$$$$$$$$$$$$$$$$$$$$\n");
+				//printf("$$$$$$$$$$$$$$$$$$$$$$$$$$$$\n");
 			}	
 		}	
-	FuncDefnList	{
+	ClassDeclnList	{
 				$$=$2;
 				print_st(current_st);
-				printf("Starting code Gen\n");
+				//printf("Starting code Gen\n");
 				generate($$);
-				printf("\n$$$$$$$$$$$$$$$$$$$$$$$$$$$$\n");
-				printf("FINAL CODE:\n");
-				printf("%s\n",$$->opr.code);
-					}
+				//printf("\n$$$$$$$$$$$$$$$$$$$$$$$$$$$$\n");
+				//printf("FINAL CODE:\n");
+				//printf("%s\n",$$->opr.code);
+			}
 	;
+
+ClassDeclnList
+	:ClassDeclnList ClassDecln	{$$=opr(CLASSLIST,2,$1,$2);}
+	|ClassDecln			{$$=$1;}
+	
+ClassDecln
+	:Mods CLASS IDENT
+				{
+				printf("%s\n",yytext);
+				struct sym_record* s=install(yytext);
+				$3 = id(s);
+				st_push(current_st);
+				current_st=new_sym_table(current_st);
+				//printf("%d",current_st);
+				//printf("%d",s->proc_st);
+				s->proc_st=current_st;
+				seen_class=1;
+
+				}
+		ClassBody ';'	
+		{
+				$$=opr(CLASS,3,$1,$3,$5);
+		}
+		;						
+
+Mods		:PUBLIC		{$$=con_i(modPUBLIC);}
+		|PRIVATE	{$$=con_i(modPRIVATE);}
+		|PROTECTED	{$$=con_i(modPROTECTED);}
+		;
+
+ClassBody	: '{' FuncDefnList '}'	{$$=$2;}
+		;
+
 FuncDefnList
 	:FuncDefnList FuncDefn	{$$ = opr(FUNC_DEF_LIST,2,$1,$2);}
-	|FuncDefn	{$$ = $1;}
+	|FuncDefn		{$$ = $1;}
 	;
+
 FuncDefn
 	:DEF IDENT 	{
 				// make ident point to the new sym tab
@@ -244,7 +255,7 @@ FuncDefn
 				s->proc_st=current_st;
 				seen_func=1;
 
-			}
+				}
 	'(' FormalArgLIST ')' ':' ReturnType CompoundStmt	{$$=opr(FUNC,4,$2,$5,$8,$9);} 
 	;
 
@@ -261,13 +272,15 @@ FormalArgList
 	;
 FormalArg
 	: IDENT {
-			struct sym_record* s = install(yytext);
-			$1 = id(s);
-		}
-	 ':' Type{
-		 	$$=opr(FORMAL_ARG,2,$1,$4); /*THIS IS INCOMPLETE*/
-		 	$1->id.symrec->type = $4->con_i.datatype;
-		 }
+				struct sym_record* s = install(yytext);
+				$1 = id(s);
+			}
+	 ':' Type
+			{
+				$$=opr(FORMAL_ARG,2,$1,$4);
+				 
+				$1->id.symrec->type = $4->con_i.value;
+			}
 	;
 	
 	
@@ -308,6 +321,8 @@ CompoundStmt
 		{	
 			if(seen_func==1)	// sym_table already made 
 				seen_func=0;
+			else if(seen_class==1)
+				seen_class=0;
 			else	
 			{
 				st_push(current_st);
@@ -323,8 +338,6 @@ CompoundStmt
 	| error '}'	{yyerror("error in compound stmt\n");}
 	;
 NonFuncDeclaration	:VarDec	{$$=$1;}
-			|ClassDecln  {$$=$1;}
-			|StructDecln {$$=$1;}
 			;
 ExpressionStmt	
 	:Expression ';'	{$$=$1;}
@@ -352,14 +365,14 @@ TypeName
 	;
 
 AssOp	
-	:EQ		{$$=con_i(EQ);printf("EQ %d",EQ);}	
+	:EQ			{$$=con_i(EQ);}	
 	|PLUS_EQ	{$$=con_i(PLUS_EQ);}
 	|MINUS_EQ	{$$=con_i(MINUS_EQ);}
 	|MULT_EQ	{$$=con_i(MULT_EQ);}
 	|DIV_EQ		{$$=con_i(DIV_EQ);}
 	;
 VarDec	
-	:VAR IdList ':' Type {$$=opr(VAR_DEC,2,$2,$4);dist_type($$);/*printf("%d",$$->opr.nops);*/}
+	:VAR IdList ':' Type {$$=opr(VAR_DEC,2,$2,$4);dist_type($$);}
 	;
 Type	
 	:TYPE_INT	{$$=con_i(MY_INT);}	
@@ -377,20 +390,18 @@ IdList
 	;
 primary_Expression	
 	:IDENT			{
-					//printf("THIS CAN BE IT %s\n",yytext);					
-					struct sym_record*s =search(current_st,yytext);					
-					//printf("THIS IS TRUE %d\n",s==NULL);
-					$$=id(s);
+						struct sym_record*s =search(current_st,yytext);					
+						$$=id(s);
 				}
 	|ConstExp		{$$=$1;}
 	|'(' Expression ')' 	{$$=$2;}
 	;
 ConstExp	
 	:INTEGER	{$$=con_i($1);printf("INTEGER %d",$1);}
-	|FLOAT		{$$=con_f($1);}
+	|FLOAT		{$$=con_f($1);printf("FLOAT %lf",$1);}
 	|CHAR		{$$=con_c($1);}
-	|TRUE		{$$=con_i($1);}	
-	|FALSE		{$$=con_i($1);}	
+	|TRUE		{$$=con_i($1);$$->con_i.datatype=MY_BOOL;}	
+	|FALSE		{$$=con_i($1);$$->con_i.datatype=MY_BOOL;}	
 	;
 
 Expression
@@ -401,7 +412,7 @@ Expression
 
 assignment_Expression	
 	:conditional_Expression		{$$=$1;}
-	|unary_Expression AssOp assignment_Expression	{$$=opr(ASSIGN,3,$1,$2,$3) ; /*type_check_assign($1,$3)*/;}
+	|unary_Expression AssOp assignment_Expression	{$$=opr(ASSIGN,3,$1,$2,$3) ; type_check_assign($$,$1,$3);}
 	;
 
 conditional_Expression	
@@ -411,59 +422,59 @@ conditional_Expression
 
 logical_or_Expression	
 	:logical_and_Expression	{$$=$1;}
-	|logical_or_Expression BOOL_OR logical_and_Expression	{$$=opr(BOOL_OR,2,$1,$3);}
+	|logical_or_Expression BOOL_OR logical_and_Expression	{$$=opr(BOOL_OR,2,$1,$3);type_check_bool($$,$1,$3);}
 	;
 
 logical_and_Expression
 	:inclusive_or_Expression	{$$=$1;}
-	|logical_and_Expression BOOL_AND inclusive_or_Expression	{$$=opr(BOOL_AND,2,$1,$3);}
+	|logical_and_Expression BOOL_AND inclusive_or_Expression	{$$=opr(BOOL_AND,2,$1,$3);type_check_bool($$,$1,$3);}
 	;
 
 inclusive_or_Expression
 	:exclusive_or_Expression	{$$=$1;}
-	|inclusive_or_Expression BIT_OR exclusive_or_Expression		{$$=opr(BIT_OR,2,$1,$3);}
+	|inclusive_or_Expression BIT_OR exclusive_or_Expression		{$$=opr(BIT_OR,2,$1,$3);type_check_int($$,$1,$3);}
 	;
 
 exclusive_or_Expression
 	:and_Expression	{$$=$1;}
-	|exclusive_or_Expression XOR and_Expression	{$$=opr(XOR,2,$1,$3);}
+	|exclusive_or_Expression XOR and_Expression	{$$=opr(XOR,2,$1,$3);type_check_int($$,$1,$3);}
 	;
 
 and_Expression
 	:equality_Expression	{$$=$1;}
-	|and_Expression BIT_AND equality_Expression	{$$=opr(BIT_AND,2,$1,$3);}
+	|and_Expression BIT_AND equality_Expression	{$$=opr(BIT_AND,2,$1,$3);type_check_int($$,$1,$3);}
 	;
 
 equality_Expression
 	:relational_Expression		{$$=$1;}	
-	|equality_Expression BOOL_EQ relational_Expression	{$$=opr(BOOL_EQ,2,$1,$3);}
-	|equality_Expression NEQ relational_Expression		{$$=opr(NEQ,2,$1,$3);}
+	|equality_Expression BOOL_EQ relational_Expression	{$$=opr(BOOL_EQ,2,$1,$3);type_check_assign($$,$1,$3);}
+	|equality_Expression NEQ relational_Expression		{$$=opr(NEQ,2,$1,$3);type_check_assign($$,$1,$3);}
 	;
 
 relational_Expression
 	:shift_Expression	{$$=$1;}
-	|relational_Expression LT shift_Expression	{$$=opr(LT,2,$1,$3);/*type_check_rel($1,$3)*/;}
-	|relational_Expression GT shift_Expression	{$$=opr(GT,2,$1,$3);/*type_check_rel($1,$3)*/;}
-	|relational_Expression LE shift_Expression	{$$=opr(LE,2,$1,$3);/*type_check_rel($1,$3)*/;}
-	|relational_Expression GE shift_Expression	{$$=opr(GE,2,$1,$3);/*type_check_rel($1,$3)*/;}
+	|relational_Expression LT shift_Expression	{$$=opr(LT,2,$1,$3);type_check_rel($$,$1,$3);}
+	|relational_Expression GT shift_Expression	{$$=opr(GT,2,$1,$3);type_check_rel($$,$1,$3);}
+	|relational_Expression LE shift_Expression	{$$=opr(LE,2,$1,$3);type_check_rel($$,$1,$3);}
+	|relational_Expression GE shift_Expression	{$$=opr(GE,2,$1,$3);type_check_rel($$,$1,$3);}
 	;
 
 shift_Expression
 	:additive_Expression						{$$ = $1;}
-	|shift_Expression LSH additive_Expression			{$$=opr(LSH,2,$1,$3);/*type_check_int($3)*/;}
-	|shift_Expression RSH additive_Expression			{$$=opr(RSH,2,$1,$3);/*type_check_int($3)*/;}
+	|shift_Expression LSH additive_Expression			{$$=opr(LSH,2,$1,$3);type_check_shift($$,$3);}
+	|shift_Expression RSH additive_Expression			{$$=opr(RSH,2,$1,$3);type_check_shift($$,$3);}
 	;
 
 additive_Expression
 	:multiplicative_Expression				{$$ = $1;}
-	|additive_Expression PLUS multiplicative_Expression		{$$=opr(PLUS,2,$1,$3);/*type_check_addmult($1,$3)*/;}
-	|additive_Expression MINUS multiplicative_Expression	{$$=opr(MINUS,2,$1,$3);/*type_check_addmult($1,$3)*/;}
+	|additive_Expression PLUS multiplicative_Expression		{$$=opr(PLUS,2,$1,$3);type_check_addmult($$,$1,$3);}
+	|additive_Expression MINUS multiplicative_Expression	{$$=opr(MINUS,2,$1,$3);type_check_addmult($$,$1,$3);}
 	;
 
 multiplicative_Expression
 	: cast_Expression					{$$ = $1;}
-	| multiplicative_Expression MULT cast_Expression	{$$=opr(MULT,2,$1,$3);/*type_check_addmult($1,$3)*/;}
-	| multiplicative_Expression DIV cast_Expression		{$$=opr(DIV,2,$1,$3);/*type_check_division($1,$3)*/;}
+	| multiplicative_Expression MULT cast_Expression	{$$=opr(MULT,2,$1,$3);type_check_addmult($$,$1,$3);}
+	| multiplicative_Expression DIV cast_Expression		{$$=opr(DIV,2,$1,$3);type_check_division($$,$1,$3);}
 	;
 
 cast_Expression
@@ -472,8 +483,8 @@ cast_Expression
 
 unary_Expression
 	: postfix_Expression	{$$=$1;}
-	| PP unary_Expression	{$$=opr(PREFIX,2,con_i($1),$2);type_check_prepostfix($2);}
-	| MM unary_Expression	{$$=opr(PREFIX,2,con_i($1),$2);type_check_prepostfix($2);}
+	| PP unary_Expression	{$$=opr(PREFIX,2,con_i($1),$2);type_check_prepostfix($$,$2);}
+	| MM unary_Expression	{$$=opr(PREFIX,2,con_i($1),$2);type_check_prepostfix($$,$2);}
 	| unary_operator cast_Expression	{$$=opr(CAST,2,$1,$2);}
 	;
 postfix_Expression
@@ -482,8 +493,8 @@ postfix_Expression
 	| postfix_Expression '('ArgExpList ')'		{$$=opr(INVOC,2,$1,$3);}
 	| postfix_Expression '(' ')'			{$$=opr(INVOC,2,$1,empty(EMPTY));}
 	| postfix_Expression '.' IDENT 							
-	| postfix_Expression PP			{$$=opr(POSTFIX,2,$1,con_i($2));type_check_prepostfix($1);}
-	| postfix_Expression MM			{$$=opr(POSTFIX,2,$1,con_i($2));type_check_prepostfix($1);}
+	| postfix_Expression PP			{$$=opr(POSTFIX,2,$1,con_i($2));type_check_prepostfix($$,$1);}
+	| postfix_Expression MM			{$$=opr(POSTFIX,2,$1,con_i($2));type_check_prepostfix($$,$1);}
 	;
 
 ArgExpList
@@ -494,52 +505,8 @@ unary_operator
 	:PLUS		{$$=con_i($1);}
 	|MINUS		{$$=con_i($1);}
 	;
-	
-ClassDecln
-	:Mods CLASS IDENT TypeParamsI ClassBody ';'	{
-								//nodeType* n=id($3);
-								//do some type checking here
-								$$=opr(CLASS,4,$1,$3,$4,$5);
-							/*here $1 will contain enum type which will be handled by the traversal function*/
-							}
-		;						
-Mods		:PUBLIC		{$$=con_i(modPUBLIC);}
-		|PRIVATE	{$$=con_i(modPRIVATE);}
-		|PROTECTED	{$$=con_i(modPROTECTED);}
-		;
-StructDecln	:STRUCT IDENT TypeParamsI ClassBody ';' {$$=opr(STRUCT,3,$2,$3,$4);}
-		;	
-TypeParamsI 	: '[' TypeParamIList ']' {$$=$2;}
-		|	{/* empty */}	
-		;
-TypeParamIList 	:IDENT	{$$=$1;}
-		|TypeParamIList ',' IDENT	
-		|TypeParamIList ','
-		;		
-TypeParams 	: '[' TypeParamList ']'	{$$=$2;}
-		;
-TypeParamList 	: TypeParam
-		| TypeParamList ',' TypeParam				
-		;
-TypeParam	:IDENT	{$$=$1;}
-		;
-ClassBody	: '{' ClassMemberDeclns '}'	{$$=$2;}
-		;
-ClassMemberDeclns 	: ClassMemberDecln
-			| ClassMemberDeclns ClassMemberDecln
-			;
-ClassMemberDecln 	: CtorDecln
-			;
-CtorDecln		: DEF THIS TypeParams HasResultType CtorBody	{$$=opr(DEF,3,$3,$4,$5);}
-			;
-HasResultType 		: ':' Type {$$=$2;}
-			;
-CtorBody 		: '=' CtorBlock {$$=$2;	/*for the time being*/}
-			| CtorBlock
-			| ';'	{$$=NULL;}
-			;
-CtorBlock 		: '{' StmtList '}'	{$$=$2;}
-			;
+
+
 %%
 int main()
 {
@@ -592,19 +559,31 @@ int generate(nodeType *n)
 	case typeOpr:
 		switch(n->opr.oper)
 		{
-			case FUNC_DEF_LIST:
-			 printf("Matched FUNC_DEF_LIST\n");
-			_code =strdup(ir_fun_def_list(n));
-			 printf("%s",_code);
-			//concat(CODE,_code);
-			break;
+			case CLASSLIST:
+				printf("Matched CLASSLIST\n");
+				_code=strdup(ir_class_decln_list(n));
+				printf("%s",_code);
+				break;
+			case CLASS:
+				 printf("Matched CLASS\n");
+				_code = strdup(ir_class_decln(n));
+			 	printf("%s",_code);
+				//concat(CODE,_code);
+				break;
 
-		case FUNC:
-			 printf("Matched FUNC\n");
-			_code = strdup(ir_fun_def(n));
-			 printf("%s",_code);
-			//concat(CODE,_code);
-			break;
+			case FUNC_DEF_LIST:
+				 printf("Matched FUNC_DEF_LIST\n");
+				_code =strdup(ir_fun_def_list(n));
+				 printf("%s",_code);
+				//concat(CODE,_code);
+				break;
+
+			case FUNC:
+				 printf("Matched FUNC\n");
+				_code = strdup(ir_fun_def(n));
+			 	printf("%s",_code);
+				//concat(CODE,_code);
+				break;
 
 		case FORMAL_ARG_LIST:
 			 printf("Matched FORMAL_ARG_LIST\n");

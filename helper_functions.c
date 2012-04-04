@@ -75,6 +75,10 @@ int get_type(nodeType* data_type_ptr)
 	{
 		return data_type_ptr->id.symrec->type;
 	}
+	else if(data_type_ptr->type==typeOpr)
+	{
+		return data_type_ptr->opr.datatype;
+	}
 }
 
 char* get_code(nodeType* n)
@@ -182,7 +186,7 @@ nodeType* con_i(int value)
 	}
 	p->type=typeConI;
 	p->con_i.value=value;
-	p->con_i.datatype=133;
+	p->con_i.datatype=MY_INT;
 	bzero(buffer,BUFFSIZE);
 	sprintf(buffer,"%d",value);
 	p->con_i.place = strdup(buffer);
@@ -200,7 +204,7 @@ nodeType* con_f(float value)
 	}
 	p->type=typeConF;
 	p->con_f.value=value;
-	p->con_f.datatype=134;
+	p->con_f.datatype=MY_FLOAT;
 	bzero(buffer,BUFFSIZE);
 	sprintf(buffer,"%f",value);
 	p->con_f.place = strdup(buffer);
@@ -217,7 +221,7 @@ nodeType* con_c(char value)
 	}
 	p->type=typeConC;
 	p->con_c.value=value;
-	p->con_c.datatype=135;
+	p->con_c.datatype=MY_CHAR;
 	bzero(buffer,BUFFSIZE);
 	sprintf(buffer,"%d",value);
 	p->con_c.place = strdup(buffer);
@@ -295,3 +299,14 @@ struct sym_record* install(char* sym_name)
 		}
 	}
 }
+void print_header()
+{
+	printf(".assembly extern mscorlib {} \n");
+	printf(".assembly output\n");
+	printf("{\n");
+	printf(".ver  0:0:0:0\n");
+	printf("}\n");
+	printf(".module output.exe\n");
+}
+
+

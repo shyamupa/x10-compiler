@@ -7,14 +7,14 @@
 #include<string.h>
 #ifndef type_checkers_h_included
 #define type_checkers_h_included
-void type_check_assign(nodeType* lhs,nodeType* rhs);
-void type_check_addmult(nodeType* lhs,nodeType* rhs);
-void type_check_rel(nodeType* lhs,nodeType* rhs);
-void type_check_int(nodeType* node);
+void type_check_assign(nodeType* assOp,nodeType* lhs,nodeType* rhs);
+void type_check_addmult(nodeType* parent,nodeType* lhs,nodeType* rhs);
+void type_check_rel(nodeType* parent,nodeType* lhs,nodeType* rhs);
+void type_check_int(nodeType* parent,nodeType* lhs,nodeType* rhs);
 void type_check_float(nodeType* node);
 void type_check_char(nodeType* node);
-void type_check_division(nodeType* lhs,nodeType* rhs);
-void type_check_prepostfix(nodeType* node);
+void type_check_division(nodeType* parent,nodeType* lhs,nodeType* rhs);
+void type_check_prepostfix(nodeType* parent,nodeType* node);
 void type_check_typeid(nodeType* node);
-
+void type_check_shift(nodeType* parent,nodeType* node);
 #endif

@@ -53,7 +53,6 @@ typedef struct
 	char* T;
 	char* F;
 	
-	//char* place = symrec->sym_name;
 }idNodeType;
 
 // for operators
@@ -62,6 +61,10 @@ typedef struct
 	nodeEnum type;
 	int oper;
 	int nops;
+	int datatype;
+	int int_val;
+	float float_val;
+	char char_val;
 	union nodeTypeTag *op[1];
 	char* begin;
 	char* next;

@@ -78,12 +78,12 @@ void ir_compound_stmt(nodeType* n)
 	generate(get_operand(n,0));
 	printf("}\n");
 }
-char* ir_assign(nodeType* N)
+char* ir_assign(nodeType* n)
 {
-	nodeType* unary_exp = get_operand(N,0);
-	nodeType* assop = get_operand(N,1);
+	nodeType* unary_exp = get_operand(n,0);
+	nodeType* assop = get_operand(n,1);
 	printf("PPPWWW : %d",assop->con_i.value);
-	nodeType* ass_exp = get_operand(N,2);
+	nodeType* ass_exp = get_operand(n,2);
 	generate(unary_exp);
 	//generate(assop);
 	printf("ASSIGN FLAG 2\n:");
@@ -119,7 +119,7 @@ char* ir_assign(nodeType* N)
 		break;
 	default: printf("ASSOP DEFAULT\n");
 	}
-	N->opr.code = strdup(buffer);
+	n->opr.code = strdup(buffer);
 	return buffer;
 }
 
@@ -134,63 +134,63 @@ char* ir_arithmetic(nodeType* n)
 	printf("E2 code:%s\n",get_code(E2));
 	switch(n->opr.oper)
 	{
-	case PLUS:
-		bzero(buffer,BUFFSIZE);
-		n->opr.place = strdup(newtmp());
-		printf("QQQQQQQQ777:%s",get_place(n));
-		sprintf(buffer, "%s\n%s\n%s=%s+%s", get_code(E1), get_code(E2), get_place(n), get_place(E1),  get_place(E2));
-		printf("QQQQQQQQQQQ:%s",buffer);
-		break;
-	case MINUS:
-		bzero(buffer,BUFFSIZE);
-		n->opr.place = strdup(newtmp());
-		printf("QQQQQQQQ778:%s",get_place(n));
-		sprintf(buffer, "%s\n%s\n%s=%s-%s", get_code(E1), get_code(E2), get_place(n), get_place(E1),  get_place(E2));
-		break;
-	case MULT:
-		bzero(buffer,BUFFSIZE);
-		n->opr.place = strdup(newtmp());
-		printf("QQQQQQQQ779:%s",get_place(n));
-		sprintf(buffer, "%s\n%s\n%s=%s*%s", get_code(E1), get_code(E2), get_place(n), get_place(E1),  get_place(E2));
-		break;
-	case DIV:
-		bzero(buffer,BUFFSIZE);
-		n->opr.place = strdup(newtmp());
-		printf("QQQQQQQQ790:%s",get_place(n));
-		sprintf(buffer, "%s\n%s\n%s=%s/%s", get_code(E1), get_code(E2), get_place(n), get_place(E1),  get_place(E2));
-		break;
-	case BIT_AND:
-		bzero(buffer,BUFFSIZE);
-		n->opr.place = strdup(newtmp());
-		printf("QQQQQQQQ790:%s",get_place(n));
-		sprintf(buffer, "%s\n%s\n%s=%s&%s", get_code(E1), get_code(E2), get_place(n), get_place(E1),  get_place(E2));
-		break;
-	case BIT_OR:
-		bzero(buffer,BUFFSIZE);
-		n->opr.place = strdup(newtmp());
-		printf("QQQQQQQQ790:%s",get_place(n));
-		sprintf(buffer, "%s\n%s\n%s=%s|%s", get_code(E1), get_code(E2), get_place(n), get_place(E1),  get_place(E2));
-		break;
-	case XOR:
-		bzero(buffer,BUFFSIZE);
-		n->opr.place = strdup(newtmp());
-		printf("QQQQQQQQ790:%s",get_place(n));
-		sprintf(buffer, "%s\n%s\n%s=%s$%s", get_code(E1), get_code(E2), get_place(n), get_place(E1),  get_place(E2));
-		break;
-	case LSH:
-		bzero(buffer,BUFFSIZE);
-		n->opr.place = strdup(newtmp());
-		printf("QQQQQQQQ790:%s",get_place(n));
-		sprintf(buffer, "%s\n%s\n%s=%s<<%s", get_code(E1), get_code(E2), get_place(n), get_place(E1),  get_place(E2));
-		break;
-	case RSH:
-		bzero(buffer,BUFFSIZE);
-		n->opr.place = strdup(newtmp());
-		printf("QQQQQQQQ790:%s",get_place(n));
-		sprintf(buffer, "%s\n%s\n%s=%s>>%s", get_code(E1), get_code(E2), get_place(n), get_place(E1),  get_place(E2));
-		break;
-	default:
-		printf("arithmetic default\n");
+		case PLUS:
+			bzero(buffer,BUFFSIZE);
+			n->opr.place = strdup(newtmp());
+			printf(":%s",get_place(n));
+			sprintf(buffer, "%s\n%s\n%s=%s+%s", get_code(E1), get_code(E2), get_place(n), get_place(E1),  get_place(E2));
+			printf(":%s",buffer);
+			break;
+		case MINUS:
+			bzero(buffer,BUFFSIZE);
+			n->opr.place = strdup(newtmp());
+			printf(":%s",get_place(n));
+			sprintf(buffer, "%s\n%s\n%s=%s-%s", get_code(E1), get_code(E2), get_place(n), get_place(E1),  get_place(E2));
+			break;
+		case MULT:
+			bzero(buffer,BUFFSIZE);
+			n->opr.place = strdup(newtmp());
+			printf(":%s",get_place(n));
+			sprintf(buffer, "%s\n%s\n%s=%s*%s", get_code(E1), get_code(E2), get_place(n), get_place(E1),  get_place(E2));
+			break;
+		case DIV:
+			bzero(buffer,BUFFSIZE);
+			n->opr.place = strdup(newtmp());
+			printf("QQQQQQQQ790:%s",get_place(n));
+			sprintf(buffer, "%s\n%s\n%s=%s/%s", get_code(E1), get_code(E2), get_place(n), get_place(E1),  get_place(E2));
+			break;
+		case BIT_AND:
+			bzero(buffer,BUFFSIZE);
+			n->opr.place = strdup(newtmp());
+			printf("QQQQQQQQ790:%s",get_place(n));
+			sprintf(buffer, "%s\n%s\n%s=%s&%s", get_code(E1), get_code(E2), get_place(n), get_place(E1),  get_place(E2));
+			break;
+		case BIT_OR:
+			bzero(buffer,BUFFSIZE);
+			n->opr.place = strdup(newtmp());
+			printf("QQQQQQQQ790:%s",get_place(n));
+			sprintf(buffer, "%s\n%s\n%s=%s|%s", get_code(E1), get_code(E2), get_place(n), get_place(E1),  get_place(E2));
+			break;
+		case XOR:
+			bzero(buffer,BUFFSIZE);
+			n->opr.place = strdup(newtmp());
+			printf("QQQQQQQQ790:%s",get_place(n));
+			sprintf(buffer, "%s\n%s\n%s=%s$%s", get_code(E1), get_code(E2), get_place(n), get_place(E1),  get_place(E2));
+			break;
+		case LSH:
+			bzero(buffer,BUFFSIZE);
+			n->opr.place = strdup(newtmp());
+			printf("QQQQQQQQ790:%s",get_place(n));
+			sprintf(buffer, "%s\n%s\n%s=%s<<%s", get_code(E1), get_code(E2), get_place(n), get_place(E1),  get_place(E2));
+			break;
+		case RSH:
+			bzero(buffer,BUFFSIZE);
+			n->opr.place = strdup(newtmp());
+			printf("QQQQQQQQ790:%s",get_place(n));
+			sprintf(buffer, "%s\n%s\n%s=%s>>%s", get_code(E1), get_code(E2), get_place(n), get_place(E1),  get_place(E2));
+			break;
+		default:
+			printf("arithmetic default\n");
 	}
 	n->opr.code = strdup(buffer);
 	printf("Exiting arithmetic\n");
@@ -252,10 +252,56 @@ char* ir_relop(nodeType* n)
 	n->opr.code = strdup(buffer);
 	return(buffer);
 }
-
-char* ir_class_def(nodeType* n)
+char* ir_class_decln(nodeType* n)
 {
-
+	nodeType* mod=get_operand(n,0);
+	nodeType* class_name=get_operand(n,1);
+	nodeType* body=get_operand(n,2);
+	printf(".class ");
+	switch(mod->con_i.value)
+	{
+		case modPUBLIC:
+						printf("public "); 
+						break;
+		case modPRIVATE:
+						printf("private "); 
+						break;
+		case modPROTECTED:
+						printf("protected "); 
+						break;				
+	}
+	printf("auto ansi beforefieldinit "); 
+	printf("%s ",class_name->id.symrec->sym_name);
+	printf("extends [mscorlib]System.Object\n");
+	printf("{\n");
+    printf(".method public hidebysig specialname rtspecialname instance default void '.ctor' ()  cil managed \n");
+    printf("{\n");
+	printf("\t.maxstack 8\n");
+	printf("\tldarg.0\n");
+	printf("\tcall instance void object::'.ctor'()\n");
+	printf("\tret\n"); 
+    	printf("}\n");
+	generate(body);
+	printf("}\n");
+}
+char* ir_class_decln_list(nodeType* n)
+{
+	nodeType* class_decln_list = get_operand(n,0);
+	nodeType* class_decln = get_operand(n,1);
+	generate(class_decln_list);
+	if(n->opr.oper == CLASSLIST)
+		{
+		generate(class_decln);
+		bzero(buffer,BUFFSIZE);
+		sprintf(buffer,"%s\n%s", get_code(class_decln_list), get_code(class_decln));
+		}
+	else
+		{
+		bzero(buffer,BUFFSIZE);
+		sprintf(buffer,"%s", get_code(class_decln_list));
+		}
+	n->opr.code = strdup(buffer);
+	return buffer;
 }
 
 char* ir_fun_def_list(nodeType* n)
@@ -305,9 +351,12 @@ void print_formal_args(nodeType* n)
 		return;
 	nodeType* lc=get_operand(n,0);
 	nodeType* rc=get_operand(n,1);
+	nodeType* s;
 	if(n->opr.oper==FORMAL_ARG)
 	{
-		print_type(get_operand(n,1));// 
+		print_type(get_operand(n,1));//
+		s=get_operand(n,0);
+		printf(" %s ",s->id.symrec->sym_name); 
 		return;
 	}
 	else
