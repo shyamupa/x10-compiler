@@ -50,10 +50,16 @@ char* ir_bool_flow(nodeType* n)
 	return buffer;
 	
 }
-char* ir_explist(nodeType* N)
+char* func_invoc(nodeType* n)
 {
-	nodeType* exp=get_operand(N,0);
-	nodeType* assexp=get_operand(N,1);
+	nodeType* func_name=get_operand(n,0);
+	nodeType* arglist=get_operand(n,1);
+	
+}
+char* ir_explist(nodeType* n)
+{
+	nodeType* exp=get_operand(n,0);
+	nodeType* assexp=get_operand(n,1);
 	generate(exp);
 	generate(assexp);
 	bzero(buffer,BUFFSIZE);
@@ -247,6 +253,10 @@ char* ir_relop(nodeType* n)
 	return(buffer);
 }
 
+char* ir_class_def(nodeType* n)
+{
+
+}
 
 char* ir_fun_def_list(nodeType* n)
 {

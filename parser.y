@@ -217,13 +217,13 @@ Defn_or_Decln
 			}	
 		}	
 	FuncDefnList	{
-					$$=$2;
-					print_st(current_st);
-					printf("Starting code Gen\n");
-					generate($$);
-					printf("\n$$$$$$$$$$$$$$$$$$$$$$$$$$$$\n");
-					printf("FINAL CODE:\n");
-					printf("%s\n",$$->opr.code);
+				$$=$2;
+				print_st(current_st);
+				printf("Starting code Gen\n");
+				generate($$);
+				printf("\n$$$$$$$$$$$$$$$$$$$$$$$$$$$$\n");
+				printf("FINAL CODE:\n");
+				printf("%s\n",$$->opr.code);
 					}
 	;
 FuncDefnList
@@ -480,7 +480,7 @@ postfix_Expression
 	: primary_Expression				{$$ = $1;}
 	| postfix_Expression '[' Expression ']'		{type_check_typeid($1);}
 	| postfix_Expression '('ArgExpList ')'		{$$=opr(INVOC,2,$1,$3);}
-	| postfix_Expression '(' ')'			{$$=opr(INVOC,1,$1);}
+	| postfix_Expression '(' ')'			{$$=opr(INVOC,2,$1,empty(EMPTY));}
 	| postfix_Expression '.' IDENT 							
 	| postfix_Expression PP			{$$=opr(POSTFIX,2,$1,con_i($2));type_check_prepostfix($1);}
 	| postfix_Expression MM			{$$=opr(POSTFIX,2,$1,con_i($2));type_check_prepostfix($1);}
@@ -497,11 +497,11 @@ unary_operator
 	
 ClassDecln
 	:Mods CLASS IDENT TypeParamsI ClassBody ';'	{
-									//nodeType* n=id($3);
-									//do some type checking here
-									$$=opr(CLASS,4,$1,$3,$4,$5);
-								/*here $1 will contain enum type which will be handled by the traversal function*/
-								}
+								//nodeType* n=id($3);
+								//do some type checking here
+								$$=opr(CLASS,4,$1,$3,$4,$5);
+							/*here $1 will contain enum type which will be handled by the traversal function*/
+							}
 		;						
 Mods		:PUBLIC		{$$=con_i(modPUBLIC);}
 		|PRIVATE	{$$=con_i(modPRIVATE);}
