@@ -119,6 +119,7 @@ int		{return TYPE_INT;}
 float		{return TYPE_FLOAT;}
 char 		{return TYPE_CHAR;}
 void		{return TYPE_VOID;}
+boolean		{return TYPE_BOOL;}
 
 var		{return VAR;}
 def		{return DEF;}

@@ -114,7 +114,7 @@ int tempno = 1;
 %token IF THEN ELSE
 %token FOR IN WHILE CONTINUE BREAK DO
 %token SWITCH CASE DEFAULT
-%token INTEGER FLOAT CHAR TYPE_INT TYPE_FLOAT TYPE_CHAR TYPE_VOID
+%token INTEGER FLOAT CHAR TYPE_INT TYPE_FLOAT TYPE_CHAR TYPE_BOOL TYPE_VOID
 %token RETURN DEF
 %token PUBLIC PRIVATE PROTECTED
 %token BEQ LT GT LE GE TRUE FALSE 
@@ -296,7 +296,7 @@ Stmt
 	|SelectionStmt		{$$=$1;}
 	|CompoundStmt		{$$=$1;}
 	|LabeledStmt		{$$=$1;}
-	|NonFuncDeclaration	{$$=$1;}
+	|NonFuncDeclaration 	{$$=$1;}
 	|AsyncStmt		{$$=$1;}
 	|JumpStmt		{$$=$1;}
 	;
@@ -378,6 +378,7 @@ Type
 	:TYPE_INT	{$$=con_i(MY_INT);}	
 	|TYPE_FLOAT	{$$=con_i(MY_FLOAT);}
 	|TYPE_CHAR	{$$=con_i(MY_CHAR);}
+	|TYPE_BOOL	{$$=con_i(MY_BOOL);}
 	|TYPE_VOID	{$$=con_i(MY_VOID);}
 	;
 IdList	
@@ -400,14 +401,14 @@ ConstExp
 	:INTEGER	{$$=con_i($1);printf("INTEGER %d",$1);}
 	|FLOAT		{$$=con_f($1);printf("FLOAT %lf",$1);}
 	|CHAR		{$$=con_c($1);}
-	|TRUE		{$$=con_i($1);$$->con_i.datatype=MY_BOOL;}	
-	|FALSE		{$$=con_i($1);$$->con_i.datatype=MY_BOOL;}	
+	|TRUE		{$$=con_b($1);}	
+	|FALSE		{$$=con_b($1);}	
 	;
 
 Expression
-	:assignment_Expression		{$$=$1;}
-	|Expression ',' assignment_Expression  {$$=opr(EXP_LIST,2,$1,$3);}
-	|ObjCreation
+	: assignment_Expression		{$$=$1;}
+	| Expression ',' assignment_Expression  {$$=opr(EXP_LIST,2,$1,$3);}
+	| ObjCreation
 	;
 
 assignment_Expression	
@@ -467,7 +468,7 @@ shift_Expression
 
 additive_Expression
 	:multiplicative_Expression				{$$ = $1;}
-	|additive_Expression PLUS multiplicative_Expression		{$$=opr(PLUS,2,$1,$3);type_check_addmult($$,$1,$3);}
+	|additive_Expression PLUS multiplicative_Expression	{$$=opr(PLUS,2,$1,$3);type_check_addmult($$,$1,$3);}
 	|additive_Expression MINUS multiplicative_Expression	{$$=opr(MINUS,2,$1,$3);type_check_addmult($$,$1,$3);}
 	;
 
@@ -522,202 +523,6 @@ void yyerror(char*s)
 	//printf("%d: %s at %s\n",yylineno,s,yytext);
 }
 
-int generate(nodeType *n)
-{
-	printf("GENERATE BEGINS\n");
-	char* _code;
-	if(!n) 
-	{
-		printf("Empty Node\n");
-		return ;
-	}	
-	switch(n->type)
-	{
-	case typeConI:
-		printf("MATCHED typeConI\n");
-		/*if(n->con_i.datatype==133 || n->con_i.datatype == 134)
-		{
-			n->con_i.place = strdup(newtmp());
-			bzero(buffer,BUFFSIZE);
-			sprintf(buffer,"%s=%s", n->con_i.place, n->con_i.place);
-			n->con_i.code =  strdup(buffer);
-			
-			printf("CONSTANT NUMBER CODE: %s",n->con_i.code);
-		}*/
-		break;
-	case typeConC:
-		break;
-	case typeConF:
-		break;
-	case typeId : 
-			
-			printf("Matched typeId:\n");
-			//printf("%s\n",n->id.symrec->sym_name);
-			printf("%s\n",n->id.code);
-			//concat(CODE,n->id.code);
-			break;
-	case typeOpr:
-		switch(n->opr.oper)
-		{
-			case CLASSLIST:
-				printf("Matched CLASSLIST\n");
-				_code=strdup(ir_class_decln_list(n));
-				printf("%s",_code);
-				break;
-			case CLASS:
-				 printf("Matched CLASS\n");
-				_code = strdup(ir_class_decln(n));
-			 	printf("%s",_code);
-				//concat(CODE,_code);
-				break;
-
-			case FUNC_DEF_LIST:
-				 printf("Matched FUNC_DEF_LIST\n");
-				_code =strdup(ir_fun_def_list(n));
-				 printf("%s",_code);
-				//concat(CODE,_code);
-				break;
-
-			case FUNC:
-				 printf("Matched FUNC\n");
-				_code = strdup(ir_fun_def(n));
-			 	printf("%s",_code);
-				//concat(CODE,_code);
-				break;
-
-		case FORMAL_ARG_LIST:
-			 printf("Matched FORMAL_ARG_LIST\n");
-			 printf("%s",_code);
-			 break;
-
-		case FORMAL_ARG:
-			 printf("Matched FORMAL_ARG\n");
-			 printf("%s",_code);
-			 break;
-		 
-		case STMT_LIST:
-			 printf("MAtched STMT_LIST\n");		
-			 _code=strdup(ir_stmtlist(n));
-			 //concat(CODE,_code);
-			 printf("%s",_code);
- 			 break;
-
-		case VAR_DEC:
-			 printf("Matched VAR_DEC\n");
-			 _code=strdup(ir_var_dec(n));
-			 //concat(CODE,_code);
-			 printf("%s",_code);
-			 break;
-		case ID_LIST:
- 			 printf("Matched ID_LIST\n");
- 			 _code=strdup(ir_idlist(n));
-			 //concat(CODE,_code);
-			 printf("%s",_code);
-			 break;
-		case EMPTY:
-			 printf("Matched EMPTY\n");
-			 n->opr.code = strdup(" ");
-			break;
-		case EXP_LIST:
-			//_code=strdup(ir_explist(n));
-			break;
-		case TERNARY:
-			//_code=strdup(ir_ternary(n));
-			break;
-		case POSTFIX:
-			//_code=strup(ir_postfix(n));
-			break;
-		case PREFIX:
-			//_code=strup(ir_prefix(n));
-			break;
-		case CAST:
-			//_code=strup(ir_cast(n));
-			break;
-		case ASSIGN:
-			printf("MATCHED ASSIGN\n");
-			_code=strdup(ir_assign(n));
-			break;
-	
-		case BOOL_OR:
-			printf("Matched BOOL_OR\n");
-			//_code=strdup(ir_bool_(n));
-			break;
-		case BOOL_AND:
-			printf("Matched BOOL_AND\n");
-			//_code=strdup(ir_bool(n));
-			break;
-		case BOOL_EQ:
-			printf("Matched BOOL_EQ\n");
-			//_code=strdup(ir_bool(n));
-			break;
-		case NEQ:
-			printf("Matched BOOL_NEQ\n");
-			//_code=strdup(ir_bool(n));
-			break;
-			
-		case BIT_OR:
-			printf("Matched BIT_OR\n");
-			_code = strdup(ir_arithmetic(n));
-			break;
-		case BIT_AND:
-			printf("Matched BIT_AND\n");
-			_code = strdup(ir_arithmetic(n));
-			break;
-		case XOR:
-			printf("Matched XOR\n");
-			_code = strdup(ir_arithmetic(n));
-			break;
-		case LT:
-			printf("Matched LT\n");
-			_code = strdup(ir_relop(n));
-			printf("RELOP LT CODE:%s\n",_code);
-		case GT:
-			printf("Matched GT\n");
-			_code = strdup(ir_relop(n));
-			printf("RELOP GT CODE:%s\n",_code);
-		case LE:
-			printf("Matched LE\n");
-			_code = strdup(ir_relop(n));
-			printf("RELOP LE CODE:%s\n",_code);
-		case GE:
-			printf("Matched GE\n");
-			_code = strdup(ir_relop(n));
-			printf("RELOP GE CODE:%s\n",_code);
-			break;
-		case LSH:
-			printf("Matched LSH\n");
-			_code = strdup(ir_arithmetic(n));
-			break;
-		case RSH:
-			printf("Matched RSH\n");
-			_code = strdup(ir_arithmetic(n));
-			break;
-	
-		case PLUS:
-			printf("Matched PLUS\n");
-			_code = strdup(ir_arithmetic(n));
-			break;
-		case MINUS:
-   			printf("Matched MINUS\n");
-   			_code = strdup(ir_arithmetic(n));
-   			break;
-		case MULT:
-			printf("Matched MULT\n");
-			_code = strdup(ir_arithmetic(n));
-			break;
-		case DIV:
-			printf("Matched DIV\n");
-			_code = strdup(ir_arithmetic(n));
-			break;
-	
-		default :
-			printf("entered default\n"); 
-	}
-	break;
-default:
-	printf("entered DEFAULT\n");
-}
-}	
 
 
 

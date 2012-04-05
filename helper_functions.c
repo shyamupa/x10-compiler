@@ -85,24 +85,24 @@ char* get_code(nodeType* n)
 {
  switch(n->type)
  {
-  case typeConI:
-		return n->con_i.code;
-		break;
-  case typeConC:
-		return n->con_c.code;
-		break;
-  case typeConF:
-		return n->con_f.code;
-		break;
-  case typeOpr:
-		return n->opr.code;
-		break;
-  case typeId:
-		return n->id.code;
-		break;
+	  case typeConI:
+			return n->con_i.code;
+			break;
+	  case typeConC:
+			return n->con_c.code;
+			break;
+	  case typeConF:
+			return n->con_f.code;
+			break;
+	  case typeOpr:
+			return n->opr.code;
+			break;
+	  case typeId:
+			return n->id.code;
+			break;
 
-  default:
-			printf("Can't get code for unknown node type\n");
+	  default:
+				printf("Can't get code for unknown node type\n");
 }
 }
 
@@ -194,7 +194,22 @@ nodeType* con_i(int value)
 	
 	return p;
 }
-
+nodeType* con_b(int value)
+{
+	nodeType *p;
+	if((p=malloc(sizeof(con_bNodeType)))==NULL)
+	{
+		yyerror("out of memory");
+	}
+	p->type=typeConB;
+	p->con_b.value=value;
+	p->con_b.datatype=MY_BOOL;
+	bzero(buffer,BUFFSIZE);
+	sprintf(buffer,"%d",value);
+	p->con_b.place = strdup(buffer);
+	p->con_b.code = strdup(buffer);
+	return p;
+}
 nodeType* con_f(float value)
 {
 	nodeType *p;
@@ -233,7 +248,6 @@ nodeType* con_c(char value)
 // this creates a node for the ident which will be used in the Syntax Tree
 nodeType *id(struct sym_record* symrec)	 
 {
-	//printf("name is %s\n",i->sym_name);
 	nodeType *p;
 	if ((p = malloc(sizeof(idNodeType))) == NULL)
 		yyerror("out of memory");
@@ -241,8 +255,6 @@ nodeType *id(struct sym_record* symrec)
 	p->id.symrec = symrec;
 	p->id.code = strdup(symrec->sym_name);
 	p->id.place = strdup(symrec->sym_name);
-	printf("ffffffffffffffffffffffffffffffffffffffffffffffffffff\n");
-	printf("%s\n",p->id.symrec->sym_name);
 	return p;
 }
 

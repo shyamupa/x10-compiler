@@ -20,6 +20,7 @@ char* get_T(nodeType* n);
 char* get_F(nodeType* n);
 nodeType* con_f(float value);
 nodeType* con_i(int value);
+nodeType* con_b(int value);
 nodeType* con_c(char value);
 nodeType* empty(int value);
 nodeType *id(struct sym_record* symrec);
