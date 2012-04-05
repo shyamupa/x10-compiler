@@ -5,6 +5,7 @@
 */
 void type_check_assign(nodeType* parent,nodeType* lhs,nodeType* rhs)
 {	
+	printf("%d %d HIHI\n",get_type(lhs),get_type(rhs));
 	if(get_type(lhs)!=get_type(rhs))
 	{
 		printf("type mismatch in assign or bool eq / neq \n");
@@ -69,12 +70,13 @@ void type_check_int(nodeType* parent,nodeType* lhs,nodeType* rhs)
 
 void type_check_bool(nodeType* parent,nodeType* lhs,nodeType* rhs)
 {
+	printf("SIDD %d %d\n",get_type(lhs),get_type(rhs));
 	if(get_type(lhs)!=MY_BOOL || get_type(rhs)!=MY_BOOL)
 	{
 		printf("type mismatch in bool\n");
 		exit(0);
 	}
-	parent->opr.datatype=MY_INT;
+	parent->opr.datatype=MY_BOOL;
 	return;
 }
 

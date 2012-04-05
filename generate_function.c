@@ -3,7 +3,7 @@
 extern char buffer[BUFFSIZE];
 extern int tempno;
 extern int labelno;
-
+extern int in_assign;
 int generate(nodeType *n)
 {
 	//printf("GENERATE BEGINS\n");
@@ -24,6 +24,9 @@ int generate(nodeType *n)
 		case typeConF:
 			printf("ldc.i4 %lf \n",n->con_f.value);
 			break;
+		case typeConB:
+			printf("ldc.i4 %d \n",n->con_b.value);
+			break;	
 		case typeId: 
 			printf("ldloc %s \n",n->id.symrec->sym_name);
 			break;
@@ -99,24 +102,37 @@ int generate(nodeType *n)
 					break;
 				case ASSIGN:
 					printf("MATCHED ASSIGN\n");
-					_code=strdup(ir_assign(n));
+					ir_assign(n);
 					break;
 			
 				case BOOL_OR:
 					printf("Matched BOOL_OR\n");
-					//_code=strdup(ir_bool_(n));
+					if(in_assign==1)
+						ir_bool(n);
+					else
+						ir_bool_flow(n);	
 					break;
 				case BOOL_AND:
 					printf("Matched BOOL_AND\n");
-					//_code=strdup(ir_bool(n));
+					if(in_assign==1)
+						ir_bool(n);
+					else
+						ir_bool_flow(n);
 					break;
 				case BOOL_EQ:
 					printf("Matched BOOL_EQ\n");
-					//_code=strdup(ir_bool(n));
+					fflush(stdout);
+					if(in_assign==1)
+						ir_bool(n);
+					else
+						ir_bool_flow(n);
 					break;
 				case NEQ:
 					printf("Matched BOOL_NEQ\n");
-					//_code=strdup(ir_bool(n));
+					if(in_assign==1)
+						ir_bool(n);
+					else
+						ir_bool_flow(n);
 					break;
 					
 				case BIT_OR:
@@ -133,7 +149,10 @@ int generate(nodeType *n)
 					break;
 				case LT:
 					printf("Matched LT\n");
-					ir_relop(n);
+					if(in_assign==0)
+						ir_relop(n);
+					else
+						ir_relop(n);	
 					break;
 				case GT:
 					printf("Matched GT\n");

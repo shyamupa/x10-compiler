@@ -117,7 +117,7 @@ int tempno = 1;
 %token INTEGER FLOAT CHAR TYPE_INT TYPE_FLOAT TYPE_CHAR TYPE_BOOL TYPE_VOID
 %token RETURN DEF
 %token PUBLIC PRIVATE PROTECTED
-%token BEQ LT GT LE GE TRUE FALSE 
+%token LT GT LE GE TRUE FALSE 
 %token ';' '{' '}' '(' ')' '[' ']' ':'
 %token IDENT
 %token ARRAY ELLIPSIS ASSERT
@@ -401,8 +401,8 @@ ConstExp
 	:INTEGER	{$$=con_i($1);printf("INTEGER %d",$1);}
 	|FLOAT		{$$=con_f($1);printf("FLOAT %lf",$1);}
 	|CHAR		{$$=con_c($1);}
-	|TRUE		{$$=con_b($1);}	
-	|FALSE		{$$=con_b($1);}	
+	|TRUE		{$$=con_b(1);}	
+	|FALSE		{$$=con_b(0);}	
 	;
 
 Expression
@@ -448,7 +448,7 @@ and_Expression
 
 equality_Expression
 	:relational_Expression		{$$=$1;}	
-	|equality_Expression BOOL_EQ relational_Expression	{$$=opr(BOOL_EQ,2,$1,$3);type_check_assign($$,$1,$3);}
+	|equality_Expression BOOL_EQ relational_Expression	{printf("asd HIHI\n");$$=opr(BOOL_EQ,2,$1,$3);type_check_assign($$,$1,$3);}
 	|equality_Expression NEQ relational_Expression		{$$=opr(NEQ,2,$1,$3);type_check_assign($$,$1,$3);}
 	;
 

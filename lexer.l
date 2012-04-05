@@ -78,7 +78,7 @@ throw		{return THROW;}
 transient	{return TRANSIENT;}
 try 		{return TRY;}
 when		{return WHEN;}
-"=="		{return BEQ;}
+"=="		{return BOOL_EQ;}
 "!="		{return NEQ;}
 ">="		{return GE;}
 ">"		{return GT;}

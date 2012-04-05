@@ -7,6 +7,7 @@ extern int generate(nodeType *n);
 
 int main_found=0;
 int main_was_found=0;
+int in_assign=0;
 // Working correctly
 char* ir_class_decln(nodeType* n)
 {
@@ -93,11 +94,13 @@ void ir_compound_stmt(nodeType* n)
 	generate(get_operand(n,0));
 	printf("}\n");
 }
-char* ir_assign(nodeType* n)
+void ir_assign(nodeType* n)
 {
 	nodeType* unary_exp = get_operand(n,0);
 	nodeType* assop = get_operand(n,1);
 	nodeType* ass_exp = get_operand(n,2);
+	printf("ASSOP IS %d\n",ass_exp->opr.oper);
+	in_assign=1;
 	switch(assop->con_i.value)
 	{
 		case EQ:
@@ -130,8 +133,7 @@ char* ir_assign(nodeType* n)
 			break;
 		default: printf("ASSOP DEFAULT\n");
 	}
-	n->opr.code = strdup(buffer);
-	return buffer;
+	in_assign=0;
 }
 // Rest working correctly
 // NEED TO COMPLETE SHIFT OPERATIONS			
@@ -298,8 +300,56 @@ void ir_relop(nodeType* n)
 			printf("Relational default\n");
 	}
 }
+// NEED TO TEST THIS ONCE
+void ir_explist(nodeType* n)
+{
+	nodeType* exp=get_operand(n,0);
+	nodeType* assexp=get_operand(n,1);
+	generate(exp);
+	generate(assexp);
+}
 ////////////////////////////////////////////////////////////////////////
+void ir_relop_flow(nodeType* n)
+{
 
+}
+void ir_bool(nodeType* n)
+{
+	nodeType* B1 = get_operand(n,0);
+	nodeType* B2 = get_operand(n,1);
+	printf("HI SID\n");
+	fflush(stdout);
+	generate(B1);
+	generate(B2);
+	switch(n->opr.oper)
+	{
+		case NEQ:
+			printf("ceq\n");
+			printf("ldc.i4.0\n");
+			printf("ceq\n");
+			break;
+		case BOOL_EQ:
+			printf("ceq\n");
+			break;
+		case BOOL_OR:
+			bzero(buffer,BUFFSIZE);
+			B1->opr.T = get_T(n);
+			B1->opr.F = strdup(newlabel());
+			B2->opr.T = get_T(n);
+			B2->opr.F = get_F(n);
+			sprintf(buffer,"%s\n%s\n%s",get_code(B1),get_F(B1),get_code(B2));
+			break;
+		case BOOL_AND:
+			bzero(buffer,BUFFSIZE);
+			B1->opr.T = strdup(newlabel());
+			B1->opr.F = get_F(n);
+			B2->opr.T = get_T(n);
+			B2->opr.F = get_F(n);
+			sprintf(buffer,"%s\n%s\n%s",get_code(B1),get_T(B1),get_code(B2));
+			break;
+		default: printf("Bool DEFAULT\n");
+	}
+}
 char* ir_bool_flow(nodeType* n)
 {
 	nodeType* B1 = get_operand(n,0);
@@ -336,19 +386,7 @@ char* ir_bool_flow(nodeType* n)
 	return buffer;
 	
 }
-char* func_invoc(nodeType* n)
-{
-	nodeType* func_name=get_operand(n,0);
-	nodeType* arglist=get_operand(n,1);
-	
-}
-void ir_explist(nodeType* n)
-{
-	nodeType* exp=get_operand(n,0);
-	nodeType* assexp=get_operand(n,1);
-	generate(exp);
-	generate(assexp);
-}
+
 
 
 

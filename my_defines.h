@@ -30,7 +30,7 @@
 #define MY_FLOAT 134
 #define MY_CHAR 135
 #define MY_VOID 136
-#define MY_BOOL 136
+#define MY_BOOL 137
 
 #define BUFFSIZE 40000
 #include "y.tab.h"

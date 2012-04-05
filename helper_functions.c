@@ -59,19 +59,23 @@ void dist_type(nodeType* nptr)
 // get_type takes a data_type node ptr and returns the data type embedded in it	
 int get_type(nodeType* data_type_ptr)
 {
-	if(data_type_ptr->type==typeConI)
+	if(data_type_ptr->type==typeConI)		// integer
 	{
 		return data_type_ptr->con_i.datatype;	
 	}
-	else if(data_type_ptr->type==typeConF)
+	else if(data_type_ptr->type==typeConF)	// float
 	{
 		return data_type_ptr->con_f.datatype;	
 	}
-	else if(data_type_ptr->type==typeConC)
+	else if(data_type_ptr->type==typeConC)		// char
 	{
 		return data_type_ptr->con_c.datatype;	
 	}
-	else if(data_type_ptr->type==typeId)
+	else if(data_type_ptr->type==typeConB)		// boolean
+	{
+		return data_type_ptr->con_b.datatype;	
+	}
+	else if(data_type_ptr->type==typeId)		// id
 	{
 		return data_type_ptr->id.symrec->type;
 	}
