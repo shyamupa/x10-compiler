@@ -4,17 +4,15 @@ public class myclass
 	{
 		var a:float;
 		var p,q,r,i,j,k,l:int;
-		var mybool:boolean;
-		p=10-(11+4)*6;
-		mybool=p > 2;
-		
+		var mybool,s,t:boolean;
+		s=true;
+		t=false;
+		//mybool = (s != t && s == t || t);
+	}
+	
+	def fun2(p:int):int
+	{
+		var a,b,c:int;
+		myfunc(a,b);
 	}
 };
-//public class yourclass
-//{
-//	def myfunc2(x:float,y:int):int
-//	{
-//		var a:float;
-//		var p,q,r:int;
-//	}
-//};

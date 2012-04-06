@@ -11,6 +11,7 @@ struct sym_record
 	int type;			// type of symbol like 'int'
 	int offset;			// offset of symbol
 	int is_proc_name;		// 1 if ident is proc
+	char signature[100];		// 
 	struct symbol_table* proc_st;	//ptr to symbol table of the procedure in case 
 	enum modifier access_mode;
 	struct sym_record * next;

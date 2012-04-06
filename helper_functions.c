@@ -25,7 +25,7 @@ char* newtmp()
 char* newlabel()
 {
 	bzero(buffer,BUFFSIZE);
-	sprintf(buffer,"l%d:",labelno++);
+	sprintf(buffer,"l%d",labelno++);
 	return(buffer);
 }
 // get_operand takes a nodeType ptr of opr node type
@@ -257,6 +257,7 @@ nodeType *id(struct sym_record* symrec)
 		yyerror("out of memory");
 	p->type = typeId;
 	p->id.symrec = symrec;
+	//printf("KHALI HAIN %s ",symrec->sym_name);
 	p->id.code = strdup(symrec->sym_name);
 	p->id.place = strdup(symrec->sym_name);
 	return p;
@@ -306,7 +307,9 @@ struct sym_record* install(char* sym_name)
 		r=search(current_st,sym_name);
 		if(r==NULL)	// sym_name not already in table add it
 		{
+			printf("I AM HERE\n");
 			r=insert(current_st,sym_name);
+			printf("install complete\n");
 			return r;
 		}
 		else	// oops the name already exists
@@ -314,6 +317,7 @@ struct sym_record* install(char* sym_name)
 		// what to do here?? do we check scope or not
 		}
 	}
+	printf("install complete\n");
 }
 void print_header()
 {

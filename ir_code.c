@@ -4,7 +4,7 @@ extern char buffer[BUFFSIZE];
 extern int tempno;
 extern int labelno;
 extern int generate(nodeType *n);
-
+char mybuf[1000];
 int main_found=0;
 int main_was_found=0;
 int in_assign=0;
@@ -221,12 +221,60 @@ void print_formal_args(nodeType* n)
 	print_formal_args(rc);
 	return;
 }
-char* ir_fun_def(nodeType* n)
+void create_formal_args(nodeType* n)
+{
+	if(n->opr.oper==EMPTY)
+		return;
+	nodeType* lc=get_operand(n,0);
+	nodeType* rc=get_operand(n,1);
+	nodeType* s;
+	if(n->opr.oper==FORMAL_ARG)
+	{
+		s=get_operand(n,1);
+		switch(s->con_i.value)
+		{
+				case MY_INT: 
+							strcat(mybuf," int32 ");
+							break;
+				case MY_FLOAT: 
+							strcat(mybuf," float32 "); 
+							break;
+		}
+		return;
+	}
+	else
+	{
+		create_formal_args(lc);
+		strcat(mybuf,",");
+	}	
+	create_formal_args(rc);
+	return;
+}
+void insert_signature(nodeType* fun_name,nodeType* formalarg,nodeType* return_type)
+{
+	bzero(fun_name->id.symrec->signature,100);
+	switch(return_type->con_i.value)
+	{
+		case MY_INT:
+					strcat(fun_name->id.symrec->signature,"INT32 ");
+					break;
+	}
+	strcat(fun_name->id.symrec->signature,fun_name->id.symrec->sym_name);
+	strcat(fun_name->id.symrec->signature," ( ");
+	create_formal_args(formalarg);
+	strcat(fun_name->id.symrec->signature,mybuf);
+	bzero(mybuf,1000);
+	strcat(fun_name->id.symrec->signature," ) ");
+	//printf("AISHWARYA %s ",fun_name->id.symrec->signature);
+	
+}
+void ir_fun_def(nodeType* n)
 {
 	
 	nodeType* fun_name = get_operand(n,0);	
 	nodeType* formal_arguments = get_operand(n,1);
 	nodeType* return_type =get_operand(n,2);
+	insert_signature(fun_name,formal_arguments,return_type);
 	nodeType* compound =get_operand(n,3);
 	// only static for time being
 	printf(".method static ");
@@ -241,8 +289,8 @@ char* ir_fun_def(nodeType* n)
 	printf("(");
 	print_formal_args(formal_arguments);
 	printf(") cil managed\n");
+	fflush(stdout);
 	generate(compound);
-	return buffer;
 }
 void print_vardec_code(nodeType* Idlist,nodeType* Type)
 {
@@ -300,6 +348,49 @@ void ir_relop(nodeType* n)
 			printf("Relational default\n");
 	}
 }
+void ir_bool(nodeType* n)
+{
+	nodeType* B1 = get_operand(n,0);
+	nodeType* B2 = get_operand(n,1);
+	char* label1;
+	char* label2;
+	switch(n->opr.oper)
+	{
+		case NEQ:
+			generate(B1);
+			generate(B2);
+			printf("ceq\n");
+			printf("ldc.i4.0\n");
+			printf("ceq\n");
+			break;
+		case BOOL_EQ:
+			generate(B1);
+			generate(B2);
+			printf("ceq\n");
+			break;
+		case BOOL_OR:
+			generate(B1);
+			label1 = strdup(newlabel());
+			printf("brtrue %s\n",label1);
+			generate(B2);
+			label2 = strdup(newlabel());
+			printf("br.s %s\n",label2);
+			printf("%s: ldc.i4.1 \n",label1);
+			printf("%s: ",label2);
+			break;
+		case BOOL_AND:
+			generate(B1);
+			label1 = strdup(newlabel());
+			printf("brfalse %s\n",label1);
+			generate(B2);
+			label2 = strdup(newlabel());
+			printf("br.s %s\n",label2);
+			printf("%s: ldc.i4.0\n",label1);
+			printf("%s: ",label2);
+			break;
+		default: printf("Bool DEFAULT\n");
+	}
+}
 // NEED TO TEST THIS ONCE
 void ir_explist(nodeType* n)
 {
@@ -309,47 +400,30 @@ void ir_explist(nodeType* n)
 	generate(assexp);
 }
 ////////////////////////////////////////////////////////////////////////
+
 void ir_relop_flow(nodeType* n)
 {
 
 }
-void ir_bool(nodeType* n)
+
+char* ir_if_else(nodeType* n)
 {
-	nodeType* B1 = get_operand(n,0);
-	nodeType* B2 = get_operand(n,1);
-	printf("HI SID\n");
-	fflush(stdout);
-	generate(B1);
-	generate(B2);
-	switch(n->opr.oper)
-	{
-		case NEQ:
-			printf("ceq\n");
-			printf("ldc.i4.0\n");
-			printf("ceq\n");
-			break;
-		case BOOL_EQ:
-			printf("ceq\n");
-			break;
-		case BOOL_OR:
-			bzero(buffer,BUFFSIZE);
-			B1->opr.T = get_T(n);
-			B1->opr.F = strdup(newlabel());
-			B2->opr.T = get_T(n);
-			B2->opr.F = get_F(n);
-			sprintf(buffer,"%s\n%s\n%s",get_code(B1),get_F(B1),get_code(B2));
-			break;
-		case BOOL_AND:
-			bzero(buffer,BUFFSIZE);
-			B1->opr.T = strdup(newlabel());
-			B1->opr.F = get_F(n);
-			B2->opr.T = get_T(n);
-			B2->opr.F = get_F(n);
-			sprintf(buffer,"%s\n%s\n%s",get_code(B1),get_T(B1),get_code(B2));
-			break;
-		default: printf("Bool DEFAULT\n");
-	}
-}
+	nodeType* expr = get_operand(n,0);
+	nodeType* stmt1 = get_operand(n,1);
+	nodeType* stmt2 = get_operand(n,2);
+	//~ ir_bool_flow(expr,stmt1,stmt2);
+	return;
+}	
+
+void ir_fun_invoc(nodeType* n)
+{
+	nodeType* func_name = get_operand(n,0);
+	nodeType* explist = get_operand(n,1);
+	generate(explist);
+	printf("call ");
+	printf("%s ",func_name->id.symrec->signature);
+}		
+
 char* ir_bool_flow(nodeType* n)
 {
 	nodeType* B1 = get_operand(n,0);

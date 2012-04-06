@@ -250,13 +250,11 @@ FuncDefn
 				$2 = id(s);
 				st_push(current_st);
 				current_st=new_sym_table(current_st);
-				//printf("%d",current_st);
-				//printf("%d",s->proc_st);
 				s->proc_st=current_st;
 				seen_func=1;
-
+				//printf("FINISHED THIS\n");
 				}
-	'(' FormalArgLIST ')' ':' ReturnType CompoundStmt	{$$=opr(FUNC,4,$2,$5,$8,$9);} 
+	'(' FormalArgLIST ')' ':' ReturnType CompoundStmt	{ $$=opr(FUNC,4,$2,$5,$8,$9);} 
 	;
 
 ReturnType
@@ -331,7 +329,7 @@ CompoundStmt
 		}
 		 StmtList 
 		{	
-			print_st(current_st);
+			//print_st(current_st);
 			current_st=st_pop();
 		}
 	  '}'		{$$=opr(COMPOUND,1,$3);}
@@ -347,7 +345,7 @@ ExpressionStmt
 	;
 SelectionStmt	
 	:IF '(' Expression ')' Stmt %prec IFX	{$$=opr(IF,2,$3,$5);}
-	|IF '(' Expression ')' Stmt ELSE Stmt	{$$=opr(IF,3,$3,$5,$7);}
+	|IF '(' Expression ')' Stmt ELSE Stmt	{$$=opr(IF_ELSE,3,$3,$5,$7);}
 	|SWITCH '(' Expression ')' Stmt		{$$=opr(SWITCH,2,$3,$5);}
 	;
 IterationStmt	
@@ -448,7 +446,7 @@ and_Expression
 
 equality_Expression
 	:relational_Expression		{$$=$1;}	
-	|equality_Expression BOOL_EQ relational_Expression	{printf("asd HIHI\n");$$=opr(BOOL_EQ,2,$1,$3);type_check_assign($$,$1,$3);}
+	|equality_Expression BOOL_EQ relational_Expression	{$$=opr(BOOL_EQ,2,$1,$3);type_check_assign($$,$1,$3);}
 	|equality_Expression NEQ relational_Expression		{$$=opr(NEQ,2,$1,$3);type_check_assign($$,$1,$3);}
 	;
 

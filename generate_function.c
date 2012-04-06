@@ -54,11 +54,14 @@ int generate(nodeType *n)
 					ir_compound_stmt(n);
 					break;
 				case FUNC:
-					 printf("Matched FUNC\n");
-					_code = strdup(ir_fun_def(n));
-					printf("%s",_code);
+					printf("Matched FUNC\n");
+					ir_fun_def(n);
+					fflush(stdout);
 					break;
-
+				case INVOC:
+					printf("Matched INVOC\n");
+					ir_fun_invoc(n);
+					break;
 				case FORMAL_ARG_LIST:
 					 printf("Matched FORMAL_ARG_LIST\n");
 					 printf("%s",_code);
@@ -100,6 +103,18 @@ int generate(nodeType *n)
 				case CAST:
 					//_code=strup(ir_cast(n));
 					break;
+				case IF:
+						printf("MATCHED IF\n");
+						//ir_if(n);
+						break;
+				case IF_ELSE:
+						printf("MATCHED IF_ELSE\n");
+						ir_if_else(n);
+						break;	
+				case ARGEXPLIST:
+						printf("MATCHED ARGEXPLIST\n");
+						ir_explist(n);
+						break;	
 				case ASSIGN:
 					printf("MATCHED ASSIGN\n");
 					ir_assign(n);
@@ -191,7 +206,6 @@ int generate(nodeType *n)
 					printf("Matched DIV\n");
 					_code = strdup(ir_arithmetic(n));
 					break;
-			
 				default :
 					printf("entered default\n"); 
 		}

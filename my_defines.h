@@ -24,6 +24,8 @@
 #define ARGEXPLIST 1357
 #define COMPOUND 1358
 #define CLASSLIST 1359
+#define IF_ELSE 1360
+
 #define YYDEBUG 1	//enable debugging
 
 #define MY_INT 133
