@@ -33,8 +33,8 @@ int generate(nodeType *n)
 			fprintf(output,"ldc.i4 %d \n",n->con_b.value);
 			break;	
 		case typeId: 
-			printf("ldloc %s \n",n->id.symrec->sym_name);
-			fprintf(output,"ldloc %s \n",n->id.symrec->sym_name);
+			printf("ldloc %s \n",n->id.symrec->uid);
+			fprintf(output,"ldloc %s \n",n->id.symrec->uid);
 			break;
 		case typeOpr:
 			switch(n->opr.oper)
@@ -122,11 +122,11 @@ int generate(nodeType *n)
 					break;
 				case IF:
 						printf("MATCHED IF\n");
-						//ir_if(n);
+						ir_if(n);
 						break;
 				case IF_ELSE:
 						printf("MATCHED IF_ELSE\n");
-						ir_if_else(n);
+						//ir_if_else(n);
 						break;	
 				case ARGEXPLIST:
 						printf("MATCHED ARGEXPLIST\n");

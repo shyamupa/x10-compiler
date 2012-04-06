@@ -6,7 +6,6 @@
 #include<string.h>
 #ifndef ir_code_h_included
 #define ir_code_h_included
-char* ir_if_else(nodeType* n);
 //char* ir_ifelse(nodeType* S,nodeType* E,nodeType* S1,nodeType* S2);
 //char* ir_while(nodeType* S,nodeType* E,nodeType* S1);
 //char* ir_boolor(nodeType* E,nodeType* E1,nodeType* E2);
@@ -28,6 +27,7 @@ void ir_assign(nodeType* n);
 void ir_stmtlist(nodeType* n);
 void ir_relop_flow(nodeType* n);
 void ir_return(nodeType* n);
+void ir_if(nodeType* n);
 
 char* ir_bool_flow(nodeType* n);
 void print_type(nodeType* n);

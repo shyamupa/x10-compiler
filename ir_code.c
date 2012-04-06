@@ -118,7 +118,11 @@ void ir_compound_stmt(nodeType* n)
 		fprintf(output,".maxstack 50\n");
 		in_func=0;
 	}
-	generate(get_operand(n,0));
+	nodeType* stmtlist = get_operand(n,0);
+	stmtlist->opr.next = strdup(newlabel());
+	generate(stmtlist);
+	//~ printf("%s:\n",stmtlist->opr.next);
+	//~ fprintf(output,"%s:\n",stmtlist->opr.next);
 	printf("}\n");
 	fprintf(output,"}\n");
 }
@@ -133,44 +137,44 @@ void ir_assign(nodeType* n)
 	{
 		case EQ:
 			generate(ass_exp);
-			printf("stloc %s\n",unary_exp->id.symrec->sym_name);
-			fprintf(output,"stloc %s\n",unary_exp->id.symrec->sym_name);
+			printf("stloc %s\n",unary_exp->id.symrec->uid);
+			fprintf(output,"stloc %s\n",unary_exp->id.symrec->uid);
 			break;
 		case PLUS_EQ:
 			generate(ass_exp);
-			printf("ldloc %s\n",unary_exp->id.symrec->sym_name);
-			fprintf(output,"ldloc %s\n",unary_exp->id.symrec->sym_name);
+			printf("ldloc %s\n",unary_exp->id.symrec->uid);
+			fprintf(output,"ldloc %s\n",unary_exp->id.symrec->uid);
 			printf("add\n");
 			fprintf(output,"add\n");
-			printf("stloc %s",unary_exp->id.symrec->sym_name);
-			fprintf(output,"stloc %s",unary_exp->id.symrec->sym_name);
+			printf("stloc %s",unary_exp->id.symrec->uid);
+			fprintf(output,"stloc %s",unary_exp->id.symrec->uid);
 			break;
 		case MINUS_EQ:
 			generate(ass_exp);
-			printf("ldloc %s\n",unary_exp->id.symrec->sym_name);
-			fprintf(output,"ldloc %s\n",unary_exp->id.symrec->sym_name);
+			printf("ldloc %s\n",unary_exp->id.symrec->uid);
+			fprintf(output,"ldloc %s\n",unary_exp->id.symrec->uid);
 			printf("sub\n");
 			fprintf(output,"sub\n");
-			printf("stloc %s",unary_exp->id.symrec->sym_name);
-			fprintf(output,"stloc %s",unary_exp->id.symrec->sym_name);
+			printf("stloc %s",unary_exp->id.symrec->uid);
+			fprintf(output,"stloc %s",unary_exp->id.symrec->uid);
 			break;
 		case MULT_EQ:
 			generate(ass_exp);
-			printf("ldloc %s\n",unary_exp->id.symrec->sym_name);
-			fprintf(output,"ldloc %s\n",unary_exp->id.symrec->sym_name);
+			printf("ldloc %s\n",unary_exp->id.symrec->uid);
+			fprintf(output,"ldloc %s\n",unary_exp->id.symrec->uid);
 			printf("mul\n");
 			fprintf(output,"mul\n");
-			printf("stloc %s",unary_exp->id.symrec->sym_name);
-			fprintf(output,"stloc %s",unary_exp->id.symrec->sym_name);
+			printf("stloc %s",unary_exp->id.symrec->uid);
+			fprintf(output,"stloc %s",unary_exp->id.symrec->uid);
 			break;
 		case DIV_EQ:
 			generate(ass_exp);
-			printf("ldloc %s\n",unary_exp->id.symrec->sym_name);
-			fprintf(output,"ldloc %s\n",unary_exp->id.symrec->sym_name);
+			printf("ldloc %s\n",unary_exp->id.symrec->uid);
+			fprintf(output,"ldloc %s\n",unary_exp->id.symrec->uid);
 			printf("div\n");
 			fprintf(output,"div\n");
-			printf("stloc %s",unary_exp->id.symrec->sym_name);
-			fprintf(output,"stloc %s",unary_exp->id.symrec->sym_name);
+			printf("stloc %s",unary_exp->id.symrec->uid);
+			fprintf(output,"stloc %s",unary_exp->id.symrec->uid);
 			break;
 		default: printf("ASSOP DEFAULT\n");
 	}
@@ -277,8 +281,8 @@ void print_formal_args(nodeType* n)
 	{
 		print_type(get_operand(n,1));
 		s=get_operand(n,0);
-		printf(" %s ",s->id.symrec->sym_name); 
-		fprintf(output," %s ",s->id.symrec->sym_name); 
+		printf(" %s ",s->id.symrec->uid); 
+		fprintf(output," %s ",s->id.symrec->uid); 
 		return;
 	}
 	else
@@ -378,8 +382,8 @@ void print_vardec_code(nodeType* Idlist,nodeType* Type)
 	if(Idlist->type==typeId)
 	{
 		print_type(Type);
-		printf(" %s ",Idlist->id.symrec->sym_name); 
-		fprintf(output," %s ",Idlist->id.symrec->sym_name); 
+		printf(" %s ",Idlist->id.symrec->uid); 
+		fprintf(output," %s ",Idlist->id.symrec->uid); 
 		return;
 	}
 	else
@@ -390,8 +394,8 @@ void print_vardec_code(nodeType* Idlist,nodeType* Type)
 		printf(",");
 		fprintf(output,",");
 		print_type(Type);
-		printf(" %s ",rc->id.symrec->sym_name); 
-		fprintf(output," %s ",rc->id.symrec->sym_name); 
+		printf(" %s ",rc->id.symrec->uid); 
+		fprintf(output," %s ",rc->id.symrec->uid); 
 	}	
 	return;
 }
@@ -552,16 +556,19 @@ void ir_relop_flow(nodeType* n)
 
 }
 
-char* ir_if_else(nodeType* n)
+void ir_if(nodeType* n)
 {
 	nodeType* expr = get_operand(n,0);
-	nodeType* stmt1 = get_operand(n,1);
-	nodeType* stmt2 = get_operand(n,2);
-	//~ ir_bool_flow(expr,stmt1,stmt2);
+	nodeType* stmt = get_operand(n,1);
+	//~ set_T(expr,newlabel());
+	//~ set_F(expr,n->opr.next);
+	//~ stmt->opr.next=strdup(n->opr.next);
+	//~ generate(expr);
+	//~ printf("%s\n",get_T(expr));
+	//~ fprintf(output,"%s\n",get_T(expr));
+	//~ generate(stmt);
 	return;
 }	
-
-		
 
 char* ir_bool_flow(nodeType* n)
 {
@@ -619,15 +626,22 @@ char*  ir_idlist(nodeType* n)
 	return buffer;
 }	
 
+//~ void  ir_stmtlist(nodeType* n)
+//~ {
+	//~ nodeType* Stmtlist = get_operand(n,0);
+	//~ nodeType* Stmt = get_operand(n,1);
+	//~ generate(Stmtlist);
+	//~ generate(Stmt);
+//~ }
 void  ir_stmtlist(nodeType* n)
 {
 	nodeType* Stmtlist = get_operand(n,0);
 	nodeType* Stmt = get_operand(n,1);
+	Stmtlist->opr.next=strdup(newlabel());
+	printf("%s NIII\n",Stmtlist->opr.next);
+	printf("%s NEXT\n",n->opr.next);
+	Stmt->opr.next = strdup(n->opr.next);
+	printf("%s\n",Stmt->opr.next);
 	generate(Stmtlist);
-	//if(Stmtlist->opr.oper == STMT_LIST)
-	//{
-		generate(Stmt);
-		//printf("Sidd1 %d \n",Stmt->opr.oper);
-		
-	//}
+	generate(Stmt);
 }

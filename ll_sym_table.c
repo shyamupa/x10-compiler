@@ -8,6 +8,17 @@ This is a linked list implementation of the symbol table
 */
 typedef struct sym_record sym_record;
 typedef struct symbol_table symbol_table;
+extern int idno;
+char my_buffer[100];
+
+
+char* newuid()
+{
+	bzero(my_buffer,100);
+	sprintf(my_buffer,"V%d",idno++);
+	return my_buffer;
+}
+
 
 symbol_table* new_sym_table(symbol_table* parent)
 {
@@ -36,7 +47,9 @@ sym_record* insert(symbol_table* st,char* sym_name)	// inserts a record and retu
 {
 	sym_record* rv;
 	rv=(sym_record*)malloc(sizeof(sym_record));
-	rv->sym_name=strdup(sym_name);	// copies from yytext
+	rv->sym_name = strdup(sym_name);	// copies from yytext
+	rv->uid = strdup(newuid());	
+
 	sym_record* p=st->Head;
 	if(p==NULL)
 	{
@@ -75,7 +88,7 @@ void print_st(symbol_table* st)
 	struct sym_record* p=st->Head;
 	while(p!=NULL)
 	{
-		printf("%s type %d \n",p->sym_name,p->type);
+		printf("%s %s type %d \n",p->sym_name,p->uid,p->type);
 		p=p->next;
 	}
 	printf("####################\n");

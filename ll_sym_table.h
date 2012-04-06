@@ -15,6 +15,7 @@ struct sym_record
 	struct symbol_table* my_st;	//ptr to symbol table of the procedure in case 
 	enum modifier access_mode;
 	struct sym_record * next;
+	char* uid;
 };
 
 struct symbol_table{
@@ -32,6 +33,7 @@ struct sym_record* insert(struct symbol_table* st,char* sym_name);	// inserts a 
 struct sym_record* search(struct symbol_table* st,char* target_name);	//searches for a record and returns a ptr to it
 void print_st(struct symbol_table* st);
 int search_keywords(char* sym_name);
+char* newuid();
 
 
 #endif

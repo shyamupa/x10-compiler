@@ -50,6 +50,7 @@ char *CODE;
 char buffer[BUFFSIZE];
 int labelno = 1;
 int tempno = 1;
+int idno = 1;
 FILE* output;			// output file
 char* out_file;
 /*global variables*/
@@ -236,7 +237,11 @@ Mods		:PUBLIC		{$$=con_i(modPUBLIC);}
 		|PROTECTED	{$$=con_i(modPROTECTED);}
 		;
 
-ClassBody	: '{' FuncDefnList '}'	{$$=$2;}
+ClassBody	: '{' {seen_class = 0;} FuncDefnList '}'	{
+														$$=$3;
+														print_st(current_st);
+														current_st=st_pop();
+														}
 		;
 
 FuncDefnList

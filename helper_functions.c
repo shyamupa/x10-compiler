@@ -115,49 +115,102 @@ char* get_code(nodeType* n)
 
 char* get_place(nodeType* n)
 {
- switch(n->type)
- {
-  case typeConI:
-		return n->con_i.place;
-		break;
-  case typeConC:
-		return n->con_c.place;
-		break;
-  case typeConF:
-		return n->con_f.place;
-		break;
-  case typeOpr:
-		return n->opr.place;
-		break;
-  case typeId:
-		return n->id.place;
-		break;
-  default:
-			printf("Can't get place for unknown node type\n");
-}
+	 switch(n->type)
+		{
+		  case typeConI:
+				return n->con_i.place;
+				break;
+		  case typeConC:
+				return n->con_c.place;
+				break;
+		  case typeConF:
+				return n->con_f.place;
+				break;
+		  case typeOpr:
+				return n->opr.place;
+				break;
+		  case typeId:
+				return n->id.place;
+				break;
+		  default:
+					printf("Can't get place for unknown node type\n");
+		}
 }
 char* get_T(nodeType* n)
 {
- switch(n->type)
- {
-  case typeConI:
-		return n->con_i.T;
-		break;
-  case typeConC:
-		return n->con_c.T;
-		break;
-  case typeConF:
-		return n->con_f.T;
-		break;
-  case typeOpr:
-		return n->opr.T;
-		break;
-  case typeId:
-		return n->id.T;
-		break;
-  default:
-			printf("Can't get T for unknown node type\n");
+	 switch(n->type)
+		{
+	  case typeConI:
+			return n->con_i.T;
+			break;
+	  case typeConC:
+			return n->con_c.T;
+			break;
+	  case typeConF:
+			return n->con_f.T;
+			break;
+	  case typeOpr:
+			return n->opr.T;
+			break;
+	  case typeId:
+			return n->id.T;
+			break;
+	  default:
+				printf("Can't get T for unknown node type\n");
+		}
 }
+void set_F(nodeType* n,char* label)
+{
+	switch(n->type)
+	{
+		case typeConI:
+			n->con_i.F=strdup(label);
+			break;
+		case typeConC:
+			n->con_c.F=strdup(label);
+			break;
+		case typeConB:
+			n->con_b.F=strdup(label);
+			break;		
+		case typeConF:
+			n->con_f.F=strdup(label);
+			break;
+		case typeOpr:
+			n->opr.F=strdup(label);
+			break;
+		case typeId:
+			n->id.F=strdup(label);
+			break;
+		default:
+			printf("Can't set F for unknown node type\n");
+	}
+}
+
+void set_T(nodeType* n,char* label)
+{
+	switch(n->type)
+	{
+		case typeConI:
+			n->con_i.T=strdup(label);
+			break;
+		case typeConC:
+			n->con_c.T=strdup(label);
+			break;
+		case typeConB:
+			n->con_b.T=strdup(label);
+			break;		
+		case typeConF:
+			n->con_f.T=strdup(label);
+			break;
+		case typeOpr:
+			n->opr.T=strdup(label);
+			break;
+		case typeId:
+			n->id.T=strdup(label);
+			break;
+		default:
+			printf("Can't set T for unknown node type\n");
+	}
 }
 
 char* get_F(nodeType* n)
@@ -310,7 +363,7 @@ struct sym_record* install(char* sym_name)
 		r=search(current_st,sym_name);
 		if(r==NULL)	// sym_name not already in table add it
 		{
-			printf("I AM HERE\n");
+			//printf("I AM HERE\n");
 			r=insert(current_st,sym_name);
 			printf("install complete\n");
 			return r;
