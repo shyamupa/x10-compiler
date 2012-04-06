@@ -27,6 +27,8 @@ char* ir_idlist(nodeType* n);
 void ir_assign(nodeType* n);
 void ir_stmtlist(nodeType* n);
 void ir_relop_flow(nodeType* n);
+void ir_return(nodeType* n);
+
 char* ir_bool_flow(nodeType* n);
 void print_type(nodeType* n);
 void print_formal_args(nodeType* n);

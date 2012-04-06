@@ -68,7 +68,10 @@ sym_record* search(symbol_table* st,char* target_name)	//searches for a record a
 void print_st(symbol_table* st)
 {
 	printf("####################\n");
-	printf("PRINTING SYM_T\n");
+	if(st->owner_name!=NULL)
+		printf("PRINTING SYM_T of %s \n",st->owner_name);
+	else
+		printf("PRINTING SYM_T of block \n");	
 	struct sym_record* p=st->Head;
 	while(p!=NULL)
 	{

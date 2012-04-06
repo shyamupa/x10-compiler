@@ -21,7 +21,6 @@ extern int yylex();
 extern char* yytext;
 extern int yywrap();
 
-
 /*prototypes start*/
 
 void FreeNode(nodeType *p);	// frees node
@@ -49,8 +48,10 @@ char *CODE;
 char buffer[BUFFSIZE];
 int labelno = 1;
 int tempno = 1;
-
+FILE* output;			// output file
+char* out_file;
 /*global variables*/
+
 %}
 %union 
 {
@@ -190,6 +191,7 @@ Defn_or_Decln
 			{
 				printf("first sym table created\n");
 				current_st=new_sym_table(current_st);
+				install("println");
 				//printf("$$$$$$$$$$$$$$$$$$$$$$$$$$$$\n");
 			}	
 		}	
@@ -216,9 +218,8 @@ ClassDecln
 				$3 = id(s);
 				st_push(current_st);
 				current_st=new_sym_table(current_st);
-				//printf("%d",current_st);
-				//printf("%d",s->proc_st);
-				s->proc_st=current_st;
+				current_st->owner_name=strdup(yytext);
+				s->my_st=current_st;
 				seen_class=1;
 
 				}
@@ -243,18 +244,19 @@ FuncDefnList
 
 FuncDefn
 	:DEF IDENT 	{
-				// make ident point to the new sym tab
-				printf("%s\n",yytext);
-				struct sym_record* s=install(yytext);
-				s->is_proc_name=1;
-				$2 = id(s);
-				st_push(current_st);
-				current_st=new_sym_table(current_st);
-				s->proc_st=current_st;
-				seen_func=1;
-				//printf("FINISHED THIS\n");
+					printf("%s\n",yytext);
+					struct sym_record* s=install(yytext);
+					s->is_proc_name=1;
+					$2 = id(s);
+					st_push(current_st);
+					current_st=new_sym_table(current_st);
+					current_st->owner_name=strdup(yytext);
+					s->my_st=current_st;
+					seen_func=1;
 				}
-	'(' FormalArgLIST ')' ':' ReturnType CompoundStmt	{ $$=opr(FUNC,4,$2,$5,$8,$9);} 
+	'(' FormalArgLIST ')' ':' ReturnType CompoundStmt	{ 												   
+														$$=opr(FUNC,4,$2,$5,$8,$9);										insert_signature($2,$5,$8);
+														} 
 	;
 
 ReturnType
@@ -300,9 +302,9 @@ Stmt
 	;
 
 JumpStmt
-	:CONTINUE ';'		{$$=con_i(CONTINUE);}	
-	|BREAK ';'		{$$=con_i(BREAK);}
-	|RETURN ';'		{$$=con_i(RETURN);}
+	:CONTINUE ';'		{$$=opr(CONTINUE,0);}	
+	|BREAK ';'		{$$=opr(BREAK,0);}
+	|RETURN ';'		{$$=opr(RETURN,0);}
 	|RETURN Expression ';'	{$$=opr(RETURN,1,$2);}
 	;
 	
@@ -329,7 +331,7 @@ CompoundStmt
 		}
 		 StmtList 
 		{	
-			//print_st(current_st);
+			print_st(current_st);
 			current_st=st_pop();
 		}
 	  '}'		{$$=opr(COMPOUND,1,$3);}
@@ -389,7 +391,8 @@ IdList
 	;
 primary_Expression	
 	:IDENT			{
-						struct sym_record*s =search(current_st,yytext);					
+						struct sym_record*s =search(current_st,yytext);
+						printf("s is NULL is true = %d\n",s==NULL);					
 						$$=id(s);
 				}
 	|ConstExp		{$$=$1;}
@@ -489,7 +492,7 @@ unary_Expression
 postfix_Expression
 	: primary_Expression				{$$ = $1;}
 	| postfix_Expression '[' Expression ']'		{type_check_typeid($1);}
-	| postfix_Expression '('ArgExpList ')'		{$$=opr(INVOC,2,$1,$3);}
+	| postfix_Expression '('ArgExpList ')'		{$$=opr(INVOC,2,$1,$3);type_check_invoc($$,$1,$3);}
 	| postfix_Expression '(' ')'			{$$=opr(INVOC,2,$1,empty(EMPTY));}
 	| postfix_Expression '.' IDENT 							
 	| postfix_Expression PP			{$$=opr(POSTFIX,2,$1,con_i($2));type_check_prepostfix($$,$1);}
@@ -507,9 +510,15 @@ unary_operator
 
 
 %%
-int main()
+int main(int argc, char** argv)
 {
+	if(argc > 0)
+	{
+		out_file=strdup(argv[1]);		// filename without extension
+		output=fopen(strcat(argv[1],".il"),"w");		// create il file
+	}
 	yyparse();
+	fclose(output);
 	return 0;
 }
 

@@ -4,6 +4,9 @@ extern char buffer[BUFFSIZE];
 extern int tempno;
 extern int labelno;
 extern struct symbol_table* current_st;
+extern FILE* output;
+extern char* out_file;
+
 char* concat(char* c1,char* c2)
 {
 	strcat(c1,"\n");
@@ -322,11 +325,17 @@ struct sym_record* install(char* sym_name)
 void print_header()
 {
 	printf(".assembly extern mscorlib {} \n");
+	fprintf(output,".assembly extern mscorlib {} \n");
 	printf(".assembly output\n");
+	fprintf(output,".assembly output\n");
 	printf("{\n");
+	fprintf(output,"{\n");
 	printf(".ver  0:0:0:0\n");
+	fprintf(output,".ver  0:0:0:0\n");
 	printf("}\n");
+	fprintf(output,"}\n");
 	printf(".module output.exe\n");
+	fprintf(output,".module %s.exe\n",out_file);
 }
 
 

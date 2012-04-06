@@ -144,4 +144,42 @@ void type_check_typeid(nodeType* node)
 	}
 	return;
 }
+void type_check_invoc(nodeType* parent,nodeType* func_name,nodeType* arg_list)
+{
+	char * pch;
+	if(strcmp(func_name->id.symrec->signature,"")==0)
+	{
+		//printf("SIGN IS NULL\n");
+		return;
+	}	
+	//printf ("Splitting string \"%s\" into tokens:\n",func_name->id.symrec->signature);
+	pch = strtok (func_name->id.symrec->signature," ::");
+	int count = 0;
+	if(strcmp(pch,"int32")==0)	
+	{
+		//printf("PCH IS %s\n",pch);
+		parent->opr.datatype = MY_INT;
+	}
+	else if(strcmp(pch,"float32")==0)	
+	{
+		//printf("PCH IS %s\n",pch);
+		parent->opr.datatype = MY_FLOAT;
+	}
+	
+	while (pch != NULL)
+	{
+		if(count>3)
+		{
+			
+			printf ("%s\n",pch);
+			pch = strtok (NULL, " )(,::");
+		}
+		else
+		{
+				count = count+1;
+				pch = strtok (NULL, " )(,::");
+		}
+
+	}
+}	
 

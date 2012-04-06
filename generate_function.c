@@ -4,6 +4,7 @@ extern char buffer[BUFFSIZE];
 extern int tempno;
 extern int labelno;
 extern int in_assign;
+extern FILE* output;
 int generate(nodeType *n)
 {
 	//printf("GENERATE BEGINS\n");
@@ -17,18 +18,23 @@ int generate(nodeType *n)
 	{
 		case typeConI:
 			printf("ldc.i4 %d \n",n->con_i.value);
+			fprintf(output,"ldc.i4 %d \n",n->con_i.value);
 			break;
 		case typeConC:
 			printf("ldc.i4 %c \n",n->con_c.value);
+			fprintf(output,"ldc.i4 %c \n",n->con_c.value);
 			break;
 		case typeConF:
 			printf("ldc.i4 %lf \n",n->con_f.value);
+			fprintf(output,"ldc.i4 %lf \n",n->con_f.value);
 			break;
 		case typeConB:
 			printf("ldc.i4 %d \n",n->con_b.value);
+			fprintf(output,"ldc.i4 %d \n",n->con_b.value);
 			break;	
 		case typeId: 
 			printf("ldloc %s \n",n->id.symrec->sym_name);
+			fprintf(output,"ldloc %s \n",n->id.symrec->sym_name);
 			break;
 		case typeOpr:
 			switch(n->opr.oper)
@@ -72,6 +78,17 @@ int generate(nodeType *n)
 					 printf("%s",_code);
 					 break;
 				 
+				case RETURN:
+					printf("Matched RETURN\n");
+					ir_return(n);
+					break;
+				case BREAK:
+					printf("Matched BREAK\n");
+					break;
+				case CONTINUE:
+					printf("Matched CONTINUE\n");
+					break;
+		
 				case STMT_LIST:
 					 printf("MAtched STMT_LIST\n");		
 					 ir_stmtlist(n);

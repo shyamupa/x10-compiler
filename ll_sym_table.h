@@ -12,13 +12,14 @@ struct sym_record
 	int offset;			// offset of symbol
 	int is_proc_name;		// 1 if ident is proc
 	char signature[100];		// 
-	struct symbol_table* proc_st;	//ptr to symbol table of the procedure in case 
+	struct symbol_table* my_st;	//ptr to symbol table of the procedure in case 
 	enum modifier access_mode;
 	struct sym_record * next;
 };
 
 struct symbol_table{
 	struct symbol_table* parent;	//pointer to parent symbol table
+	char * owner_name;
 	struct sym_record* Head;	//first entry in list of local variables
 	struct sym_record* Tail;	//last entry in list of local variable
 	int numparam;			//header

@@ -1,18 +1,20 @@
 public class myclass
 {
-	def myfunc(x:float,y:int):int
+	
+	def myfunc(x:int,y:int):int
 	{
-		var a:float;
-		var p,q,r,i,j,k,l:int;
-		var mybool,s,t:boolean;
-		s=true;
+		var t:boolean;
+		var p:int;
 		t=false;
-		//mybool = (s != t && s == t || t);
+		p=1;
+		println(p);
+		return t; 
 	}
 	
-	def fun2(p:int):int
+	def main():void
 	{
-		var a,b,c:int;
-		myfunc(a,b);
+		var sid:int;
+		myfunc(1,2);
+		return;
 	}
 };

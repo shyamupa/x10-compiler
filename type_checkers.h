@@ -17,4 +17,5 @@ void type_check_division(nodeType* parent,nodeType* lhs,nodeType* rhs);
 void type_check_prepostfix(nodeType* parent,nodeType* node);
 void type_check_typeid(nodeType* node);
 void type_check_shift(nodeType* parent,nodeType* node);
+void type_check_invoc(nodeType* parent,nodeType* func_name,nodeType* arg_list);
 #endif
