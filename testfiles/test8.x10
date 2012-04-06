@@ -1,20 +1,22 @@
 public class myclass
 {
 	
-	def myfunc(x:int,y:int):int
+	def myfun(x:int,y:int):int
 	{
+		//hjjsahd
 		var t:boolean;
-		var p:int;
-		t=false;
-		p=1;
+		var p,a,b:int;
+		t=false; 
+		a = 200;
+		b = 1;
+		p = a << b;
 		println(p);
-		return t; 
+		return b; 
 	}
 	
 	def main():void
-	{
-		var sid:int;
-		myfunc(1,2);
-		return;
+	{	
+		myfun(1,2);
+		return ;
 	}
 };

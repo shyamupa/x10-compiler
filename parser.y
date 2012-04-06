@@ -16,10 +16,12 @@
 
 
 extern struct sym_record sym_table;
-extern yylineno;
+extern yyline_no;
 extern int yylex();
 extern char* yytext;
 extern int yywrap();
+extern int yycolumn;
+extern int yyleng;
 
 /*prototypes start*/
 
@@ -304,7 +306,7 @@ Stmt
 JumpStmt
 	:CONTINUE ';'		{$$=opr(CONTINUE,0);}	
 	|BREAK ';'		{$$=opr(BREAK,0);}
-	|RETURN ';'		{$$=opr(RETURN,0);}
+	|RETURN ';'		{printf("In Return \n");$$=opr(RETURN,0);}
 	|RETURN Expression ';'	{$$=opr(RETURN,1,$2);}
 	;
 	
@@ -335,14 +337,14 @@ CompoundStmt
 			current_st=st_pop();
 		}
 	  '}'		{$$=opr(COMPOUND,1,$3);}
-	| error '}'	{yyerror("error in compound stmt\n");}
+	| error '}'	{yyerror("error in compound stmt");}
 	;
 NonFuncDeclaration	:VarDec	{$$=$1;}
 			;
 ExpressionStmt	
 	:Expression ';'	{$$=$1;}
 	|';'		{$$=empty(EMPTY);}
-	|Expression error ';'	{yyerror("error in exp stmt\n");}
+	|Expression error ';'	{yyerror("error in exp stmt");}
 	|error ';'	{yyerror("error in empty stmt");}
 	;
 SelectionStmt	
@@ -523,14 +525,10 @@ int main(int argc, char** argv)
 }
 
 
-
-void yyerror(char*s)  
+void yyerror (char *s) /* Called by yyparse on error */
 {
-	printf("%s\n",s);
-	//printf("%d: %s at %s\n",yylineno,s,yytext);
+	printf ("%d:%d:error:%s at %s  \n",yyline_no,yycolumn-yyleng,s,yytext);
 }
-
-
 
 
 

@@ -8,7 +8,8 @@ void type_check_assign(nodeType* parent,nodeType* lhs,nodeType* rhs)
 	printf("%d %d HIHI\n",get_type(lhs),get_type(rhs));
 	if(get_type(lhs)!=get_type(rhs))
 	{
-		printf("type mismatch in assign or bool eq / neq \n");
+		//printf("type mismatch in assign or bool eq / neq \n");
+		yyerror("type mismatch in assign or bool eq/neq");
 		exit(0);
 	}
 	parent->opr.datatype=get_type(rhs);
@@ -39,7 +40,7 @@ void type_check_addmult(nodeType* parent,nodeType* lhs,nodeType* rhs)
 		//printf("case 3\n");
 		return;
 	}
-	printf("type mismatch in addmult\n");
+	yyerror("type mismatch in addmult");
 	exit(0);
 }
 
@@ -53,7 +54,7 @@ void type_check_rel(nodeType* parent,nodeType* lhs,nodeType* rhs)
 			return;
 		}
 	}
-	printf("type mismatch in relational\n");
+	yyerror("type mismatch in relational\n");
 	exit(0);
 }
 
@@ -61,7 +62,7 @@ void type_check_int(nodeType* parent,nodeType* lhs,nodeType* rhs)
 {
 	if(get_type(lhs)!=MY_INT || get_type(rhs)!=MY_INT)
 	{
-		printf("type mismatch in int\n");
+		yyerror("type mismatch in int\n");
 		exit(0);
 	}
 	parent->opr.datatype=MY_INT;
@@ -70,10 +71,10 @@ void type_check_int(nodeType* parent,nodeType* lhs,nodeType* rhs)
 
 void type_check_bool(nodeType* parent,nodeType* lhs,nodeType* rhs)
 {
-	printf("SIDD %d %d\n",get_type(lhs),get_type(rhs));
+	//printf("SIDD %d %d\n",get_type(lhs),get_type(rhs));
 	if(get_type(lhs)!=MY_BOOL || get_type(rhs)!=MY_BOOL)
 	{
-		printf("type mismatch in bool\n");
+		yyerror("type mismatch in bool\n");
 		exit(0);
 	}
 	parent->opr.datatype=MY_BOOL;
@@ -84,7 +85,7 @@ void type_check_shift(nodeType* parent,nodeType* node)
 {
 	if(get_type(node)!=MY_INT)
 	{
-		printf("type mismatch in shift\n");
+		yyerror("type mismatch in shift\n");
 		exit(0);
 	}
 	parent->opr.datatype=MY_INT;
@@ -102,7 +103,7 @@ void type_check_division(nodeType* parent,nodeType* lhs,nodeType* rhs)
 	{
 		if(rhs->con_f.value!=0.0)		return;
 	}
-	printf("Division by zero\n");
+	yyerror("Division by zero\n");
 	exit(0);
 	// assign type to parent
 	if(get_type(lhs)==MY_INT && get_type(rhs)==MY_INT)
@@ -120,7 +121,7 @@ void type_check_division(nodeType* parent,nodeType* lhs,nodeType* rhs)
 		parent->opr.datatype=MY_FLOAT;
 		return;
 	}
-	printf("type mismatch in division\n");
+	yyerror("type mismatch in division\n");
 	exit(0);
 }
 
@@ -128,7 +129,7 @@ void type_check_prepostfix(nodeType* parent,nodeType* node)
 {
 	if(get_type(node)!=MY_INT && get_type(node)!=MY_FLOAT)
 	{
-		printf("type mismatch in ppprefix\n");
+		yyerror("type mismatch in ppprefix\n");
 		exit(0);
 	}
 	parent->opr.datatype=get_type(node);
@@ -139,7 +140,7 @@ void type_check_typeid(nodeType* node)
 {
 	if(node->type!=typeId)
 	{
-		printf("type undefined\n");
+		yyerror("type undefined\n");
 		exit(0);
 	}
 	return;
@@ -147,13 +148,15 @@ void type_check_typeid(nodeType* node)
 void type_check_invoc(nodeType* parent,nodeType* func_name,nodeType* arg_list)
 {
 	char * pch;
-	if(strcmp(func_name->id.symrec->signature,"")==0)
+	char* sign;
+	sign = strdup(func_name->id.symrec->signature);
+	if(strcmp(sign,"")==0)
 	{
 		//printf("SIGN IS NULL\n");
 		return;
 	}	
 	//printf ("Splitting string \"%s\" into tokens:\n",func_name->id.symrec->signature);
-	pch = strtok (func_name->id.symrec->signature," ::");
+	pch = strtok (sign," ::");
 	int count = 0;
 	if(strcmp(pch,"int32")==0)	
 	{
@@ -171,7 +174,7 @@ void type_check_invoc(nodeType* parent,nodeType* func_name,nodeType* arg_list)
 		if(count>3)
 		{
 			
-			printf ("%s\n",pch);
+			printf("%s\n",pch);
 			pch = strtok (NULL, " )(,::");
 		}
 		else

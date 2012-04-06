@@ -215,10 +215,20 @@ char* ir_arithmetic(nodeType* n)
 			fprintf(output,"xor\n");
 			break;
 		case LSH:
-			//printf("xor\n");
+			printf("ldc.i4.s 0x1f\n");
+			fprintf(output,"ldc.i4.s 0x1f\n");
+			printf("and\n");
+			fprintf(output,"and\n");
+			printf("shl\n");
+			fprintf(output,"shl\n");
 			break;
 		case RSH:
-			//printf("xor\n");
+			printf("ldc.i4.s 0x1f\n");
+			fprintf(output,"ldc.i4.s 0x1f\n");
+			printf("and\n");
+			fprintf(output,"and\n");
+			printf("shr\n");
+			fprintf(output,"shr\n");
 			break;
 		default:
 			printf("arithmetic default\n");
@@ -614,8 +624,10 @@ void  ir_stmtlist(nodeType* n)
 	nodeType* Stmtlist = get_operand(n,0);
 	nodeType* Stmt = get_operand(n,1);
 	generate(Stmtlist);
-	if(Stmtlist->opr.oper == STMT_LIST)
-	{
+	//if(Stmtlist->opr.oper == STMT_LIST)
+	//{
 		generate(Stmt);
-	}
+		//printf("Sidd1 %d \n",Stmt->opr.oper);
+		
+	//}
 }
