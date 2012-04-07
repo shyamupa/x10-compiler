@@ -6,10 +6,10 @@ public class myclass
 		var a,b:boolean;
 		a = true;
 		b = false;
-		if(a && b)
+		while(true)
 		{		
 		x = true ;
-		}		
+		}
 		println(6);		
 		return (6+7); 
 	}

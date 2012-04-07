@@ -147,7 +147,11 @@ int generate(nodeType *n)
 							break;
 				case IF_ELSE:
 							printf("MATCHED IF_ELSE\n");
-							//ir_if_else(n);
+							ir_if_else(n);
+							break;	
+				case WHILE:
+							printf("MATCHED WHILE\n");
+							ir_while(n);
 							break;	
 				case ARGEXPLIST:
 							printf("MATCHED ARGEXPLIST\n");
@@ -262,6 +266,10 @@ int generate(nodeType *n)
 							printf("Matched DIV\n");
 							ir_arithmetic(n);
 							break;
+				case ASYNCH:
+							printf("Matched ASYNCH\n");
+							ir_asynch_list(n);
+							break;		
 				default :
 					printf("entered default\n"); 
 		}

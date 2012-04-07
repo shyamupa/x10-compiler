@@ -39,7 +39,7 @@ nodeType* get_operand(nodeType* opnode,int index)
 		return opnode->opr.op[index];
 	else
 		{
-			printf("POLOLOPOPOPLOPOLPOPLOIPIOPL\n");
+			printf("get operand main fasa\n");
 			exit(0);
 		}	
 }

@@ -25,6 +25,7 @@
 #define COMPOUND 1358
 #define CLASSLIST 1359
 #define IF_ELSE 1360
+#define ASYNCH 1361
 
 #define YYDEBUG 1	//enable debugging
 

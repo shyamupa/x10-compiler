@@ -11,6 +11,7 @@ int main_found=0;
 int main_was_found=0;
 int in_assign=0;
 int in_func=0;
+extern int idno;
 // Working correctly
 void ir_class_decln(nodeType* n)
 {
@@ -571,7 +572,46 @@ void ir_if(nodeType* n)
 	generate(stmt);
 	return;
 }	
-
+void ir_if_else(nodeType* n)
+{
+	nodeType* expr = get_operand(n,0);
+	nodeType* stmt1 = get_operand(n,1);
+	nodeType* stmt2 = get_operand(n,2);
+	set_T(expr,newlabel());
+	set_F(expr,newlabel());
+	strcat(stmt1->opr.next,n->opr.next);
+	strcat(stmt2->opr.next,n->opr.next);
+	generate(expr);
+	printf("%s:\n",get_T(expr));
+	fprintf(output,"%s:\n",get_T(expr));
+	generate(stmt1);
+	printf("br.s %s\n ",n->opr.next);
+	fprintf(output,"br.s %s\n",n->opr.next);
+	printf("%s:\n",get_F(expr));
+	fprintf(output,"%s:\n",get_F(expr));
+	generate(stmt2);
+	
+}	
+void ir_while(nodeType* n)
+{
+	nodeType* expr = get_operand(n,0);
+	nodeType* stmt = get_operand(n,1);
+	char begin[16];
+	memset(begin,0,16);
+	strcat(begin,newlabel());
+	set_T(expr,newlabel());
+	set_F(expr,n->opr.next);
+	strcat(stmt->opr.next,begin);
+	printf("%s:\n",begin);
+	fprintf(output,"%s:\n",begin);
+	generate(expr);
+	printf("%s:\n",get_T(expr));
+	fprintf(output,"%s:\n",get_T(expr));
+	generate(stmt);
+	printf("br.s %s\n ",begin);
+	fprintf(output,"br.s %s\n",begin);
+}	
+	
 void ir_bool_flow(nodeType* n)
 {
 	nodeType* B1 = get_operand(n,0);
@@ -643,4 +683,47 @@ void ir_stmtlist(nodeType* n)
 	fprintf(output,"%s: \n",Stmtlist->opr.next);
 	generate(Stmt);
 	//~ free(n);
+}
+
+void ir_asynch_list(nodeType* n)
+{
+	printf("Entered Async\n");
+	nodeType* func = get_operand(n,0);
+	nodeType* fun_name = get_operand(func,0);
+	char* sign,*pch;
+	sign = strdup(fun_name->id.symrec->signature);
+	
+	printf(".locals init (class [mscorlib]System.Threading.Thread V%d)\n",idno);
+	fprintf(output,".locals init (class [mscorlib]System.Threading.Thread V%d)\n",idno);
+	printf("ldnull\n");
+	fprintf(output,"ldnull\n");
+	printf("ldftn ");
+	fprintf(output,"ldftn ");
+	
+	
+	if(strcmp(sign,"")==0)		return;	
+	pch = strtok (sign," ::");
+	printf("%s ",pch);
+	fprintf(output,"%s ",pch);
+	
+	printf("class ");
+	fprintf(output,"class ");
+	printf("%s::",fun_name->id.symrec->my_st->parent->owner_name);
+	fprintf(output,"%s::",fun_name->id.symrec->my_st->parent->owner_name);
+	printf("%s",fun_name->id.symrec->sym_name);
+	fprintf(output,"%s",fun_name->id.symrec->sym_name);
+	printf("()\n");
+	fprintf(output,"()\n");
+	
+	printf("newobj instance void class [mscorlib]System.Threading.ThreadStart::'.ctor'(object, native int)\n");
+	fprintf(output,"newobj instance void class [mscorlib]System.Threading.ThreadStart::'.ctor'(object, native int)\n");
+	printf("newobj instance void class [mscorlib]System.Threading.Thread::'.ctor'(class [mscorlib]System.Threading.ThreadStart)\n");
+	fprintf(output,"newobj instance void class [mscorlib]System.Threading.Thread::'.ctor'(class [mscorlib]System.Threading.ThreadStart)\n");
+	printf("stloc V%d\n",idno); 
+	fprintf(output,"stloc V%d\n",idno); 
+	printf("ldloc V%d\n",idno); 
+	fprintf(output,"ldloc V%d\n",idno); 
+	printf("callvirt instance void class [mscorlib]System.Threading.Thread::Start()\n");
+	fprintf(output,"callvirt instance void class [mscorlib]System.Threading.Thread::Start()\n");
+	idno++;
 }

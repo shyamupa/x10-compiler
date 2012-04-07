@@ -108,36 +108,37 @@
      TYPE_INT = 324,
      TYPE_FLOAT = 325,
      TYPE_CHAR = 326,
-     RETURN = 327,
-     DEF = 328,
-     PUBLIC = 329,
-     PRIVATE = 330,
-     PROTECTED = 331,
-     BEQ = 332,
-     LT = 333,
-     GT = 334,
-     LE = 335,
-     GE = 336,
-     TRUE = 337,
-     FALSE = 338,
-     IDENT = 339,
-     ARRAY = 340,
-     ELLIPSIS = 341,
-     ASSERT = 342,
-     EQ = 343,
-     PLUS_EQ = 344,
-     MULT_EQ = 345,
-     MINUS_EQ = 346,
-     DIV_EQ = 347,
-     PP = 348,
-     MM = 349,
-     IFX = 350,
-     MINUS = 351,
-     PLUS = 352,
-     DIV = 353,
-     MULT = 354,
-     NEG = 355,
-     POW = 356
+     TYPE_BOOL = 327,
+     TYPE_VOID = 328,
+     RETURN = 329,
+     DEF = 330,
+     PUBLIC = 331,
+     PRIVATE = 332,
+     PROTECTED = 333,
+     LT = 334,
+     GT = 335,
+     LE = 336,
+     GE = 337,
+     TRUE = 338,
+     FALSE = 339,
+     IDENT = 340,
+     ARRAY = 341,
+     ELLIPSIS = 342,
+     ASSERT = 343,
+     EQ = 344,
+     PLUS_EQ = 345,
+     MULT_EQ = 346,
+     MINUS_EQ = 347,
+     DIV_EQ = 348,
+     PP = 349,
+     MM = 350,
+     IFX = 351,
+     MINUS = 352,
+     PLUS = 353,
+     DIV = 354,
+     MULT = 355,
+     NEG = 356,
+     POW = 357
    };
 #endif
 /* Tokens.  */
@@ -210,36 +211,37 @@
 #define TYPE_INT 324
 #define TYPE_FLOAT 325
 #define TYPE_CHAR 326
-#define RETURN 327
-#define DEF 328
-#define PUBLIC 329
-#define PRIVATE 330
-#define PROTECTED 331
-#define BEQ 332
-#define LT 333
-#define GT 334
-#define LE 335
-#define GE 336
-#define TRUE 337
-#define FALSE 338
-#define IDENT 339
-#define ARRAY 340
-#define ELLIPSIS 341
-#define ASSERT 342
-#define EQ 343
-#define PLUS_EQ 344
-#define MULT_EQ 345
-#define MINUS_EQ 346
-#define DIV_EQ 347
-#define PP 348
-#define MM 349
-#define IFX 350
-#define MINUS 351
-#define PLUS 352
-#define DIV 353
-#define MULT 354
-#define NEG 355
-#define POW 356
+#define TYPE_BOOL 327
+#define TYPE_VOID 328
+#define RETURN 329
+#define DEF 330
+#define PUBLIC 331
+#define PRIVATE 332
+#define PROTECTED 333
+#define LT 334
+#define GT 335
+#define LE 336
+#define GE 337
+#define TRUE 338
+#define FALSE 339
+#define IDENT 340
+#define ARRAY 341
+#define ELLIPSIS 342
+#define ASSERT 343
+#define EQ 344
+#define PLUS_EQ 345
+#define MULT_EQ 346
+#define MINUS_EQ 347
+#define DIV_EQ 348
+#define PP 349
+#define MM 350
+#define IFX 351
+#define MINUS 352
+#define PLUS 353
+#define DIV 354
+#define MULT 355
+#define NEG 356
+#define POW 357
 
 
 
@@ -249,7 +251,7 @@ typedef union YYSTYPE
 {
 
 /* Line 1676 of yacc.c  */
-#line 47 "parser.y"
+#line 61 "parser.y"
 
 	int iVal;
 	float fVal;
@@ -261,7 +263,7 @@ typedef union YYSTYPE
 
 
 /* Line 1676 of yacc.c  */
-#line 265 "y.tab.h"
+#line 267 "y.tab.h"
 } YYSTYPE;
 # define YYSTYPE_IS_TRIVIAL 1
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */

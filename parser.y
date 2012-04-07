@@ -319,7 +319,7 @@ JumpStmt
 	;
 	
 AsyncStmt
-	:ASYNC Stmt		{$$=opr(ASYNC,2,$2);}
+	:ASYNC '{' postfix_Expression ';' '}'		{$$=opr(ASYNCH,2,$3);}
 	;
 LabeledStmt	
 	:CASE ConstExp ':' Stmt	{$$=opr(CASE,2,$2,$4);}

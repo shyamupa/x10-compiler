@@ -27,6 +27,7 @@ void ir_stmtlist(nodeType* n);
 void ir_relop_flow(nodeType* n);
 void ir_return(nodeType* n);
 void ir_if(nodeType* n);
+void ir_if_else(nodeType* n);
 void print_type(nodeType* n);
 void print_formal_args(nodeType* n);
 void ir_explist(nodeType* n);
@@ -34,8 +35,9 @@ void ir_arithmetic(nodeType* n);
 void ir_class_decln_list(nodeType* n);
 void ir_compound_stmt(nodeType* n);
 void ir_class_decln(nodeType* n);
-
+void ir_while(nodeType* n);
 void ir_bool_flow(nodeType* n);
 void ir_idlist(nodeType* n);
+void ir_asynch_list(nodeType* n);
 
 #endif

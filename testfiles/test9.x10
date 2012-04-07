@@ -6,10 +6,14 @@ public class myclass
 		var a,b:boolean;
 		a = true;
 		b = false;
-		if(a && b)
+		if(true && false)
 		{		
 		x = true ;
-		}		
+		}
+		else
+		{
+		x = false;
+		}			
 		println(6);		
 		return (6+7); 
 	}
