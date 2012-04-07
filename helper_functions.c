@@ -35,7 +35,13 @@ char* newlabel()
 // and returns the operand at position index
 nodeType* get_operand(nodeType* opnode,int index)
 {
-	return opnode->opr.op[index];
+	if(index < opnode->opr.nops)
+		return opnode->opr.op[index];
+	else
+		{
+			printf("POLOLOPOPOPLOPOLPOPLOIPIOPL\n");
+			exit(0);
+		}	
 }
 // NEEDS ASSERT statements
 // takes a VarDec node and spread the type info 
@@ -136,6 +142,89 @@ char* get_place(nodeType* n)
 					printf("Can't get place for unknown node type\n");
 		}
 }
+
+void set_F(nodeType* n,char* label)
+{
+	switch(n->type)
+	{
+		case typeConI:
+			strcat(n->con_i.F,label);
+			break;
+		case typeConC:
+			strcat(n->con_c.F,label);
+			break;
+		case typeConB:
+			strcat(n->con_b.F,label);
+			break;		
+		case typeConF:
+			strcat(n->con_f.F,label);
+			break;
+		case typeOpr:
+			strcat(n->opr.F,label);
+			break;
+		case typeId:
+			strcat(n->id.F,label);
+			break;
+		default:
+			printf("Can't set F for unknown node type\n");
+	}
+}
+
+void set_T(nodeType* n,char* label)
+{
+	switch(n->type)
+	{
+		case typeConI:
+			strcat(n->con_i.T,label);
+			break;
+		case typeConC:
+			strcat(n->con_c.T,label);
+			break;
+		case typeConB:
+			strcat(n->con_b.T,label);
+			break;		
+		case typeConF:
+			strcat(n->con_f.T,label);
+			break;
+		case typeOpr:
+			strcat(n->opr.T,label);
+			break;
+		case typeId:
+			strcat(n->id.T,label);
+			break;
+		default:
+			printf("Can't set T for unknown node type\n");
+	}
+}
+
+char* get_F(nodeType* n)
+{
+	 switch(n->type)
+	 {
+	  case typeConI:
+			return n->con_i.F;
+			break;
+	  case typeConC:
+			return n->con_c.F;
+			break;
+	  case typeConF:
+			return n->con_f.F;
+			break;
+	  case typeOpr:
+			return n->opr.F;
+			break;
+	  case typeId:
+			return n->id.F;
+			break;
+	  case typeConB:
+			return n->con_b.F;
+			break;			
+			
+	  default:
+				printf("Can't get F for unknown node type\n");
+	}
+}
+
 char* get_T(nodeType* n)
 {
 	 switch(n->type)
@@ -155,86 +244,12 @@ char* get_T(nodeType* n)
 	  case typeId:
 			return n->id.T;
 			break;
+	  case typeConB:
+			return n->con_b.T;
+			break;			
 	  default:
 				printf("Can't get T for unknown node type\n");
 		}
-}
-void set_F(nodeType* n,char* label)
-{
-	switch(n->type)
-	{
-		case typeConI:
-			n->con_i.F=strdup(label);
-			break;
-		case typeConC:
-			n->con_c.F=strdup(label);
-			break;
-		case typeConB:
-			n->con_b.F=strdup(label);
-			break;		
-		case typeConF:
-			n->con_f.F=strdup(label);
-			break;
-		case typeOpr:
-			n->opr.F=strdup(label);
-			break;
-		case typeId:
-			n->id.F=strdup(label);
-			break;
-		default:
-			printf("Can't set F for unknown node type\n");
-	}
-}
-
-void set_T(nodeType* n,char* label)
-{
-	switch(n->type)
-	{
-		case typeConI:
-			n->con_i.T=strdup(label);
-			break;
-		case typeConC:
-			n->con_c.T=strdup(label);
-			break;
-		case typeConB:
-			n->con_b.T=strdup(label);
-			break;		
-		case typeConF:
-			n->con_f.T=strdup(label);
-			break;
-		case typeOpr:
-			n->opr.T=strdup(label);
-			break;
-		case typeId:
-			n->id.T=strdup(label);
-			break;
-		default:
-			printf("Can't set T for unknown node type\n");
-	}
-}
-
-char* get_F(nodeType* n)
-{
- switch(n->type)
- {
-  case typeConI:
-		return n->con_i.F;
-		break;
-  case typeConC:
-		return n->con_c.F;
-		break;
-  case typeConF:
-		return n->con_f.F;
-		break;
-  case typeOpr:
-		return n->opr.F;
-		break;
-  case typeId:
-		return n->id.F;
-		break;
-  default:
-			printf("Can't get F for unknown node type\n");
-}
 }
 
 nodeType* con_i(int value)
@@ -244,9 +259,9 @@ nodeType* con_i(int value)
 	{
 		yyerror("out of memory");
 	}
-	p->type=typeConI;
-	p->con_i.value=value;
-	p->con_i.datatype=MY_INT;
+	p->type = typeConI;
+	p->con_i.value = value;
+	p->con_i.datatype = MY_INT;
 	bzero(buffer,BUFFSIZE);
 	sprintf(buffer,"%d",value);
 	p->con_i.place = strdup(buffer);
@@ -338,7 +353,7 @@ nodeType *opr(int oper, int nops, ...)
 	nodeType *p;
 	size_t size;
 	int i;
-	size = sizeof(oprNodeType) + (nops - 1) * sizeof(nodeType*);
+	size = sizeof(oprNodeType) + (nops-1) * sizeof(nodeType*);
 	if ((p = malloc(size)) == NULL)
 		yyerror("out of memory");
 	p->type = typeOpr;
@@ -390,5 +405,24 @@ void print_header()
 	printf(".module output.exe\n");
 	fprintf(output,".module %s.exe\n",out_file);
 }
+
+void traverse(nodeType* n)
+{
+ if(n->type == typeOpr)
+	{
+		 printf("found opr node\n");
+		 int number = n->opr.nops;
+		 int count = 0;
+		 while(count < number)
+		 {
+			 //~ printf("%d\n",count);
+			 traverse(get_operand(n,count));
+			 count++;
+		 }
+		 printf("Parent Node Type:%d \n",n->type);
+	}
+ else
+	 printf("NNode Type:%d \n",n->type);
+}	
 
 

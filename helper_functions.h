@@ -28,6 +28,8 @@ nodeType* empty(int value);
 nodeType *id(struct sym_record* symrec);
 nodeType *opr(int oper, int nops, ...); 
 struct sym_record* install(char* sym_name);
+void traverse(nodeType* n);
+
 
 
 #endif

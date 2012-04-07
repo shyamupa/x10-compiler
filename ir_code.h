@@ -20,22 +20,22 @@ void ir_fun_invoc(nodeType* n);
 void print_signature(nodeType* fun_name,nodeType* formalarg,nodeType* return_type);
 void ir_relop(nodeType* n);
 void ir_fun_def(nodeType* n);
-char* ir_fun_def_list(nodeType* n);
+void ir_fun_def_list(nodeType* n);
 void ir_var_dec(nodeType* n);
-char* ir_idlist(nodeType* n);
 void ir_assign(nodeType* n);
 void ir_stmtlist(nodeType* n);
 void ir_relop_flow(nodeType* n);
 void ir_return(nodeType* n);
 void ir_if(nodeType* n);
-
-char* ir_bool_flow(nodeType* n);
 void print_type(nodeType* n);
 void print_formal_args(nodeType* n);
-char* func_invoc(nodeType* n);
 void ir_explist(nodeType* n);
-char* ir_arithmetic(nodeType* n);
-char* ir_class_decln_list(nodeType* n);
+void ir_arithmetic(nodeType* n);
+void ir_class_decln_list(nodeType* n);
 void ir_compound_stmt(nodeType* n);
-char* ir_class_decln(nodeType* n);
+void ir_class_decln(nodeType* n);
+
+void ir_bool_flow(nodeType* n);
+void ir_idlist(nodeType* n);
+
 #endif

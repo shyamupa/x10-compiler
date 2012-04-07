@@ -29,200 +29,239 @@ int generate(nodeType *n)
 			fprintf(output,"ldc.i4 %lf \n",n->con_f.value);
 			break;
 		case typeConB:
+			if(in_assign == 1)
+			{
 			printf("ldc.i4 %d \n",n->con_b.value);
 			fprintf(output,"ldc.i4 %d \n",n->con_b.value);
+			}
+			else
+			{	
+				if(n->con_b.value == 1)
+				{
+					printf("br.s %s \n",get_T(n));
+					fprintf(output,"br.s %s \n",get_T(n));
+				}
+				else
+				{
+					printf("br.s %s \n",get_F(n));
+					fprintf(output,"br.s %s \n",get_F(n));
+				}
+			}
 			break;	
-		case typeId: 
+		case typeId:
 			printf("ldloc %s \n",n->id.symrec->uid);
 			fprintf(output,"ldloc %s \n",n->id.symrec->uid);
+			if(in_assign == 0)
+			{
+				if(n->id.symrec->type == MY_BOOL)
+				{
+					printf("brtrue %s\n",get_T(n));
+					fprintf(output,"brtrue %s\n",get_T(n));
+				}
+			}
 			break;
 		case typeOpr:
 			switch(n->opr.oper)
 			{
 				case CLASSLIST:
-					printf("Matched CLASSLIST\n");
-					_code=strdup(ir_class_decln_list(n));
-					printf("%s",_code);
-					break;
+							printf("Matched CLASSLIST\n");
+							ir_class_decln_list(n);
+							break;
 				case CLASS:
-					 printf("Matched CLASS\n");
-					ir_class_decln(n);
-					break;
+							 printf("Matched CLASS\n");
+							ir_class_decln(n);
+							break;
 
 				case FUNC_DEF_LIST:
-					 printf("Matched FUNC_DEF_LIST\n");
-					_code =strdup(ir_fun_def_list(n));
-					 printf("%s",_code);
-					//concat(CODE,_code);
-					break;
+							 printf("Matched FUNC_DEF_LIST\n");
+							ir_fun_def_list(n);
+							break;
 				case COMPOUND:
-					 printf("Matched COMPOUND\n");
-					ir_compound_stmt(n);
-					break;
+							 printf("Matched COMPOUND\n");
+							ir_compound_stmt(n);
+							break;
 				case FUNC:
-					printf("Matched FUNC\n");
-					ir_fun_def(n);
-					fflush(stdout);
-					break;
+							printf("Matched FUNC\n");
+							ir_fun_def(n);
+							fflush(stdout);
+							break;
 				case INVOC:
-					printf("Matched INVOC\n");
-					ir_fun_invoc(n);
-					break;
+							printf("Matched INVOC\n");
+							ir_fun_invoc(n);
+							break;
 				case FORMAL_ARG_LIST:
-					 printf("Matched FORMAL_ARG_LIST\n");
-					 printf("%s",_code);
-					 break;
+							 printf("Matched FORMAL_ARG_LIST\n");
+							 printf("%s",_code);
+							 break;
 
 				case FORMAL_ARG:
-					 printf("Matched FORMAL_ARG\n");
-					 printf("%s",_code);
-					 break;
-				 
+							 printf("Matched FORMAL_ARG\n");
+							 printf("%s",_code);
+							 break;
+						 
 				case RETURN:
-					printf("Matched RETURN\n");
-					ir_return(n);
-					break;
+							printf("Matched RETURN\n");
+							ir_return(n);
+							break;
 				case BREAK:
-					printf("Matched BREAK\n");
-					break;
+							printf("Matched BREAK\n");
+							break;
 				case CONTINUE:
-					printf("Matched CONTINUE\n");
-					break;
+							printf("Matched CONTINUE\n");
+							break;
 		
 				case STMT_LIST:
-					 printf("MAtched STMT_LIST\n");		
-					 ir_stmtlist(n);
-					 break;
+							 printf("MAtched STMT_LIST\n");		
+							 ir_stmtlist(n);
+							 break;
 				case VAR_DEC:
-					 printf("Matched VAR_DEC\n");
-					 ir_var_dec(n);
-					 break;
+							 printf("Matched VAR_DEC\n");
+							 ir_var_dec(n);
+							 break;
 				case ID_LIST:
-					 printf("Matched ID_LIST\n");
-					 _code=strdup(ir_idlist(n));
-					 printf("%s",_code);
-					 break;
+							 printf("Matched ID_LIST\n");
+							 ir_idlist(n);
+							 printf("%s",_code);
+							 break;
 				case EMPTY:
-					 printf("Matched EMPTY\n");
-					break;
+							 printf("Matched EMPTY\n");
+							break;
 				case EXP_LIST:
-					ir_explist(n);
-					break;
+							ir_explist(n);
+							break;
 				case TERNARY:
-					//_code=strdup(ir_ternary(n));
-					break;
+							//_code=strdup(ir_ternary(n));
+							break;
 				case POSTFIX:
-					//_code=strup(ir_postfix(n));
-					break;
+							//_code=strup(ir_postfix(n));
+							break;
 				case PREFIX:
-					//_code=strup(ir_prefix(n));
-					break;
+							//_code=strup(ir_prefix(n));
+							break;
 				case CAST:
-					//_code=strup(ir_cast(n));
-					break;
+							//_code=strup(ir_cast(n));
+							break;
 				case IF:
-						printf("MATCHED IF\n");
-						ir_if(n);
-						break;
+							printf("MATCHED IF\n");
+							ir_if(n);
+							break;
 				case IF_ELSE:
-						printf("MATCHED IF_ELSE\n");
-						//ir_if_else(n);
-						break;	
+							printf("MATCHED IF_ELSE\n");
+							//ir_if_else(n);
+							break;	
 				case ARGEXPLIST:
-						printf("MATCHED ARGEXPLIST\n");
-						ir_explist(n);
-						break;	
+							printf("MATCHED ARGEXPLIST\n");
+							ir_explist(n);
+							break;	
 				case ASSIGN:
-					printf("MATCHED ASSIGN\n");
-					ir_assign(n);
-					break;
+							printf("MATCHED ASSIGN\n");
+							in_assign=1;
+							ir_assign(n);
+							in_assign =0;
+							break;
 			
 				case BOOL_OR:
-					printf("Matched BOOL_OR\n");
-					if(in_assign==1)
-						ir_bool(n);
-					else
-						ir_bool_flow(n);	
-					break;
+							printf("Matched BOOL_OR\n");
+							if(in_assign==1)
+								{
+								ir_bool(n);
+								
+								}
+							else
+								ir_bool_flow(n);
+									
+							break;
 				case BOOL_AND:
-					printf("Matched BOOL_AND\n");
-					if(in_assign==1)
-						ir_bool(n);
-					else
-						ir_bool_flow(n);
-					break;
+							printf("Matched BOOL_AND\n");
+							if(in_assign==1)
+								{
+									ir_bool(n);
+									
+								}	
+							else
+								ir_bool_flow(n);
+							break;
 				case BOOL_EQ:
-					printf("Matched BOOL_EQ\n");
-					fflush(stdout);
-					if(in_assign==1)
-						ir_bool(n);
-					else
-						ir_bool_flow(n);
-					break;
+							printf("Matched BOOL_EQ\n");
+							fflush(stdout);
+							if(in_assign==1)
+								{
+									ir_bool(n);
+									
+								}	
+							else
+								ir_bool_flow(n);
+							break;
 				case NEQ:
-					printf("Matched BOOL_NEQ\n");
-					if(in_assign==1)
-						ir_bool(n);
-					else
-						ir_bool_flow(n);
-					break;
+							printf("Matched BOOL_NEQ\n");
+							if(in_assign==1)
+								{
+									ir_bool(n);
+									
+								}	
+							else
+								ir_bool_flow(n);
+							break;
 					
 				case BIT_OR:
-					printf("Matched BIT_OR\n");
-					_code = strdup(ir_arithmetic(n));
-					break;
+							printf("Matched BIT_OR\n");
+							ir_arithmetic(n);
+							break;
 				case BIT_AND:
-					printf("Matched BIT_AND\n");
-					_code = strdup(ir_arithmetic(n));
-					break;
+							printf("Matched BIT_AND\n");
+							ir_arithmetic(n);
+							break;
 				case XOR:
-					printf("Matched XOR\n");
-					_code = strdup(ir_arithmetic(n));
-					break;
+							printf("Matched XOR\n");
+							ir_arithmetic(n);
+							break;
 				case LT:
-					printf("Matched LT\n");
-					if(in_assign==0)
-						ir_relop(n);
-					else
-						ir_relop(n);	
-					break;
+							printf("Matched LT\n");
+							if(in_assign==0)
+								ir_relop(n);
+							else
+								{
+								ir_relop(n);
+								in_assign=0;
+								}	
+							break;
 				case GT:
-					printf("Matched GT\n");
-					ir_relop(n);
-					break;
+							printf("Matched GT\n");
+							ir_relop(n);
+							break;
 				case LE:
-					printf("Matched LE\n");
-					ir_relop(n);
-					break;
+							printf("Matched LE\n");
+							ir_relop(n);
+							break;
 				case GE:
-					printf("Matched GE\n");
-					ir_relop(n);
-					break;
+							printf("Matched GE\n");
+							ir_relop(n);
+							break;
 				case LSH:
-					printf("Matched LSH\n");
-					_code = strdup(ir_arithmetic(n));
-					break;
+							printf("Matched LSH\n");
+							ir_arithmetic(n);
+							break;
 				case RSH:
-					printf("Matched RSH\n");
-					_code = strdup(ir_arithmetic(n));
-					break;
+							printf("Matched RSH\n");
+							ir_arithmetic(n);
+							break;
 			
 				case PLUS:
-					printf("Matched PLUS\n");
-					_code = strdup(ir_arithmetic(n));
-					break;
+							printf("Matched PLUS\n");
+							ir_arithmetic(n);
+							break;
 				case MINUS:
-					printf("Matched MINUS\n");
-					_code = strdup(ir_arithmetic(n));
-					break;
+							printf("Matched MINUS\n");
+							ir_arithmetic(n);
+							break;
 				case MULT:
-					printf("Matched MULT\n");
-					_code = strdup(ir_arithmetic(n));
-					break;
+							printf("Matched MULT\n");
+							ir_arithmetic(n);
+							break;
 				case DIV:
-					printf("Matched DIV\n");
-					_code = strdup(ir_arithmetic(n));
-					break;
+							printf("Matched DIV\n");
+							ir_arithmetic(n);
+							break;
 				default :
 					printf("entered default\n"); 
 		}

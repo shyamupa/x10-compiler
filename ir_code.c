@@ -3,15 +3,16 @@
 extern char buffer[BUFFSIZE];
 extern int tempno;
 extern int labelno;
+nodeType* root;
 extern int generate(nodeType *n);
 extern FILE* output;
-char mybuf[1000];
+char mybuf[100];
 int main_found=0;
 int main_was_found=0;
 int in_assign=0;
 int in_func=0;
 // Working correctly
-char* ir_class_decln(nodeType* n)
+void ir_class_decln(nodeType* n)
 {
 	nodeType* mod=get_operand(n,0);
 	nodeType* class_name=get_operand(n,1);
@@ -60,45 +61,21 @@ char* ir_class_decln(nodeType* n)
 	fprintf(output,"}\n");
 }
 // Working correctly
-char* ir_class_decln_list(nodeType* n)
+void ir_class_decln_list(nodeType* n)
 {
 	nodeType* class_decln_list = get_operand(n,0);
 	nodeType* class_decln = get_operand(n,1);
 	generate(class_decln_list);
-	if(n->opr.oper == CLASSLIST)
-		{
-		generate(class_decln);
-		bzero(buffer,BUFFSIZE);
-		sprintf(buffer,"%s\n%s", get_code(class_decln_list), get_code(class_decln));
-		}
-	else
-		{
-		bzero(buffer,BUFFSIZE);
-		sprintf(buffer,"%s", get_code(class_decln_list));
-		}
-	n->opr.code = strdup(buffer);
-	return buffer;
+	generate(class_decln);
 }
 // Working correctly
-char* ir_fun_def_list(nodeType* n)
+void ir_fun_def_list(nodeType* n)
 {
 	nodeType* fun_def_list = get_operand(n,0);
 	nodeType* fun_def = get_operand(n,1);
 	generate(fun_def_list);
-	if(n->opr.oper == FUNC_DEF_LIST)
-		{
-		generate(fun_def);
-		bzero(buffer,BUFFSIZE);
-		sprintf(buffer,"%s\n%s", get_code(fun_def_list), get_code(fun_def));
-		}
-	else
-		{
-		bzero(buffer,BUFFSIZE);
-		sprintf(buffer,"%s", get_code(fun_def_list));
-		}
-	n->opr.code = strdup(buffer);
-	return buffer;
-	
+	generate(fun_def);
+	//~ free(n);
 }
 void ir_compound_stmt(nodeType* n)
 {
@@ -119,23 +96,37 @@ void ir_compound_stmt(nodeType* n)
 		in_func=0;
 	}
 	nodeType* stmtlist = get_operand(n,0);
-	stmtlist->opr.next = strdup(newlabel());
+	strcat(stmtlist->opr.next,newlabel());
+	//~ printf("COMPOUND TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT\n");
+	//~ traverse(root);
+	//~ printf("COMPOUND TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT\n");
 	generate(stmtlist);
-	//~ printf("%s:\n",stmtlist->opr.next);
-	//~ fprintf(output,"%s:\n",stmtlist->opr.next);
+	
+	printf("%s:\n",stmtlist->opr.next);
+	fprintf(output,"%s:\n",stmtlist->opr.next);
+
 	printf("}\n");
 	fprintf(output,"}\n");
+	//~ free(n);
 }
 void ir_assign(nodeType* n)
 {
 	nodeType* unary_exp = get_operand(n,0);
 	nodeType* assop = get_operand(n,1);
 	nodeType* ass_exp = get_operand(n,2);
-	printf("ASSOP IS %d\n",ass_exp->opr.oper);
-	in_assign=1;
+	//~ printf("ASSIGN TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT\n");
+	//~ traverse(root);
+	//~ printf("ASSIGN TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT\n");
+	
+	printf("Unary_exp TYPE IS %d\n",unary_exp->type);
+	printf("assop TYPE IS %d\n",assop->type);
+	printf("ass_Exp TYPE IS %d\n",ass_exp->type);
 	switch(assop->con_i.value)
 	{
 		case EQ:
+			printf("OOOOOOLAALALALALA!!\n");
+			//~ printf("ASSEXP VALUE IS %d\n",ass_exp->con_i.value);
+			fflush(stdout);
 			generate(ass_exp);
 			printf("stloc %s\n",unary_exp->id.symrec->uid);
 			fprintf(output,"stloc %s\n",unary_exp->id.symrec->uid);
@@ -178,11 +169,10 @@ void ir_assign(nodeType* n)
 			break;
 		default: printf("ASSOP DEFAULT\n");
 	}
-	in_assign=0;
 }
 // Rest working correctly
 // NEED TO COMPLETE SHIFT OPERATIONS			
-char* ir_arithmetic(nodeType* n)
+void ir_arithmetic(nodeType* n)
 {
 	nodeType* E1 = get_operand(n,0);
 	nodeType* E2 = get_operand(n,1);
@@ -238,8 +228,6 @@ char* ir_arithmetic(nodeType* n)
 			printf("arithmetic default\n");
 			fprintf(output,"arithmetic default\n");
 	}
-	n->opr.code = strdup(buffer);
-	return(buffer);
 }
 void print_type(nodeType* n)
 {
@@ -312,6 +300,12 @@ void create_formal_args(nodeType* n)
 				case MY_FLOAT: 
 							strcat(mybuf," float32 "); 
 							break;
+				case MY_BOOL:
+							strcat(mybuf," bool ");
+							break;
+				default:	
+							strcat(mybuf," unhandled type ");
+							break;					
 		}
 		return;
 	}
@@ -347,6 +341,7 @@ void insert_signature(nodeType* fun_name,nodeType* formalarg,nodeType* return_ty
 	strcat(fun_name->id.symrec->signature,mybuf);
 	bzero(mybuf,1000);
 	strcat(fun_name->id.symrec->signature," ) ");
+	printf("FINAL SIGNATURE:%s\n",fun_name->id.symrec->signature);
 }
 
 void ir_fun_def(nodeType* n)
@@ -409,6 +404,7 @@ void ir_var_dec(nodeType* n)
 	print_vardec_code(Idlist,Type);
 	printf(")\n");
 	fprintf(output,")\n");
+	//~ free(n);
 }
 
 // NEED TO PUT FLAG FOR CONTROL FLOW AND EXPRESSION 
@@ -511,6 +507,7 @@ void ir_explist(nodeType* n)
 	generate(exp);
 	generate(assexp);
 }
+
 void ir_fun_invoc(nodeType* n)
 {
 	nodeType* func_name = get_operand(n,0);
@@ -532,6 +529,7 @@ void ir_fun_invoc(nodeType* n)
 		fprintf(output,")\n");
 	}	
 }
+
 void ir_return(nodeType* n)
 {
 	if(n->opr.nops == 0)
@@ -560,88 +558,89 @@ void ir_if(nodeType* n)
 {
 	nodeType* expr = get_operand(n,0);
 	nodeType* stmt = get_operand(n,1);
-	//~ set_T(expr,newlabel());
-	//~ set_F(expr,n->opr.next);
+	set_T(expr,newlabel());
+	set_F(expr,n->opr.next);
 	//~ stmt->opr.next=strdup(n->opr.next);
-	//~ generate(expr);
-	//~ printf("%s\n",get_T(expr));
-	//~ fprintf(output,"%s\n",get_T(expr));
-	//~ generate(stmt);
+	//~ bzero(stmt->opr.next,10);
+	strcat(stmt->opr.next,n->opr.next);
+	printf("expr true label:%s\n",get_T(expr));
+	printf("expr false label:%s\n",get_F(expr));
+	generate(expr);
+	printf("%s:\n",get_T(expr));
+	fprintf(output,"%s:\n",get_T(expr));
+	generate(stmt);
 	return;
 }	
 
-char* ir_bool_flow(nodeType* n)
+void ir_bool_flow(nodeType* n)
 {
 	nodeType* B1 = get_operand(n,0);
 	nodeType* B2 = get_operand(n,1);
-	generate(B1);
-	generate(B2);
+	printf("n true label:%s\n",get_T(n));
+	printf("n false label:%s\n",get_F(n));
 	switch(n->opr.oper)
 	{
-	case NEQ:
-		sprintf(buffer,"%s\n%s\n%s%s%s",get_code(B1), get_code(B2), get_place(B1), " != ", get_place(B2));
-		break;
-	case BOOL_EQ:
-		sprintf(buffer,"%s\n%s\n%s%s%s",get_code(B1), get_code(B2), get_place(B1), " == ", get_place(B2));
-		break;
 	case BOOL_OR:
-		bzero(buffer,BUFFSIZE);
-		B1->opr.T = get_T(n);
-		B1->opr.F = strdup(newlabel());
-		B2->opr.T = get_T(n);
-		B2->opr.F = get_F(n);
-		sprintf(buffer,"%s\n%s\n%s",get_code(B1),get_F(B1),get_code(B2));
+		printf("MATCHED BOOL_OR in ir_bool_flow\n");
+		set_T(B1,n->opr.T);
+		set_F(B1,newlabel());
+		set_T(B2,n->opr.T);
+		set_F(B2,n->opr.F);
+		generate(B1);
+		printf("%s:",get_F(B1)); 
+		fprintf(output,"%s:",get_F(B1)); 
+		generate(B2);
+		break;
+	case NEQ:
+		 set_T(B1,get_F(n));
+		 set_F(B1,get_T(n));
+		 generate(B1);
 		break;
 	case BOOL_AND:
-		bzero(buffer,BUFFSIZE);
-		B1->opr.T = strdup(newlabel());
-		B1->opr.F = get_F(n);
-		B2->opr.T = get_T(n);
-		B2->opr.F = get_F(n);
-		sprintf(buffer,"%s\n%s\n%s",get_code(B1),get_T(B1),get_code(B2));
+		set_T(B1,newlabel());
+		set_F(B1, get_F(n));
+		set_T(B2, get_T(n));
+		set_F(B2, get_F(n));
+		generate(B1);
+		printf("%s:",get_T(B1)); 
+		fprintf(output,"%s:",get_T(B1)); 
+		generate(B2);
 		break;
 	default: printf("Bool DEFAULT\n");
 	}
-	n->opr.code = strdup(buffer);
-	return buffer;
 	
 }
 
-
-
-
-
-
-
-char*  ir_idlist(nodeType* n)
+void ir_idlist(nodeType* n)
 {
 	nodeType* Idlist = get_operand(n,0);
 	nodeType* ident = get_operand(n,1);
 	generate(Idlist);
-	//~ printf("huhahuahuahauha\n");
-	//no need to generate code for ident as it is generated during installation
-	bzero(buffer,BUFFSIZE);
-	sprintf(buffer,"%s\n%s", get_code(Idlist), get_code(ident));
-	n->opr.code = strdup(buffer);
-	return buffer;
 }	
 
-//~ void  ir_stmtlist(nodeType* n)
-//~ {
-	//~ nodeType* Stmtlist = get_operand(n,0);
-	//~ nodeType* Stmt = get_operand(n,1);
-	//~ generate(Stmtlist);
-	//~ generate(Stmt);
-//~ }
-void  ir_stmtlist(nodeType* n)
+void ir_stmtlist(nodeType* n)
 {
 	nodeType* Stmtlist = get_operand(n,0);
 	nodeType* Stmt = get_operand(n,1);
-	Stmtlist->opr.next=strdup(newlabel());
-	printf("%s NIII\n",Stmtlist->opr.next);
-	printf("%s NEXT\n",n->opr.next);
-	Stmt->opr.next = strdup(n->opr.next);
-	printf("%s\n",Stmt->opr.next);
+	//~ Stmtlist->opr.next = strdup(newlabel());	//yahi hai gadbad!!!!
+	//~ printf("STMT_LIST1 TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT\n");
+	//~ traverse(root);
+	//~ printf("STMT_LIST1 TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT\n");
+	memset(Stmtlist->opr.next,0,16);
+	strcat(Stmtlist->opr.next,newlabel());
+	printf("Stmtlist next:%s \n",Stmtlist->opr.next);
+	printf("Stmtlist type:%d \n",Stmtlist->type);
+	printf("Stmtlist nops:%d \n",Stmtlist->opr.nops);
+	//~ if(Stmtlist->opr.nops>2) printf("nops:%d \n",get_operand(Stmtlist,1)->type);
+	//~ printf("STMT_LIST2 TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT\n");
+	//~ traverse(root);
+	//~ printf("STMT_LIST2 TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT\n");
+
 	generate(Stmtlist);
+	memset(Stmt->opr.next,0,16);
+	strcat(Stmt->opr.next,n->opr.next);	
+	printf("%s: \n",Stmtlist->opr.next);
+	fprintf(output,"%s: \n",Stmtlist->opr.next);
 	generate(Stmt);
+	//~ free(n);
 }

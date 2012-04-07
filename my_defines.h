@@ -34,7 +34,7 @@
 #define MY_VOID 136
 #define MY_BOOL 137
 
-#define BUFFSIZE 40000
+#define BUFFSIZE 100
 #include "y.tab.h"
 
 typedef union nodeTypeTag nodeType;	

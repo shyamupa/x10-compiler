@@ -53,6 +53,7 @@ int tempno = 1;
 int idno = 1;
 FILE* output;			// output file
 char* out_file;
+nodeType* root;
 /*global variables*/
 
 %}
@@ -201,7 +202,9 @@ Defn_or_Decln
 	ClassDeclnList	{
 				$$=$2;
 				print_st(current_st);
-				//printf("Starting code Gen\n");
+				printf("Starting traversal:\n");
+				root = $$;
+				//traverse($$);
 				generate($$);
 				//printf("\n$$$$$$$$$$$$$$$$$$$$$$$$$$$$\n");
 				//printf("FINAL CODE:\n");
@@ -406,8 +409,8 @@ primary_Expression
 	|'(' Expression ')' 	{$$=$2;}
 	;
 ConstExp	
-	:INTEGER	{$$=con_i($1);printf("INTEGER %d",$1);}
-	|FLOAT		{$$=con_f($1);printf("FLOAT %lf",$1);}
+	:INTEGER	{$$=con_i($1);printf("INTEGERSSSSSSSSs %d\n",$1);}
+	|FLOAT		{$$=con_f($1);printf("FLOATSSSSSSSSSs %lf\n",$1);}
 	|CHAR		{$$=con_c($1);}
 	|TRUE		{$$=con_b(1);}	
 	|FALSE		{$$=con_b(0);}	
@@ -421,7 +424,14 @@ Expression
 
 assignment_Expression	
 	:conditional_Expression		{$$=$1;}
-	|unary_Expression AssOp assignment_Expression	{$$=opr(ASSIGN,3,$1,$2,$3) ; type_check_assign($$,$1,$3);}
+	|unary_Expression AssOp assignment_Expression	{
+													$$=opr(ASSIGN,3,$1,$2,$3) ;
+													type_check_assign($$,$1,$3);
+													printf("MAKING ASSIGN NODE:\n");
+													printf("Unary Exp name:%s\n",$1->id.symrec->sym_name);
+													printf("Assop Type:%d\n",$2->type);
+													printf("Assignment Exp value:%d type:%d \n",$3->con_i.value,$3->type);
+													}
 	;
 
 conditional_Expression	

@@ -23,8 +23,8 @@ typedef struct
 	int value;
 	char* code;
 	char* place;
-	char* T;
-	char* F;
+	char T[16];
+	char F[16];
 
 }con_bNodeType;
 
@@ -35,8 +35,8 @@ typedef struct
 	float value;
 	char* place;
 	char *code;
-	char* T;
-	char* F;
+	char T[16];
+	char F[16];
 
 
 }con_fNodeType;
@@ -48,8 +48,8 @@ typedef struct
 	char value;
 	char* place;
 	char *code;
-	char* T;
-	char* F;
+	char T[16];
+	char F[16];
 	
 
 }con_cNodeType;
@@ -62,8 +62,8 @@ typedef struct
 	struct symbol_table* st;
 	char *code;
 	char* place;
-	char* T;
-	char* F;
+	char T[16];
+	char F[16];
 	
 }idNodeType;
 
@@ -74,16 +74,15 @@ typedef struct
 	int oper;
 	int nops;
 	int datatype;
-	int int_val;
-	float float_val;
-	char char_val;
 	union nodeTypeTag *op[1];
 	char* begin;
-	char* next;
-	char* T;
-	char* F;
 	char* place;
 	char* code;
+	char T[16];
+	char F[16];
+	char next[16];
+	
+
 }oprNodeType;
 
 union nodeTypeTag 
