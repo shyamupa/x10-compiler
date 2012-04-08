@@ -3,14 +3,15 @@ public class myclass
 	
 	def myfun(x:boolean,y:int):int
 	{
-		var a,b:boolean;
-		a = true;
-		b = false;
 		while(true)
 		{		
-		x = true ;
+		println(1);
+		y=y+1;
+		if(y == 6)
+		{
+		break;
 		}
-		println(6);		
+		}
 		return (6+7); 
 	}
 	

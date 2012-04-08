@@ -54,24 +54,26 @@ int generate(nodeType *n)
 			{
 			printf("ldloc %s \n",n->id.symrec->uid);
 			fprintf(output,"ldloc %s \n",n->id.symrec->uid);
-			//~ if(in_assign == 0)
-			//~ {
-				//~ if(n->id.symrec->type == MY_BOOL)
-				//~ {
-					//~ printf("brtrue %s\n",get_T(n));
-					//~ fprintf(output,"brtrue %s\n",get_T(n));
-				//~ }
-			//~ }
 			}
 			else
 			{
 				printf("ldarg %s \n",n->id.symrec->uid);
 				fprintf(output,"ldarg %s \n",n->id.symrec->uid);
+				
 			}	
 			break;
 		case typeOpr:
 			switch(n->opr.oper)
 			{
+				case ARRAY:
+							printf("Matched ARRAY\n");
+							ir_array_declaration(n);
+							break;
+				case ARRAY_INVOC:
+							printf("Matched ARRAY_INVOC 1\n");
+							ir_array_rhs(n);
+							break;
+							
 				case ASYNC:
 							printf("Matched ASYNC\n");
 							ir_asynch_list(n);
@@ -130,9 +132,11 @@ int generate(nodeType *n)
 							break;
 				case BREAK:
 							printf("Matched BREAK\n");
+							ir_break(n);
 							break;
 				case CAST:
-							//_code=strup(ir_cast(n));
+							printf("Matched CAST\n");
+							ir_cast(n);
 							break;
 				case CONTINUE:
 							printf("Matched CONTINUE\n");
@@ -193,13 +197,23 @@ int generate(nodeType *n)
 							printf("Matched DEFAULT\n");
 							ir_default_stmt(n);					
 							break;
+				case FOR:
+							printf("MATCHED FOR\n");
+							ir_for(n);
+							break;			
 				case GT:
 							printf("Matched GT\n");
-							ir_relop(n);
+							if(in_assign==0)
+								ir_relop_flow(n);
+							else
+								ir_relop(n);
 							break;
 				case GE:
 							printf("Matched GE\n");
-							ir_relop(n);
+							if(in_assign==0)
+								ir_relop_flow(n);
+							else
+								ir_relop(n);
 							break;
 				case IF:
 							printf("MATCHED IF\n");
@@ -221,13 +235,16 @@ int generate(nodeType *n)
 				case LT:
 							printf("Matched LT\n");
 							if(in_assign==0)
-								ir_relop(n);
+								ir_relop_flow(n);
 							else
 								ir_relop(n);
 							break;
 				case LE:
 							printf("Matched LE\n");
-							ir_relop(n);
+							if(in_assign==0)
+								ir_relop_flow(n);
+							else
+								ir_relop(n);
 							break;
 				case LSH:
 							printf("Matched LSH\n");

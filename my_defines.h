@@ -28,6 +28,8 @@
 #define ASYNCH 1361
 #define CASE_STMT_LIST 1362
 #define CASE_STMT	1363
+#define MY_PLUS	1364
+#define MY_MINUS 1365
 
 #define YYDEBUG 1	//enable debugging
 

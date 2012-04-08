@@ -67,6 +67,7 @@ nodeType* root;
 	union nodeTypeTag *nPtr;	 // node pointer
 }
 %token VAL VAR
+%token ARRAY_INVOC
 %token ABSTRACT
 %token AS
 %token ASYNC
@@ -396,6 +397,11 @@ AssOp
 	;
 VarDec	
 	:VAR IdList ':' Type {$$=opr(VAR_DEC,2,$2,$4);dist_type($$);}
+	|VAR IdList	AssOp ARRAY '[' Type ']' '(' Expression ')'	
+				{
+					$$ = opr(ARRAY,3,$2,$6,$9);
+					dist_type($$);
+				}
 	;
 Type	
 	:TYPE_INT	{$$=con_i(MY_INT);}	
@@ -440,10 +446,10 @@ assignment_Expression
 	|unary_Expression AssOp assignment_Expression	{
 													$$=opr(ASSIGN,3,$1,$2,$3) ;
 													type_check_assign($$,$1,$3);
-													printf("MAKING ASSIGN NODE:\n");
+													/*printf("MAKING ASSIGN NODE:\n");
 													printf("Unary Exp name:%s\n",$1->id.symrec->sym_name);
 													printf("Assop Type:%d\n",$2->type);
-													printf("Assignment Exp value:%d type:%d \n",$3->con_i.value,$3->type);
+													printf("Assignment Exp value:%d type:%d \n",$3->con_i.value,$3->type);													*/
 													}
 	;
 
@@ -517,11 +523,11 @@ unary_Expression
 	: postfix_Expression	{$$=$1;}
 	| PP unary_Expression	{$$=opr(PREFIX,2,con_i($1),$2);type_check_prepostfix($$,$2);}
 	| MM unary_Expression	{$$=opr(PREFIX,2,con_i($1),$2);type_check_prepostfix($$,$2);}
-	| unary_operator cast_Expression	{$$=opr(CAST,2,$1,$2);}
+	| unary_operator cast_Expression	{$$=opr(CAST,2,$1,$2);type_check_cast($$,$2);}
 	;
 postfix_Expression
 	: primary_Expression				{$$ = $1;}
-	| postfix_Expression '[' Expression ']'		{type_check_typeid($1);}
+	| postfix_Expression '[' Expression ']'		{$$=opr(ARRAY_INVOC,2,$1,$3);type_check_array_invoc($$,$1);}
 	| postfix_Expression '('ArgExpList ')'		{$$=opr(INVOC,2,$1,$3);type_check_invoc($$,$1,$3);}
 	| postfix_Expression '(' ')'			{$$=opr(INVOC,2,$1,empty(EMPTY));}
 	| postfix_Expression '.' IDENT 							
@@ -534,8 +540,8 @@ ArgExpList
 	| ArgExpList ',' conditional_Expression	{$$=opr(ARGEXPLIST,2,$1,$3);}
 	;
 unary_operator
-	:PLUS		{$$=con_i($1);}
-	|MINUS		{$$=con_i($1);}
+	:PLUS		{$$=con_i(MY_PLUS);}
+	|MINUS		{$$=con_i(MY_MINUS);}
 	;
 
 

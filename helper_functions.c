@@ -330,6 +330,7 @@ nodeType *id(struct sym_record* symrec)
 		yyerror("out of memory");
 	p->type = typeId;
 	p->id.symrec = symrec;
+	printf("SSSSSSSSS%dSSSSSSSSSSS  %s\n",p->type,p->id.symrec->sym_name);
 	//printf("KHALI HAIN %s ",symrec->sym_name);
 	p->id.code = strdup(symrec->sym_name);
 	p->id.place = strdup(symrec->sym_name);
