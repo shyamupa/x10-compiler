@@ -6,7 +6,9 @@ extern int labelno;
 extern struct symbol_table* current_st;
 extern FILE* output;
 extern char* out_file;
-
+nodeType* expr_queue[MAXQUEUE];
+char label_queue[MAXQUEUE][16];
+int queue_length = 0;
 char* concat(char* c1,char* c2)
 {
 	strcat(c1,"\n");
@@ -425,4 +427,9 @@ void traverse(nodeType* n)
 	 printf("NNode Type:%d \n",n->type);
 }	
 
-
+void insert_queue(nodeType* n, char* label)
+{
+	expr_queue[queue_length] = n;
+	strcpy(label_queue[queue_length],label);
+	queue_length++;
+}	

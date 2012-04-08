@@ -6,11 +6,11 @@ public class myclass
 		var a,b:boolean;
 		a = true;
 		b = false;
-		if(a && b)
+		if(a == b)
 		{		
-		x = true ;
+		println(6); ;
 		}		
-		println(6);		
+				
 		return (6+7); 
 	}
 	

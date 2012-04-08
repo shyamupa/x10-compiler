@@ -9,9 +9,13 @@ extern FILE* output;
 char mybuf[100];
 int main_found=0;
 int main_was_found=0;
+int seen_bool_flow=0;
 int in_assign=0;
 int in_func=0;
+extern int queue_length;
 extern int idno;
+nodeType* expr_queue[MAXQUEUE];
+char label_queue[MAXQUEUE][16];
 // Working correctly
 void ir_class_decln(nodeType* n)
 {
@@ -129,44 +133,106 @@ void ir_assign(nodeType* n)
 			//~ printf("ASSEXP VALUE IS %d\n",ass_exp->con_i.value);
 			fflush(stdout);
 			generate(ass_exp);
-			printf("stloc %s\n",unary_exp->id.symrec->uid);
-			fprintf(output,"stloc %s\n",unary_exp->id.symrec->uid);
+			if(unary_exp->id.symrec->formal !=1)
+			{
+				printf("stloc %s\n",unary_exp->id.symrec->uid);
+				fprintf(output,"stloc %s\n",unary_exp->id.symrec->uid);
+			}
+			else
+			{
+				printf("starg %s \n",unary_exp->id.symrec->uid);
+				fprintf(output,"starg %s \n",unary_exp->id.symrec->uid);
+			}	
 			break;
 		case PLUS_EQ:
-			generate(ass_exp);
+			if(unary_exp->id.symrec->formal !=1)
+			{
 			printf("ldloc %s\n",unary_exp->id.symrec->uid);
 			fprintf(output,"ldloc %s\n",unary_exp->id.symrec->uid);
+			generate(ass_exp);
 			printf("add\n");
 			fprintf(output,"add\n");
-			printf("stloc %s",unary_exp->id.symrec->uid);
-			fprintf(output,"stloc %s",unary_exp->id.symrec->uid);
+			printf("stloc %s\n",unary_exp->id.symrec->uid);
+			fprintf(output,"stloc %s\n",unary_exp->id.symrec->uid);
+			}
+			else
+			{
+			printf("ldarg %s\n",unary_exp->id.symrec->uid);
+			fprintf(output,"ldarg %s\n",unary_exp->id.symrec->uid);
+			generate(ass_exp);
+			printf("add\n");
+			fprintf(output,"add\n");
+			printf("starg %s\n",unary_exp->id.symrec->uid);
+			fprintf(output,"starg %s\n",unary_exp->id.symrec->uid);
+			}	
 			break;
 		case MINUS_EQ:
-			generate(ass_exp);
+			
+			if(unary_exp->id.symrec->formal !=1)
+			{
 			printf("ldloc %s\n",unary_exp->id.symrec->uid);
 			fprintf(output,"ldloc %s\n",unary_exp->id.symrec->uid);
+			generate(ass_exp);
 			printf("sub\n");
 			fprintf(output,"sub\n");
-			printf("stloc %s",unary_exp->id.symrec->uid);
-			fprintf(output,"stloc %s",unary_exp->id.symrec->uid);
+			printf("stloc %s\n",unary_exp->id.symrec->uid);
+			fprintf(output,"stloc %s\n",unary_exp->id.symrec->uid);
+			}
+			else
+			{
+			printf("ldarg %s\n",unary_exp->id.symrec->uid);
+			fprintf(output,"ldarg %s\n",unary_exp->id.symrec->uid);
+			generate(ass_exp);
+			printf("sub\n");
+			fprintf(output,"sub\n");
+			printf("starg %s\n",unary_exp->id.symrec->uid);
+			fprintf(output,"starg %s\n",unary_exp->id.symrec->uid);
+			}	
 			break;
 		case MULT_EQ:
-			generate(ass_exp);
+			if(unary_exp->id.symrec->formal !=1)
+			{
 			printf("ldloc %s\n",unary_exp->id.symrec->uid);
 			fprintf(output,"ldloc %s\n",unary_exp->id.symrec->uid);
+			generate(ass_exp);
 			printf("mul\n");
 			fprintf(output,"mul\n");
-			printf("stloc %s",unary_exp->id.symrec->uid);
-			fprintf(output,"stloc %s",unary_exp->id.symrec->uid);
-			break;
-		case DIV_EQ:
+			printf("stloc %s\n",unary_exp->id.symrec->uid);
+			fprintf(output,"stloc %s\n",unary_exp->id.symrec->uid);
+			}
+			else
+			{
+			printf("ldarg %s\n",unary_exp->id.symrec->uid);
+			fprintf(output,"ldarg %s\n",unary_exp->id.symrec->uid);
 			generate(ass_exp);
+			printf("mul\n");
+			fprintf(output,"mul\n");
+			printf("starg %s\n",unary_exp->id.symrec->uid);
+			fprintf(output,"starg %s\n",unary_exp->id.symrec->uid);
+			}	
+			break;
+
+		case DIV_EQ:
+			if(unary_exp->id.symrec->formal !=1)
+			{
 			printf("ldloc %s\n",unary_exp->id.symrec->uid);
 			fprintf(output,"ldloc %s\n",unary_exp->id.symrec->uid);
+			generate(ass_exp);
 			printf("div\n");
 			fprintf(output,"div\n");
 			printf("stloc %s",unary_exp->id.symrec->uid);
 			fprintf(output,"stloc %s",unary_exp->id.symrec->uid);
+			}
+			else
+			{
+			printf("ldarg %s\n",unary_exp->id.symrec->uid);
+			fprintf(output,"ldarg %s\n",unary_exp->id.symrec->uid);
+			generate(ass_exp);
+			printf("div\n");
+			fprintf(output,"div\n");
+			printf("starg %s",unary_exp->id.symrec->uid);
+			fprintf(output,"starg %s",unary_exp->id.symrec->uid);
+			}	
 			break;
 		default: printf("ASSOP DEFAULT\n");
 	}
@@ -524,6 +590,11 @@ void ir_fun_invoc(nodeType* n)
 	else  		// default println function called
 	{
 		generate(explist);
+		printf("call void [mscorlib]System.Console::WriteLine");
+		printf("(");
+		printf("int32");
+		printf(")\n");
+
 		fprintf(output,"call void [mscorlib]System.Console::WriteLine");
 		fprintf(output,"(");
 		fprintf(output,"int32");
@@ -552,9 +623,44 @@ void ir_return(nodeType* n)
 				
 void ir_relop_flow(nodeType* n)
 {
-
+	nodeType* B1 = get_operand(n,0);
+	nodeType* B2 = get_operand(n,1);
+	generate(B1);
+	generate(B2);
+	switch(n->opr.oper)
+	{
+		case LT:
+			printf("MATCHED LT in ir_relop_flow\n");
+			printf("blt %s\n",get_T(n));
+			fprintf(output,"blt %s\n",get_T(n));
+			printf("br %s\n",get_F(n));
+			fprintf(output,"br %s\n",get_F(n));
+			break;
+		case GT:
+			printf("MATCHED GT in ir_relop_flow\n");
+			printf("bgt %s\n",get_T(n));
+			fprintf(output,"bgt %s\n",get_T(n));
+			printf("br %s\n",get_F(n));
+			fprintf(output,"br %s\n",get_F(n));
+			break;
+		case LE:
+			printf("MATCHED LE in ir_relop_flow\n");
+			printf("ble %s\n",get_T(n));
+			fprintf(output,"ble %s\n",get_T(n));
+			printf("br %s\n",get_F(n));
+			fprintf(output,"br %s\n",get_F(n));
+			break;
+		case GE:
+			printf("MATCHED GE in ir_relop_flow\n");
+			printf("bge %s\n",get_T(n));
+			fprintf(output,"bge %s\n",get_T(n));
+			printf("br %s\n",get_F(n));
+			fprintf(output,"br %s\n",get_F(n));
+			break;
+		default:
+			printf("Relational Flow default\n");
+	}
 }
-
 void ir_if(nodeType* n)
 {
 	nodeType* expr = get_operand(n,0);
@@ -631,10 +737,23 @@ void ir_bool_flow(nodeType* n)
 		fprintf(output,"%s:",get_F(B1)); 
 		generate(B2);
 		break;
+	case BOOL_EQ:
+		generate(B1);
+		generate(B2);
+		printf("MATCHED BOOL_EQ in ir_relop_flow\n");
+		printf("beq %s\n",get_T(n));
+		fprintf(output,"beq %s\n",get_T(n));
+		printf("br %s\n",get_F(n));
+		fprintf(output,"br %s\n",get_F(n));
+		break;
 	case NEQ:
-		 set_T(B1,get_F(n));
-		 set_F(B1,get_T(n));
-		 generate(B1);
+		generate(B1);
+		generate(B2);
+		printf("MATCHED NEQ in ir_relop_flow\n");
+		printf("bne.un %s\n",get_T(n));
+		fprintf(output,"bne.un %s\n",get_T(n));
+		printf("br %s\n",get_F(n));
+		fprintf(output,"br %s\n",get_F(n));
 		break;
 	case BOOL_AND:
 		set_T(B1,newlabel());
@@ -701,7 +820,8 @@ void ir_asynch_list(nodeType* n)
 	fprintf(output,"ldftn ");
 	
 	
-	if(strcmp(sign,"")==0)		return;	
+	if(strcmp(sign,"")==0)	
+		return;	
 	pch = strtok (sign," ::");
 	printf("%s ",pch);
 	fprintf(output,"%s ",pch);
@@ -727,3 +847,90 @@ void ir_asynch_list(nodeType* n)
 	fprintf(output,"callvirt instance void class [mscorlib]System.Threading.Thread::Start()\n");
 	idno++;
 }
+
+void ir_switch(nodeType* n)
+{
+	nodeType* expr = get_operand(n,0);
+	nodeType* case_stmt_list = get_operand(n,1);
+	generate(expr);//after this the value of expr will be on stack
+	printf("br.s test\n");
+	fprintf(output,"br.s test\n");
+	generate(case_stmt_list);
+	printf("test:\n");
+	fprintf(output,"test:\n");
+	int count = 0;
+	nodeType* const_exp;
+	char* label;
+	queue_length = queue_length -1;
+	printf("QUEUE LENGTH:%d\n",queue_length);
+	while(count <= queue_length)		//since at the end queue_length is one more than the actual queue length
+	{
+		const_exp = expr_queue[count];
+		
+		if(const_exp->type == typeOpr )
+		{
+			if(const_exp->opr.oper == EMPTY)
+			{
+				printf("br.s %s\n",label_queue[count]);
+				fprintf(output,"br.s %s\n",label_queue[count]);
+			}
+			else
+			{
+				generate(const_exp);
+				printf("beq %s\n",label_queue[count]);
+				fprintf(output,"beq %s\n",label_queue[count]);
+			}
+		}
+		else
+		{
+			generate(const_exp);
+			printf("beq %s\n",label_queue[count]);
+			fprintf(output,"beq %s\n",label_queue[count]);
+		}
+		
+		if(count != queue_length)		//do not do it after the last statement
+			generate(expr);
+		
+		count++;
+	}
+	printf("last:\n");
+	fprintf(output,"last:\n");
+}	
+void ir_case_stmt_list(nodeType* n)
+{
+	nodeType* casestmtlist = get_operand(n,0);
+	nodeType* casestmt = get_operand(n,1);
+	nodeType* default_stmt = get_operand(n,2);
+	generate(casestmtlist);	
+	generate(casestmt);	
+	generate(default_stmt);	
+}	
+void ir_case_stmt(nodeType* n)
+{
+	nodeType* const_exp = get_operand(n,0);
+	nodeType* stmt = get_operand(n,1);
+	char mylabel[16];
+	memset(mylabel,0,16);
+	strcat(mylabel,newlabel());
+	printf("%s: ",mylabel);
+	fprintf(output,"%s: ",mylabel);
+	generate(stmt);
+	printf("br.s last\n");
+	fprintf(output,"br.s last\n");
+	insert_queue(const_exp,mylabel);
+}	
+
+void ir_default_stmt(nodeType* n)
+{
+	nodeType* stmt = get_operand(n,0);
+	char mylabel[16];
+	memset(mylabel,0,16);
+	strcat(mylabel,newlabel());
+	printf("%s: ",mylabel);
+	fprintf(output,"%s: ",mylabel);
+	generate(stmt);
+	printf("br.s last\n");
+	fprintf(output,"br.s last\n");
+	nodeType* const_exp = empty(EMPTY);
+	insert_queue(const_exp,mylabel);
+}	

@@ -137,6 +137,8 @@ nodeType* root;
 %type <nPtr> ArgExpList
 %type <nPtr> AsyncStmt
 %type <nPtr> BasicForStmt
+%type <nPtr> CaseStmt
+%type <nPtr> CaseStmtList
 %type <nPtr> cast_Expression
 %type <nPtr> conditional_Expression
 %type <nPtr> CompoundStmt 
@@ -145,6 +147,7 @@ nodeType* root;
 %type <nPtr> ClassDecln
 %type <nPtr> ClassBody 
 %type <nPtr> Defn_or_Decln
+%type <nPtr> DefaultStmt
 %type <nPtr> equality_Expression
 %type <nPtr> exclusive_or_Expression
 %type <nPtr> Expression
@@ -161,7 +164,6 @@ nodeType* root;
 %type <nPtr> JumpStmt
 %type <nPtr> logical_or_Expression
 %type <nPtr> logical_and_Expression
-%type <nPtr> LabeledStmt
 %type <nPtr> multiplicative_Expression
 %type <nPtr> Mods
 %type <nPtr> NonFuncDeclaration
@@ -284,6 +286,7 @@ FormalArg
 	: IDENT {
 				struct sym_record* s = install(yytext);
 				$1 = id(s);
+				s->formal=1;
 			}
 	 ':' Type
 			{
@@ -305,7 +308,6 @@ Stmt
 	|BasicForStmt 		{$$=$1;}
 	|SelectionStmt		{$$=$1;}
 	|CompoundStmt		{$$=$1;}
-	|LabeledStmt		{$$=$1;}
 	|NonFuncDeclaration 	{$$=$1;}
 	|AsyncStmt		{$$=$1;}
 	|JumpStmt		{$$=$1;}
@@ -319,13 +321,9 @@ JumpStmt
 	;
 	
 AsyncStmt
-	:ASYNC '{' postfix_Expression ';' '}'		{$$=opr(ASYNCH,2,$3);}
+	:ASYNC '{' postfix_Expression ';' '}'		{ $$=opr(ASYNC,2,$3);}
 	;
-LabeledStmt	
-	:CASE ConstExp ':' Stmt	{$$=opr(CASE,2,$2,$4);}
-	|DEFAULT ':' Stmt	{$$=opr(CASE,1,$3);}
-	;
-		
+	
 CompoundStmt	
 	:'{'
 		{	
@@ -355,11 +353,26 @@ ExpressionStmt
 	|Expression error ';'	{yyerror("error in exp stmt");}
 	|error ';'	{yyerror("error in empty stmt");}
 	;
+	
 SelectionStmt	
 	:IF '(' Expression ')' Stmt %prec IFX	{$$=opr(IF,2,$3,$5);}
 	|IF '(' Expression ')' Stmt ELSE Stmt	{$$=opr(IF_ELSE,3,$3,$5,$7);}
-	|SWITCH '(' Expression ')' Stmt		{$$=opr(SWITCH,2,$3,$5);}
+	|SWITCH '(' Expression ')' '{' CaseStmtList '}'		{$$=opr(SWITCH,2,$3,$6);}
 	;
+
+CaseStmtList 
+	: CaseStmtList CaseStmt  DefaultStmt {$$=opr(CASE_STMT_LIST,3,$1,$2,$3);}
+	| CaseStmt { $$ = $1;}
+
+CaseStmt	
+	:CASE ConstExp ':' Stmt	{printf("LLLLLLLLLLLL\n");$$=opr(CASE_STMT,2,$2,$4);}
+	;
+
+DefaultStmt
+	:DEFAULT ':'	Stmt {printf("KKKKKKKKK\n"); $$ = opr(DEFAULT,1,$3);}
+	|{$$ = empty(EMPTY);/*empty production*/}
+	;
+
 IterationStmt	
 	:WHILE '(' Expression ')' Stmt			{$$ = opr(WHILE, 2, $3, $5);}
 	;

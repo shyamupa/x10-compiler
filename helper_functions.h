@@ -6,6 +6,7 @@
 #include<string.h>
 #ifndef helper_functions_h_included
 #define helper_functions_h_included
+#define MAXQUEUE 100
 
 char* concat(char* c1,char* c2);
 char* newlabel();
@@ -29,6 +30,8 @@ nodeType *id(struct sym_record* symrec);
 nodeType *opr(int oper, int nops, ...); 
 struct sym_record* install(char* sym_name);
 void traverse(nodeType* n);
+void insert_queue(nodeType* n, char* label);
+
 
 
 

@@ -26,6 +26,8 @@
 #define CLASSLIST 1359
 #define IF_ELSE 1360
 #define ASYNCH 1361
+#define CASE_STMT_LIST 1362
+#define CASE_STMT	1363
 
 #define YYDEBUG 1	//enable debugging
 
