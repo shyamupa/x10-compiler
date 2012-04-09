@@ -9,6 +9,7 @@ public class myclass
 		{
 			t[i] = a;
 			a = a + 1;
+			print(a);
 		}
 		for(i = 0;i<5;i=i+1)
 		{

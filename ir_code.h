@@ -45,6 +45,8 @@ void ir_fun_invoc(nodeType* n);
 void ir_idlist(nodeType* n);
 void ir_if(nodeType* n);
 void ir_if_else(nodeType* n);
+void ir_prefix(nodeType* n);
+void ir_postfix(nodeType* n);
 void ir_relop(nodeType* n);
 void ir_relop_flow(nodeType* n);
 void ir_return(nodeType* n);

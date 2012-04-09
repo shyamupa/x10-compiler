@@ -158,7 +158,9 @@ int search_keywords(char* sym_name)
 	"return",
 	"switch",
 	"try",
-	"when"
+	"when",
+	"println",
+	"print"
 };
 	 for(i=0;i<61;i++)
 	 {

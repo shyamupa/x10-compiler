@@ -199,6 +199,7 @@ Defn_or_Decln
 				printf("first sym table created\n");
 				current_st=new_sym_table(current_st);
 				install("println");
+				install("print");
 				//printf("$$$$$$$$$$$$$$$$$$$$$$$$$$$$\n");
 			}	
 		}	
@@ -521,8 +522,8 @@ cast_Expression
 
 unary_Expression
 	: postfix_Expression	{$$=$1;}
-	| PP unary_Expression	{$$=opr(PREFIX,2,con_i($1),$2);type_check_prepostfix($$,$2);}
-	| MM unary_Expression	{$$=opr(PREFIX,2,con_i($1),$2);type_check_prepostfix($$,$2);}
+	| PP unary_Expression	{$$=opr(PREFIX,2,con_i(MY_PP),$2);type_check_prepostfix($$,$2);}
+	| MM unary_Expression	{$$=opr(PREFIX,2,con_i(MY_MM),$2);type_check_prepostfix($$,$2);}
 	| unary_operator cast_Expression	{$$=opr(CAST,2,$1,$2);type_check_cast($$,$2);}
 	;
 postfix_Expression
@@ -531,8 +532,8 @@ postfix_Expression
 	| postfix_Expression '('ArgExpList ')'		{$$=opr(INVOC,2,$1,$3);type_check_invoc($$,$1,$3);}
 	| postfix_Expression '(' ')'			{$$=opr(INVOC,2,$1,empty(EMPTY));}
 	| postfix_Expression '.' IDENT 							
-	| postfix_Expression PP			{$$=opr(POSTFIX,2,$1,con_i($2));type_check_prepostfix($$,$1);}
-	| postfix_Expression MM			{$$=opr(POSTFIX,2,$1,con_i($2));type_check_prepostfix($$,$1);}
+	| postfix_Expression PP			{$$=opr(POSTFIX,2,$1,con_i(MY_PP));type_check_prepostfix($$,$1);}
+	| postfix_Expression MM			{$$=opr(POSTFIX,2,$1,con_i(MY_MM));type_check_prepostfix($$,$1);}
 	;
 
 ArgExpList

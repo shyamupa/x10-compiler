@@ -30,6 +30,9 @@
 #define CASE_STMT	1363
 #define MY_PLUS	1364
 #define MY_MINUS 1365
+#define MY_PP 1366
+#define MY_MM 1367
+
 
 #define YYDEBUG 1	//enable debugging
 

@@ -274,10 +274,12 @@ int generate(nodeType *n)
 							ir_arithmetic(n);
 							break;
 				case POSTFIX:
-							//_code=strup(ir_postfix(n));
+							printf("Matched POSTFIX\n");
+							ir_postfix(n);
 							break;
 				case PREFIX:
-							//_code=strup(ir_prefix(n));
+							printf("Matched PREFIX\n");
+							ir_prefix(n);
 							break;
 				case RETURN:
 							printf("Matched RETURN\n");

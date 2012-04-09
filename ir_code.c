@@ -646,7 +646,7 @@ void ir_fun_invoc(nodeType* n)
 {
 	nodeType* func_name = get_operand(n,0);
 	nodeType* explist = get_operand(n,1);
-	if(strcmp(func_name->id.symrec->sym_name,"println")!=0)
+	if((strcmp(func_name->id.symrec->sym_name,"println")!=0) && (strcmp(func_name->id.symrec->sym_name,"print")!=0))
 	{
 		generate(explist);
 		printf("call ");
@@ -654,7 +654,7 @@ void ir_fun_invoc(nodeType* n)
 		printf("%s ",func_name->id.symrec->signature);
 		fprintf(output,"%s \n",func_name->id.symrec->signature);
 	}
-	else  		// default println function called
+	else if(strcmp(func_name->id.symrec->sym_name,"println")==0)  		// println function called
 	{
 		generate(explist);
 		printf("call void [mscorlib]System.Console::WriteLine");
@@ -663,6 +663,19 @@ void ir_fun_invoc(nodeType* n)
 		printf(")\n");
 
 		fprintf(output,"call void [mscorlib]System.Console::WriteLine");
+		fprintf(output,"(");
+		fprintf(output,"int32");
+		fprintf(output,")\n");
+	}
+	else if(strcmp(func_name->id.symrec->sym_name,"print")==0) 		// default print function called
+	{
+		generate(explist);
+		printf("call void [mscorlib]System.Console::Write");
+		printf("(");
+		printf("int32");
+		printf(")\n");
+
+		fprintf(output,"call void [mscorlib]System.Console::Write");
 		fprintf(output,"(");
 		fprintf(output,"int32");
 		fprintf(output,")\n");
@@ -1248,4 +1261,128 @@ void ir_break(nodeType* n)
 	}
 	else
 		printf("STRAY BREAK\n");
+}
+
+void ir_prefix(nodeType* n)
+{	
+	nodeType* operator = get_operand(n,0);
+	nodeType* unary_exp = get_operand(n,1);
+	printf("IN IR PREFIX %d, PP = %d\n",operator->con_i.value,MY_PP);
+	if(operator->con_i.value==MY_PP)
+	{
+		generate(unary_exp);
+		printf("ldc.i4 1\n");
+		printf("add\n");
+		fprintf(output,"ldc.i4 1\n");
+		fprintf(output,"add\n");
+		if(unary_exp->id.symrec->formal !=1)
+		{
+			printf("stloc %s\n",unary_exp->id.symrec->uid);
+			printf("ldloc %s\n",unary_exp->id.symrec->uid);
+			fprintf(output,"stloc %s\n",unary_exp->id.symrec->uid);
+			fprintf(output,"ldloc %s\n",unary_exp->id.symrec->uid);
+		}
+		else
+		{
+			printf("starg %s \n",unary_exp->id.symrec->uid);
+			printf("ldarg %s \n",unary_exp->id.symrec->uid);
+			fprintf(output,"starg %s \n",unary_exp->id.symrec->uid);
+			fprintf(output,"ldarg %s \n",unary_exp->id.symrec->uid);
+		}
+	}
+	else if(operator->con_i.value==MY_MM)
+	{
+		generate(unary_exp);
+		printf("ldc.i4 1\n");
+		printf("sub\n");
+		fprintf(output,"ldc.i4 1\n");
+		fprintf(output,"sub\n");
+		if(unary_exp->id.symrec->formal !=1)
+		{
+			printf("stloc %s\n",unary_exp->id.symrec->uid);
+			printf("ldloc %s\n",unary_exp->id.symrec->uid);
+			fprintf(output,"stloc %s\n",unary_exp->id.symrec->uid);
+			fprintf(output,"ldloc %s\n",unary_exp->id.symrec->uid);
+		}
+		else
+		{
+			printf("starg %s \n",unary_exp->id.symrec->uid);
+			printf("ldarg %s \n",unary_exp->id.symrec->uid);
+			fprintf(output,"starg %s \n",unary_exp->id.symrec->uid);
+			fprintf(output,"ldarg %s \n",unary_exp->id.symrec->uid);
+		}
+	}
+}
+
+void ir_postfix(nodeType* n)
+{	
+	nodeType* operator = get_operand(n,1);
+	nodeType* postfix_exp = get_operand(n,0);
+	printf("IN IR POSTFIX %d, PP = %d\n",operator->con_i.value,MY_PP);
+	if(operator->con_i.value==MY_PP)
+	{
+		if(postfix_exp->id.symrec->formal !=1)
+		{
+			printf("ldloc %s\n",postfix_exp->id.symrec->uid);
+			printf("ldloc %s\n",postfix_exp->id.symrec->uid);
+			fprintf(output,"ldloc %s\n",postfix_exp->id.symrec->uid);
+			fprintf(output,"ldloc %s\n",postfix_exp->id.symrec->uid);
+		}
+		else
+		{
+			printf("ldarg %s \n",postfix_exp->id.symrec->uid);
+			printf("ldarg %s \n",postfix_exp->id.symrec->uid);
+			fprintf(output,"ldarg %s \n",postfix_exp->id.symrec->uid);
+			fprintf(output,"ldarg %s \n",postfix_exp->id.symrec->uid);
+		}
+		
+		printf("ldc.i4 1\n");
+		printf("add\n");
+		fprintf(output,"ldc.i4 1\n");
+		fprintf(output,"add\n");
+		
+		if(postfix_exp->id.symrec->formal !=1)
+		{
+			printf("stloc %s\n",postfix_exp->id.symrec->uid);
+			fprintf(output,"stloc %s\n",postfix_exp->id.symrec->uid);
+		}
+		else
+		{
+			printf("starg %s \n",postfix_exp->id.symrec->uid);
+			fprintf(output,"starg %s \n",postfix_exp->id.symrec->uid);
+		}
+	}
+	else if(operator->con_i.value==MY_MM)
+	{
+		if(postfix_exp->id.symrec->formal !=1)
+		{
+			printf("ldloc %s\n",postfix_exp->id.symrec->uid);
+			printf("ldloc %s\n",postfix_exp->id.symrec->uid);
+			fprintf(output,"ldloc %s\n",postfix_exp->id.symrec->uid);
+			fprintf(output,"ldloc %s\n",postfix_exp->id.symrec->uid);
+		}
+		else
+		{
+			printf("ldarg %s \n",postfix_exp->id.symrec->uid);
+			printf("ldarg %s \n",postfix_exp->id.symrec->uid);
+			fprintf(output,"ldarg %s \n",postfix_exp->id.symrec->uid);
+			fprintf(output,"ldarg %s \n",postfix_exp->id.symrec->uid);
+		}
+		
+		printf("ldc.i4 1\n");
+		printf("add\n");
+		fprintf(output,"ldc.i4 1\n");
+		fprintf(output,"add\n");
+		
+		if(postfix_exp->id.symrec->formal !=1)
+		{
+			printf("stloc %s\n",postfix_exp->id.symrec->uid);
+			fprintf(output,"stloc %s\n",postfix_exp->id.symrec->uid);
+		}
+		else
+		{
+			printf("starg %s \n",postfix_exp->id.symrec->uid);
+			fprintf(output,"starg %s \n",postfix_exp->id.symrec->uid);
+		}
+	}
 }
