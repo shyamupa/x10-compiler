@@ -264,6 +264,11 @@ void ir_arithmetic(nodeType* n)
 			printf("div\n");
 			fprintf(output,"div\n");
 			break;
+		case MODULO:
+			printf("rem\n");
+			fprintf(output,"rem\n");
+			break;
+	
 		case BIT_AND:
 			printf("and\n");
 			fprintf(output,"and\n");
@@ -388,6 +393,7 @@ void create_formal_args(nodeType* n)
 }
 void insert_signature(nodeType* fun_name,nodeType* formalarg,nodeType* return_type)
 {
+	printf("DOING SIGNATURE\n");
 	memset(fun_name->id.symrec->signature,0,100);
 	switch(return_type->con_i.value)
 	{

@@ -107,6 +107,7 @@ when		{yycolumn=yycolumn+yyleng;return WHEN;}
 "-"			{yycolumn=yycolumn+yyleng;return MINUS;}
 "*"			{yycolumn=yycolumn+yyleng;return MULT;}
 "/"			{yycolumn=yycolumn+yyleng;return DIV;}
+"%"			{yycolumn=yycolumn+yyleng;return MODULO;}
 "**"		{yycolumn=yycolumn+yyleng;return POW;}
 "++"		{yycolumn=yycolumn+yyleng;return PP;}
 "--"		{yycolumn=yycolumn+yyleng;return MM;}

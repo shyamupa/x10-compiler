@@ -186,7 +186,7 @@ nodeType* root;
 %nonassoc IFX
 %nonassoc ELSE
 %left PLUS MINUS
-%left MULT DIV
+%left MULT DIV MODULO
 %left NEG
 %right POW
 %start Defn_or_Decln
@@ -268,8 +268,10 @@ FuncDefn
 					s->my_st=current_st;
 					seen_func=1;
 				}
-	'(' FormalArgLIST ')' ':' ReturnType CompoundStmt	{ 												   
-														$$=opr(FUNC,4,$2,$5,$8,$9);										insert_signature($2,$5,$8);
+	'(' FormalArgLIST ')' ':' ReturnType {insert_signature($2,$5,$8);} CompoundStmt	
+														{ 												   
+														$$=opr(FUNC,4,$2,$5,$8,$10);
+														printf("FUNCTION MATCHED\n");
 														} 
 	;
 
@@ -486,8 +488,8 @@ and_Expression
 
 equality_Expression
 	:relational_Expression		{$$=$1;}	
-	|equality_Expression BOOL_EQ relational_Expression	{$$=opr(BOOL_EQ,2,$1,$3);type_check_assign($$,$1,$3);}
-	|equality_Expression NEQ relational_Expression		{$$=opr(NEQ,2,$1,$3);type_check_assign($$,$1,$3);}
+	|equality_Expression BOOL_EQ relational_Expression	{$$=opr(BOOL_EQ,2,$1,$3);type_check_booleq($$,$1,$3);}
+	|equality_Expression NEQ relational_Expression		{$$=opr(NEQ,2,$1,$3);type_check_booleq($$,$1,$3);}
 	;
 
 relational_Expression
@@ -514,6 +516,7 @@ multiplicative_Expression
 	: cast_Expression					{$$ = $1;}
 	| multiplicative_Expression MULT cast_Expression	{$$=opr(MULT,2,$1,$3);type_check_addmult($$,$1,$3);}
 	| multiplicative_Expression DIV cast_Expression		{$$=opr(DIV,2,$1,$3);type_check_division($$,$1,$3);}
+	| multiplicative_Expression MODULO cast_Expression		{$$=opr(MODULO,2,$1,$3);type_check_modulo($$,$1,$3);}
 	;
 
 cast_Expression

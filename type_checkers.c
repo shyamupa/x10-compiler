@@ -6,18 +6,30 @@
 extern struct symbol_table* current_st;
 void type_check_assign(nodeType* parent,nodeType* lhs,nodeType* rhs)
 {	
-	//~ if((lhs->type==typeOpr) && (lhs->opr.oper==ARRAY_INVOC))	lhs = get_operand(lhs,0);
-	//~ if((rhs->type==typeOpr) && (rhs->opr.oper==ARRAY_INVOC))	rhs = get_operand(rhs,0);
 	printf("%d %d HIHI\n",get_type(lhs),get_type(rhs));
 	if(get_type(lhs)!=get_type(rhs))
 	{
-		//printf("type mismatch in assign or bool eq / neq \n");
-		yyerror("type mismatch in assign or bool eq/neq");
+		yyerror("type mismatch in assign");
 		exit(0);
 	}
 	parent->opr.datatype=get_type(rhs);
 	return;
 }
+
+// in bool eq or neq check for strict matching of data types
+// int==int float==float is allowed etc etc
+// final result will have data type of bool
+void type_check_booleq(nodeType* parent,nodeType* lhs,nodeType* rhs)
+{	
+	if(get_type(lhs)!=get_type(rhs))
+	{
+		yyerror("type mismatch in bool eq/neq");
+		exit(0);
+	}
+	parent->opr.datatype=MY_BOOL;
+	return;
+}
+
 /*
 	checks type for add and mult 
 	allows all 4 combos of int and float
@@ -74,7 +86,6 @@ void type_check_int(nodeType* parent,nodeType* lhs,nodeType* rhs)
 
 void type_check_bool(nodeType* parent,nodeType* lhs,nodeType* rhs)
 {
-	//printf("SIDD %d %d\n",get_type(lhs),get_type(rhs));
 	if(get_type(lhs)!=MY_BOOL || get_type(rhs)!=MY_BOOL)
 	{
 		yyerror("type mismatch in bool\n");
@@ -100,26 +111,33 @@ void type_check_division(nodeType* parent,nodeType* lhs,nodeType* rhs)
 	// first check div by 0
 	if(rhs->type==typeConI)
 	{
-		if(rhs->con_i.value!=0)		return;
+		if(rhs->con_i.value==0)
+		{
+			yyerror("Division by zero\n");
+			exit(0);
+		}	
 	}
 	else if(rhs->type==typeConF)
 	{
-		if(rhs->con_f.value!=0.0)		return;
+		if(rhs->con_f.value!=0.0)
+		{
+			yyerror("Division by zero\n");
+			exit(0);
+		}		
 	}
-	yyerror("Division by zero\n");
-	exit(0);
+	
 	// assign type to parent
-	if(get_type(lhs)==MY_INT && get_type(rhs)==MY_INT)
+	if(get_type(lhs)==MY_INT && get_type(rhs)==MY_INT)			// both are int parent is int
 	{
 		parent->opr.datatype=get_type(rhs);
 		return;
 	}
-	else if(get_type(lhs)==MY_FLOAT && get_type(rhs)==MY_FLOAT)
+	else if(get_type(lhs)==MY_FLOAT && get_type(rhs)==MY_FLOAT)	// both are int parent is float
 	{
 		parent->opr.datatype=get_type(rhs);
 		return;
 	}
-	else if(get_type(lhs)==MY_FLOAT || get_type(rhs)==MY_FLOAT)
+	else if(get_type(lhs)==MY_FLOAT || get_type(rhs)==MY_FLOAT)	// either is float,parent is float
 	{
 		parent->opr.datatype=MY_FLOAT;
 		return;
@@ -127,7 +145,28 @@ void type_check_division(nodeType* parent,nodeType* lhs,nodeType* rhs)
 	yyerror("type mismatch in division\n");
 	exit(0);
 }
-
+void type_check_modulo(nodeType* parent,nodeType* lhs,nodeType* rhs)
+{
+	// first check div by 0
+	if(rhs->type==typeConI)
+	{
+		if(rhs->con_i.value==0)
+		{
+			yyerror("Modulo by zero\n");
+			exit(0);
+		}	
+	}
+	if(get_type(lhs)==MY_INT && get_type(rhs)==MY_INT)		//both are only allowed to be int right now
+	{	
+		parent->opr.datatype=get_type(lhs);			// parent is also int
+		return;
+	}
+	else
+	{
+		yyerror("type mismatch in modulo\n");
+		exit(0);
+	}
+}
 void type_check_prepostfix(nodeType* parent,nodeType* node)
 {
 	if(get_type(node)!=MY_INT && get_type(node)!=MY_FLOAT)
@@ -150,25 +189,26 @@ void type_check_typeid(nodeType* node)
 }
 void type_check_invoc(nodeType* parent,nodeType* func_name,nodeType* arg_list)
 {
+	printf("izbdidsadbdis\n");
 	char * pch;
 	char* sign;
 	sign = strdup(func_name->id.symrec->signature);
 	if(strcmp(sign,"")==0)
 	{
-		//printf("SIGN IS NULL\n");
+		printf("SIGN IS NULL\n");
 		return;
 	}	
-	//printf ("Splitting string \"%s\" into tokens:\n",func_name->id.symrec->signature);
+	printf ("Splitting string \"%s\" into tokens:\n",func_name->id.symrec->signature);
 	pch = strtok (sign," ::");
 	int count = 0;
 	if(strcmp(pch,"int32")==0)	
 	{
-		//printf("PCH IS %s\n",pch);
+		printf("PCH IS %s\n",pch);
 		parent->opr.datatype = MY_INT;
 	}
 	else if(strcmp(pch,"float32")==0)	
 	{
-		//printf("PCH IS %s\n",pch);
+		printf("PCH IS %s\n",pch);
 		parent->opr.datatype = MY_FLOAT;
 	}
 	
