@@ -5,6 +5,7 @@ extern int tempno;
 extern int labelno;
 extern int in_assign;
 extern int seen_bool_flow;
+extern int prepost_put;
 extern FILE* output;
 int generate(nodeType *n)
 {
@@ -50,17 +51,7 @@ int generate(nodeType *n)
 			}
 			break;	
 		case typeId:
-			if(n->id.symrec->formal != 1)
-			{
-			printf("ldloc %s \n",n->id.symrec->uid);
-			fprintf(output,"ldloc %s \n",n->id.symrec->uid);
-			}
-			else
-			{
-				printf("ldarg %s \n",n->id.symrec->uid);
-				fprintf(output,"ldarg %s \n",n->id.symrec->uid);
-				
-			}	
+			print_load_var(n);
 			break;
 		case typeOpr:
 			switch(n->opr.oper)
@@ -84,9 +75,9 @@ int generate(nodeType *n)
 							break;	
 				case ASSIGN:
 							printf("MATCHED ASSIGN\n");
-							in_assign=1;
+							in_assign=1;prepost_put = 1;
 							ir_assign(n);
-							in_assign =0;
+							in_assign =0;prepost_put = 0;
 							break;
 			
 				case BOOL_OR:
@@ -117,18 +108,22 @@ int generate(nodeType *n)
 								ir_bool(n);
 							else
 							{
-								seen_bool_flow = 1;
+								seen_bool_flow = 1;prepost_put = 1;
 								ir_bool_flow(n);
-								seen_bool_flow = 0;
+								seen_bool_flow = 0;prepost_put = 0;
 							}		
 							break;
 				case BIT_OR:
 							printf("Matched BIT_OR\n");
+							prepost_put = 1;
 							ir_arithmetic(n);
+							prepost_put = 0;
 							break;
 				case BIT_AND:
 							printf("Matched BIT_AND\n");
+							prepost_put = 1;
 							ir_arithmetic(n);
+							prepost_put = 0;
 							break;
 				case BREAK:
 							printf("Matched BREAK\n");
@@ -203,17 +198,21 @@ int generate(nodeType *n)
 							break;			
 				case GT:
 							printf("Matched GT\n");
+							prepost_put = 1;
 							if(in_assign==0)
 								ir_relop_flow(n);
 							else
 								ir_relop(n);
+							prepost_put = 0;
 							break;
 				case GE:
 							printf("Matched GE\n");
+							prepost_put = 1;
 							if(in_assign==0)
 								ir_relop_flow(n);
 							else
 								ir_relop(n);
+							prepost_put = 0;
 							break;
 				case IF:
 							printf("MATCHED IF\n");
@@ -234,32 +233,43 @@ int generate(nodeType *n)
 							break;
 				case LT:
 							printf("Matched LT\n");
+							prepost_put = 1;
 							if(in_assign==0)
 								ir_relop_flow(n);
 							else
 								ir_relop(n);
+							prepost_put = 0;
 							break;
 				case LE:
 							printf("Matched LE\n");
+							prepost_put = 1;
 							if(in_assign==0)
 								ir_relop_flow(n);
 							else
 								ir_relop(n);
+							prepost_put = 0;
 							break;
 				case LSH:
 							printf("Matched LSH\n");
+							prepost_put = 1;
 							ir_arithmetic(n);
+							prepost_put = 0;
 							break;
 				case MINUS:
 							printf("Matched MINUS\n");
+							prepost_put = 1;
 							ir_arithmetic(n);
+							prepost_put = 0;
 							break;
 				case MULT:
 							printf("Matched MULT\n");
+							prepost_put = 1;
 							ir_arithmetic(n);
+							prepost_put = 0;
 							break;
 				case NEQ:
 							printf("Matched BOOL_NEQ\n");
+							prepost_put = 1;
 							if(in_assign==1)
 								ir_bool(n);
 							else
@@ -267,11 +277,14 @@ int generate(nodeType *n)
 								seen_bool_flow = 1;
 								ir_bool_flow(n);
 								seen_bool_flow = 0;
-							}		
+							}
+							prepost_put = 0;		
 							break;
 				case PLUS:
 							printf("Matched PLUS\n");
+							prepost_put = 1;
 							ir_arithmetic(n);
+							prepost_put = 0;
 							break;
 				case POSTFIX:
 							printf("Matched POSTFIX\n");
@@ -287,7 +300,9 @@ int generate(nodeType *n)
 							break;
 				case RSH:
 							printf("Matched RSH\n");
+							prepost_put = 1;
 							ir_arithmetic(n);
+							prepost_put = 0;
 							break;
 			
 				

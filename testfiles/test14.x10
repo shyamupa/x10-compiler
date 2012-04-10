@@ -2,12 +2,13 @@ public class myclass
 {
 	def main():void
 	{	
-		var a,b,c,d:int;
-		b = 1;
-		c = b++ + b++;
-		d = a + b++;
-		println(c);
-		println(d);
+		var i : int;
+		var t = Array[int](10);
+		for(i=0;i<10;i++)
+		{
+			t[i] = i;
+			println(t[i]);
+		}
 		return;
 	}
 };

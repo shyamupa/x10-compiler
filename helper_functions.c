@@ -150,21 +150,27 @@ void set_F(nodeType* n,char* label)
 	switch(n->type)
 	{
 		case typeConI:
+			memset(n->con_i.F,0,16);
 			strcat(n->con_i.F,label);
 			break;
 		case typeConC:
+			memset(n->con_c.F,0,16);
 			strcat(n->con_c.F,label);
 			break;
 		case typeConB:
+			memset(n->con_b.F,0,16);
 			strcat(n->con_b.F,label);
 			break;		
 		case typeConF:
+			memset(n->con_f.F,0,16);
 			strcat(n->con_f.F,label);
 			break;
 		case typeOpr:
+			memset(n->opr.F,0,16);
 			strcat(n->opr.F,label);
 			break;
 		case typeId:
+			memset(n->id.F,0,16);
 			strcat(n->id.F,label);
 			break;
 		default:
@@ -177,21 +183,27 @@ void set_T(nodeType* n,char* label)
 	switch(n->type)
 	{
 		case typeConI:
+			memset(n->con_i.T,0,16);
 			strcat(n->con_i.T,label);
 			break;
 		case typeConC:
+			memset(n->con_c.T,0,16);
 			strcat(n->con_c.T,label);
 			break;
 		case typeConB:
+			memset(n->con_b.T,0,16);
 			strcat(n->con_b.T,label);
 			break;		
 		case typeConF:
+			memset(n->con_f.T,0,16);
 			strcat(n->con_f.T,label);
 			break;
 		case typeOpr:
+			memset(n->opr.T,0,16);
 			strcat(n->opr.T,label);
 			break;
 		case typeId:
+			memset(n->id.T,0,16);
 			strcat(n->id.T,label);
 			break;
 		default:
@@ -433,4 +445,42 @@ void insert_queue(nodeType* n, char* label)
 	expr_queue[queue_length] = n;
 	strcpy(label_queue[queue_length],label);
 	queue_length++;
+}
+
+void print_store_var(nodeType* n)
+{
+	if(n->type != typeId)
+		{
+			printf("Trying to store into non variable \n");
+			exit(0);
+		}	
+	if(n->id.symrec->formal !=1)
+		{
+			printf("stloc %s\n",n->id.symrec->uid);
+			fprintf(output,"stloc %s\n",n->id.symrec->uid);
+		}
+	else
+		{
+			printf("starg %s \n",n->id.symrec->uid);
+			fprintf(output,"starg %s \n",n->id.symrec->uid);
+		}
+}
+
+void print_load_var(nodeType* n)
+{
+	if(n->type != typeId)
+		{
+			printf("Trying to load a non variable \n");
+			exit(0);
+		}
+	if(n->id.symrec->formal !=1)
+		{
+			printf("ldloc %s\n",n->id.symrec->uid);
+			fprintf(output,"ldloc %s\n",n->id.symrec->uid);
+		}
+	else
+		{
+			printf("ldarg %s \n",n->id.symrec->uid);
+			fprintf(output,"ldarg %s \n",n->id.symrec->uid);
+		}
 }	

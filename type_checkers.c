@@ -3,10 +3,11 @@
 	checks type for assign opr
 	type should STRICTLY MATCH
 */
+extern struct symbol_table* current_st;
 void type_check_assign(nodeType* parent,nodeType* lhs,nodeType* rhs)
 {	
-	if((lhs->type==typeOpr) && (lhs->opr.oper==ARRAY_INVOC))	lhs = get_operand(lhs,0);
-	if((rhs->type==typeOpr) && (rhs->opr.oper==ARRAY_INVOC))	rhs = get_operand(rhs,0);
+	//~ if((lhs->type==typeOpr) && (lhs->opr.oper==ARRAY_INVOC))	lhs = get_operand(lhs,0);
+	//~ if((rhs->type==typeOpr) && (rhs->opr.oper==ARRAY_INVOC))	rhs = get_operand(rhs,0);
 	printf("%d %d HIHI\n",get_type(lhs),get_type(rhs));
 	if(get_type(lhs)!=get_type(rhs))
 	{
@@ -190,18 +191,13 @@ void type_check_invoc(nodeType* parent,nodeType* func_name,nodeType* arg_list)
 
 void type_check_array_invoc(nodeType* parent,nodeType* array_name)
 {
-	if(strcmp(array_name->id.symrec->signature,"int32")==0)	
+	struct sym_record*p = search(current_st,array_name->id.symrec->sym_name);
+	if(p==NULL)
 	{
-		parent->opr.datatype = MY_INT;
+		yyerror("  Array not declared\n");
+		exit(0);
 	}
-	else if(strcmp(array_name->id.symrec->signature,"float32")==0)	
-	{
-		parent->opr.datatype = MY_FLOAT;
-	}
-	else if(strcmp(array_name->id.symrec->signature,"char")==0)	
-	{
-		parent->opr.datatype = MY_CHAR;
-	}
+	parent->opr.datatype = p->type;
 }	
 
 

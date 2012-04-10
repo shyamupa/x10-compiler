@@ -3,19 +3,19 @@ public class myclass
 	def main():void
 	{	
 		var i,a:int;
-		var t = Array[int](5);
+		var t = Array[int](10);
 		a = 3;
-		for(i = 0;i<5;i=i+1)
+		for(i = 0;i<10;i=i+1)
 		{
 			t[i] = a;
 			a = a + 1;
 			print(a);
 		}
-		for(i = 0;i<5;i=i+1)
+		for(i = 0;i<10;i=i+1)
 		{
 			t[i] += a;
 		}
-		for(i = 0;i<5;i=i+1)
+		for(i = 0;i<10;i=i+1)
 		{
 			println(t[i]);
 		}

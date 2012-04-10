@@ -12,6 +12,7 @@ int main_was_found=0;
 int seen_bool_flow=0;
 int in_assign=0;
 int in_func=0;
+int prepost_put = 0;
 extern int queue_length;//the number of case statements minus one
 extern int idno;
 nodeType* expr_queue[MAXQUEUE];
@@ -105,6 +106,7 @@ void ir_compound_stmt(nodeType* n)
 		in_func=0;
 	}
 	nodeType* stmtlist = get_operand(n,0);
+	memset(stmtlist->opr.next,0,16);
 	strcat(stmtlist->opr.next,newlabel());
 	//~ printf("COMPOUND TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT\n");
 	//~ traverse(root);
@@ -135,7 +137,6 @@ void ir_assign(nodeType* n)
 		case EQ:
 			printf("OOOOOOLAALALALALA!!\n");
 			//~ printf("ASSEXP VALUE IS %d\n",ass_exp->con_i.value);
-			fflush(stdout);
 			if(unary_exp->opr.oper==ARRAY_INVOC)
 			{	
 				ir_array_lhs(unary_exp);
@@ -145,18 +146,8 @@ void ir_assign(nodeType* n)
 			}
 			else
 			{		
-				if(unary_exp->id.symrec->formal !=1)
-				{
-					generate(ass_exp);
-					printf("stloc %s\n",unary_exp->id.symrec->uid);
-					fprintf(output,"stloc %s\n",unary_exp->id.symrec->uid);
-				}
-				else
-				{
-					generate(ass_exp);
-					printf("starg %s \n",unary_exp->id.symrec->uid);
-					fprintf(output,"starg %s \n",unary_exp->id.symrec->uid);
-				}
+				generate(ass_exp);
+				print_store_var(unary_exp);
 			}	
 			break;
 		case PLUS_EQ:
@@ -172,26 +163,12 @@ void ir_assign(nodeType* n)
 			}
 			else
 			{			
-				if(unary_exp->id.symrec->formal !=1)
-				{
-					printf("ldloc %s\n",unary_exp->id.symrec->uid);
-					fprintf(output,"ldloc %s\n",unary_exp->id.symrec->uid);
-					generate(ass_exp);
-					printf("add\n");
-					fprintf(output,"add\n");
-					printf("stloc %s\n",unary_exp->id.symrec->uid);
-					fprintf(output,"stloc %s\n",unary_exp->id.symrec->uid);
-				}
-				else
-				{
-					printf("ldarg %s\n",unary_exp->id.symrec->uid);
-					fprintf(output,"ldarg %s\n",unary_exp->id.symrec->uid);
-					generate(ass_exp);
-					printf("add\n");
-					fprintf(output,"add\n");
-					printf("starg %s\n",unary_exp->id.symrec->uid);
-					fprintf(output,"starg %s\n",unary_exp->id.symrec->uid);
-				}
+				
+				print_load_var(unary_exp);
+				generate(ass_exp);
+				printf("add\n");
+				fprintf(output,"add\n");
+				print_store_var(unary_exp);
 			}	
 			break;
 		case MINUS_EQ:
@@ -208,27 +185,12 @@ void ir_assign(nodeType* n)
 			}
 			else
 			{			
-				if(unary_exp->id.symrec->formal !=1)
-				{
-					printf("ldloc %s\n",unary_exp->id.symrec->uid);
-					fprintf(output,"ldloc %s\n",unary_exp->id.symrec->uid);
-					generate(ass_exp);
-					printf("sub\n");
-					fprintf(output,"sub\n");
-					printf("stloc %s\n",unary_exp->id.symrec->uid);
-					fprintf(output,"stloc %s\n",unary_exp->id.symrec->uid);
-				}
-				else
-				{
-					printf("ldarg %s\n",unary_exp->id.symrec->uid);
-					fprintf(output,"ldarg %s\n",unary_exp->id.symrec->uid);
-					generate(ass_exp);
-					printf("sub\n");
-					fprintf(output,"sub\n");
-					printf("starg %s\n",unary_exp->id.symrec->uid);
-					fprintf(output,"starg %s\n",unary_exp->id.symrec->uid);
-				}	
-			}
+				print_load_var(unary_exp);
+				generate(ass_exp);
+				printf("sub\n");
+				fprintf(output,"sub\n");
+				print_store_var(unary_exp);
+			}	
 			break;
 		case MULT_EQ:
 			if(unary_exp->opr.oper==ARRAY_INVOC)
@@ -243,26 +205,12 @@ void ir_assign(nodeType* n)
 			}
 			else
 			{			
-				if(unary_exp->id.symrec->formal !=1)
-				{
-					printf("ldloc %s\n",unary_exp->id.symrec->uid);
-					fprintf(output,"ldloc %s\n",unary_exp->id.symrec->uid);
-					generate(ass_exp);
-					printf("mul\n");
-					fprintf(output,"mul\n");
-					printf("stloc %s\n",unary_exp->id.symrec->uid);
-					fprintf(output,"stloc %s\n",unary_exp->id.symrec->uid);
-				}
-				else
-				{
-					printf("ldarg %s\n",unary_exp->id.symrec->uid);
-					fprintf(output,"ldarg %s\n",unary_exp->id.symrec->uid);
-					generate(ass_exp);
-					printf("mul\n");
-					fprintf(output,"mul\n");
-					printf("starg %s\n",unary_exp->id.symrec->uid);
-					fprintf(output,"starg %s\n",unary_exp->id.symrec->uid);
-				}
+				
+				print_load_var(unary_exp);
+				generate(ass_exp);
+				printf("mul\n");
+				fprintf(output,"mul\n");
+				print_store_var(unary_exp);
 			}	
 			break;
 
@@ -279,26 +227,12 @@ void ir_assign(nodeType* n)
 			}
 			else
 			{			
-				if(unary_exp->id.symrec->formal !=1)
-				{
-					printf("ldloc %s\n",unary_exp->id.symrec->uid);
-					fprintf(output,"ldloc %s\n",unary_exp->id.symrec->uid);
-					generate(ass_exp);
-					printf("div\n");
-					fprintf(output,"div\n");
-					printf("stloc %s",unary_exp->id.symrec->uid);
-					fprintf(output,"stloc %s",unary_exp->id.symrec->uid);
-				}
-				else
-				{
-					printf("ldarg %s\n",unary_exp->id.symrec->uid);
-					fprintf(output,"ldarg %s\n",unary_exp->id.symrec->uid);
-					generate(ass_exp);
-					printf("div\n");
-					fprintf(output,"div\n");
-					printf("starg %s",unary_exp->id.symrec->uid);
-					fprintf(output,"starg %s",unary_exp->id.symrec->uid);
-				}
+				
+				print_load_var(unary_exp);
+				generate(ass_exp);
+				printf("div\n");
+				fprintf(output,"div\n");
+				print_store_var(unary_exp);
 			}	
 			break;
 		default: printf("ASSOP DEFAULT\n");
@@ -423,6 +357,7 @@ void create_formal_args(nodeType* n)
 	nodeType* lc=get_operand(n,0);
 	nodeType* rc=get_operand(n,1);
 	nodeType* s;
+	memset(mybuf,0,100);
 	if(n->opr.oper==FORMAL_ARG)
 	{
 		s=get_operand(n,1);
@@ -453,7 +388,7 @@ void create_formal_args(nodeType* n)
 }
 void insert_signature(nodeType* fun_name,nodeType* formalarg,nodeType* return_type)
 {
-	bzero(fun_name->id.symrec->signature,100);
+	memset(fun_name->id.symrec->signature,0,100);
 	switch(return_type->con_i.value)
 	{
 		case MY_INT:
@@ -473,7 +408,7 @@ void insert_signature(nodeType* fun_name,nodeType* formalarg,nodeType* return_ty
 	strcat(fun_name->id.symrec->signature," ( ");
 	create_formal_args(formalarg);
 	strcat(fun_name->id.symrec->signature,mybuf);
-	bzero(mybuf,1000);
+	memset(mybuf,0,100);
 	strcat(fun_name->id.symrec->signature," ) ");
 	printf("FINAL SIGNATURE:%s\n",fun_name->id.symrec->signature);
 }
@@ -684,20 +619,13 @@ void ir_fun_invoc(nodeType* n)
 
 void ir_return(nodeType* n)
 {
-	if(n->opr.nops == 0)
-		{
-			printf("pop \n");
-			printf("ret \n");
-			fprintf(output,"pop \n");
-			fprintf(output,"ret \n");
-		}
-	else
+	if(n->opr.nops != 0)
 	{
 		nodeType* return_exp = get_operand(n,0);
 		generate(return_exp);
-		printf("ret \n");
-		fprintf(output,"ret \n");
 	}
+	printf("ret \n");
+	fprintf(output,"ret \n");
 }
 ////////////////////////////////////////////////////////////////////////
 				
@@ -748,7 +676,7 @@ void ir_if(nodeType* n)
 	set_T(expr,newlabel());
 	set_F(expr,n->opr.next);
 	//~ stmt->opr.next=strdup(n->opr.next);
-	//~ bzero(stmt->opr.next,10);
+	memset(stmt->opr.next,0,16);
 	strcat(stmt->opr.next,n->opr.next);
 	printf("expr true label:%s\n",get_T(expr));
 	printf("expr false label:%s\n",get_F(expr));
@@ -767,8 +695,10 @@ void ir_if_else(nodeType* n)
 	nodeType* stmt2 = get_operand(n,2);
 	set_T(expr,newlabel());
 	set_F(expr,newlabel());
-	strcat(stmt1->opr.next,n->opr.next);
-	strcat(stmt2->opr.next,n->opr.next);
+	memset(stmt1->opr.next,0,16);
+	memset(stmt2->opr.next,0,16);
+	strcpy(stmt1->opr.next,n->opr.next);
+	strcpy(stmt2->opr.next,n->opr.next);
 	seen_bool_flow = 1;
 	generate(expr);
 	seen_bool_flow = 0;
@@ -791,7 +721,8 @@ void ir_while(nodeType* n)
 	strcat(begin,newlabel());
 	set_T(expr,newlabel());
 	set_F(expr,n->opr.next);
-	strcat(stmt->opr.next,begin);
+	memset(stmt->opr.next,0,16);
+	strcpy(stmt->opr.next,begin);
 	printf("%s:\n",begin);
 	fprintf(output,"%s:\n",begin);
 	seen_bool_flow = 1;
@@ -1001,11 +932,12 @@ void ir_for(nodeType* n)
 	loop_flag = loop_flag + 1;
 	//####################
 	
-	printf("br.s %s\n",initializenext);
-	fprintf(output,"br.s %s\n",initializenext);
+	printf("br %s\n",initializenext);
+	fprintf(output,"br %s\n",initializenext);
 	printf("%s: \n",begin);
 	fprintf(output,"%s: ",begin);
 	generate(stmt);
+	prepost_put = 0;
 	generate(increament);
 	printf("%s: ",initializenext);
 	fprintf(output,"%s: ",initializenext);
@@ -1036,18 +968,7 @@ void ir_array_declaration(nodeType* n)
 	printf(" %s )\n",array_name->id.symrec->uid); 	
 	fprintf(output," %s )\n",array_name->id.symrec->uid); 	
 	
-	printf("ldc.i4 ");
-	fprintf(output,"ldc.i4 ");
-	if(array_size->type == typeConI)
-	{
-		printf("%d\n",array_size->con_i.value);
-		fprintf(output,"%d\n",array_size->con_i.value);
-	}
-	else if(array_size->type == typeId)
-	{
-		printf("%s\n",array_size->id.symrec->uid);
-		fprintf(output,"%s\n",array_size->id.symrec->uid);
-	}
+	generate(array_size);
 	printf("newarr [mscorlib]System.Int32\n"); 
 	fprintf(output,"newarr [mscorlib]System.Int32\n"); 
 	printf("stloc %s\n",array_name->id.symrec->uid );
@@ -1060,20 +981,7 @@ void ir_array_lhs(nodeType* n)
 	nodeType* array_index = get_operand(n,1);
 	printf("ldloc %s\n",array_name->id.symrec->uid ); //number[i] = i
 	fprintf(output,"ldloc %s\n",array_name->id.symrec->uid ); //number[i] = i
-	if(array_index->type == typeConI)
-	{
-		printf("ldc.i4 ");
-		fprintf(output,"ldc.i4 ");
-		printf("%d\n",array_index->con_i.value);
-		fprintf(output,"%d\n",array_index->con_i.value);
-	}
-	else if(array_index->type == typeId)
-	{
-		printf("ldloc ");
-		fprintf(output,"ldloc ");
-		printf("%s\n",array_index->id.symrec->uid);
-		fprintf(output,"%s\n",array_index->id.symrec->uid);
-	} 
+	generate(array_index);
 }	
 
 void ir_array_rhs(nodeType* n)
@@ -1082,20 +990,7 @@ void ir_array_rhs(nodeType* n)
 	nodeType* array_index = get_operand(n,1);
 	printf("ldloc %s\n",array_name->id.symrec->uid ); 
 	fprintf(output,"ldloc %s\n",array_name->id.symrec->uid ); 
-	if(array_index->type == typeConI)
-	{
-		printf("ldc.i4 ");
-		fprintf(output,"ldc.i4 ");
-		printf("%d\n",array_index->con_i.value);
-		fprintf(output,"%d\n",array_index->con_i.value);
-	}
-	else if(array_index->type == typeId)
-	{
-		printf("ldloc ");
-		fprintf(output,"ldloc ");
-		printf("%s\n",array_index->id.symrec->uid);
-		fprintf(output,"%s\n",array_index->id.symrec->uid);
-	} 
+	generate(array_index);
 	printf("ldelem.i4\n");
 	fprintf(output,"ldelem.i4\n");
 }
@@ -1268,50 +1163,24 @@ void ir_prefix(nodeType* n)
 	nodeType* operator = get_operand(n,0);
 	nodeType* unary_exp = get_operand(n,1);
 	printf("IN IR PREFIX %d, PP = %d\n",operator->con_i.value,MY_PP);
+	
+	generate(unary_exp);
+	printf("ldc.i4 1\n");
+	fprintf(output,"ldc.i4 1\n");
+	
 	if(operator->con_i.value==MY_PP)
 	{
-		generate(unary_exp);
-		printf("ldc.i4 1\n");
-		printf("add\n");
-		fprintf(output,"ldc.i4 1\n");
 		fprintf(output,"add\n");
-		if(unary_exp->id.symrec->formal !=1)
-		{
-			printf("stloc %s\n",unary_exp->id.symrec->uid);
-			printf("ldloc %s\n",unary_exp->id.symrec->uid);
-			fprintf(output,"stloc %s\n",unary_exp->id.symrec->uid);
-			fprintf(output,"ldloc %s\n",unary_exp->id.symrec->uid);
-		}
-		else
-		{
-			printf("starg %s \n",unary_exp->id.symrec->uid);
-			printf("ldarg %s \n",unary_exp->id.symrec->uid);
-			fprintf(output,"starg %s \n",unary_exp->id.symrec->uid);
-			fprintf(output,"ldarg %s \n",unary_exp->id.symrec->uid);
-		}
+		printf("add\n");
 	}
 	else if(operator->con_i.value==MY_MM)
 	{
-		generate(unary_exp);
-		printf("ldc.i4 1\n");
-		printf("sub\n");
-		fprintf(output,"ldc.i4 1\n");
 		fprintf(output,"sub\n");
-		if(unary_exp->id.symrec->formal !=1)
-		{
-			printf("stloc %s\n",unary_exp->id.symrec->uid);
-			printf("ldloc %s\n",unary_exp->id.symrec->uid);
-			fprintf(output,"stloc %s\n",unary_exp->id.symrec->uid);
-			fprintf(output,"ldloc %s\n",unary_exp->id.symrec->uid);
-		}
-		else
-		{
-			printf("starg %s \n",unary_exp->id.symrec->uid);
-			printf("ldarg %s \n",unary_exp->id.symrec->uid);
-			fprintf(output,"starg %s \n",unary_exp->id.symrec->uid);
-			fprintf(output,"ldarg %s \n",unary_exp->id.symrec->uid);
-		}
+		printf("sub\n");
 	}
+	print_store_var(unary_exp);	
+	if(prepost_put == 1)
+		print_load_var(unary_exp);
 }
 
 void ir_postfix(nodeType* n)
@@ -1319,70 +1188,21 @@ void ir_postfix(nodeType* n)
 	nodeType* operator = get_operand(n,1);
 	nodeType* postfix_exp = get_operand(n,0);
 	printf("IN IR POSTFIX %d, PP = %d\n",operator->con_i.value,MY_PP);
+
+	if(prepost_put == 1)
+		print_load_var(postfix_exp);
+	print_load_var(postfix_exp);
+	printf("ldc.i4 1\n");
+	fprintf(output,"ldc.i4 1\n");		
 	if(operator->con_i.value==MY_PP)
 	{
-		if(postfix_exp->id.symrec->formal !=1)
-		{
-			printf("ldloc %s\n",postfix_exp->id.symrec->uid);
-			printf("ldloc %s\n",postfix_exp->id.symrec->uid);
-			fprintf(output,"ldloc %s\n",postfix_exp->id.symrec->uid);
-			fprintf(output,"ldloc %s\n",postfix_exp->id.symrec->uid);
-		}
-		else
-		{
-			printf("ldarg %s \n",postfix_exp->id.symrec->uid);
-			printf("ldarg %s \n",postfix_exp->id.symrec->uid);
-			fprintf(output,"ldarg %s \n",postfix_exp->id.symrec->uid);
-			fprintf(output,"ldarg %s \n",postfix_exp->id.symrec->uid);
-		}
-		
-		printf("ldc.i4 1\n");
 		printf("add\n");
-		fprintf(output,"ldc.i4 1\n");
 		fprintf(output,"add\n");
-		
-		if(postfix_exp->id.symrec->formal !=1)
-		{
-			printf("stloc %s\n",postfix_exp->id.symrec->uid);
-			fprintf(output,"stloc %s\n",postfix_exp->id.symrec->uid);
-		}
-		else
-		{
-			printf("starg %s \n",postfix_exp->id.symrec->uid);
-			fprintf(output,"starg %s \n",postfix_exp->id.symrec->uid);
-		}
 	}
 	else if(operator->con_i.value==MY_MM)
 	{
-		if(postfix_exp->id.symrec->formal !=1)
-		{
-			printf("ldloc %s\n",postfix_exp->id.symrec->uid);
-			printf("ldloc %s\n",postfix_exp->id.symrec->uid);
-			fprintf(output,"ldloc %s\n",postfix_exp->id.symrec->uid);
-			fprintf(output,"ldloc %s\n",postfix_exp->id.symrec->uid);
-		}
-		else
-		{
-			printf("ldarg %s \n",postfix_exp->id.symrec->uid);
-			printf("ldarg %s \n",postfix_exp->id.symrec->uid);
-			fprintf(output,"ldarg %s \n",postfix_exp->id.symrec->uid);
-			fprintf(output,"ldarg %s \n",postfix_exp->id.symrec->uid);
-		}
-		
-		printf("ldc.i4 1\n");
-		printf("add\n");
-		fprintf(output,"ldc.i4 1\n");
-		fprintf(output,"add\n");
-		
-		if(postfix_exp->id.symrec->formal !=1)
-		{
-			printf("stloc %s\n",postfix_exp->id.symrec->uid);
-			fprintf(output,"stloc %s\n",postfix_exp->id.symrec->uid);
-		}
-		else
-		{
-			printf("starg %s \n",postfix_exp->id.symrec->uid);
-			fprintf(output,"starg %s \n",postfix_exp->id.symrec->uid);
-		}
+		printf("sub\n");
+		fprintf(output,"sub\n");
 	}
+	print_store_var(postfix_exp);
 }
