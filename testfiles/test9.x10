@@ -1,4 +1,4 @@
-public class myclass
+public class myclass()
 {
 	
 	def myfun(x:boolean,y:int):int

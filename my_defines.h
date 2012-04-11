@@ -32,6 +32,11 @@
 #define MY_MINUS 1365
 #define MY_PP 1366
 #define MY_MM 1367
+#define FIELD_ARG_LIST 1368
+#define FIELD_ARG 1369
+#define OBJ 1370
+#define INITEXPLIST 1371
+#define CLASSBODY 1372
 
 
 #define YYDEBUG 1	//enable debugging
@@ -43,6 +48,8 @@
 #define MY_BOOL 137
 
 #define BUFFSIZE 100
+#define MAXSTACK_SIZE 50
+
 #include "y.tab.h"
 
 typedef union nodeTypeTag nodeType;	

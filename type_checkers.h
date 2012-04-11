@@ -21,4 +21,5 @@ void type_check_shift(nodeType* parent,nodeType* node);
 void type_check_invoc(nodeType* parent,nodeType* func_name,nodeType* arg_list);
 void type_check_cast(nodeType* parent,nodeType* node);
 void type_check_modulo(nodeType* parent,nodeType* lhs,nodeType* rhs);
+void type_check_obj(nodeType* lhs,nodeType* class_name,nodeType* argexplist);
 #endif

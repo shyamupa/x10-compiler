@@ -6,33 +6,39 @@ extern int labelno;
 extern struct symbol_table* current_st;
 extern FILE* output;
 extern char* out_file;
+
+// global variables
 nodeType* expr_queue[MAXQUEUE];
 char label_queue[MAXQUEUE][16];
 int queue_length = 0;
+
+
+// concats strings with /n in between
 char* concat(char* c1,char* c2)
 {
 	strcat(c1,"\n");
-	printf("jbdsah\n");
 	strcat(c1,c2);
-	printf("jbdsah\n");
 	return c1;
 }
+
 // Generates new temp and returns the string
 // NEEDS global variables buffer and tempno
 char* newtmp()
 {
-	bzero(buffer,BUFFSIZE);
+	memset(buffer,0,BUFFSIZE);
 	sprintf(buffer,"t%d",tempno++);
 	return(buffer);
 }
+
 // Generates a newlabel and returns the string 
 // NEEDS global variables buffer and labelno
 char* newlabel()
 {
-	bzero(buffer,BUFFSIZE);
+	memset(buffer,0,BUFFSIZE);
 	sprintf(buffer,"l%d",labelno++);
 	return(buffer);
 }
+
 // get_operand takes a nodeType ptr of opr node type
 // and returns the operand at position index
 nodeType* get_operand(nodeType* opnode,int index)
@@ -45,7 +51,8 @@ nodeType* get_operand(nodeType* opnode,int index)
 			exit(0);
 		}	
 }
-// NEEDS ASSERT statements
+
+// NEEDS ASSERT statements GIGLAMESH
 // takes a VarDec node and spread the type info 
 void dist_type(nodeType* nptr)
 {
@@ -67,7 +74,9 @@ void dist_type(nodeType* nptr)
 		idlist->id.symrec->type=TypeToAssign;
 	}	
 }
+
 // get_type takes a data_type node ptr and returns the data type embedded in it	
+// return values like MY_INT MY_BOOL etc
 int get_type(nodeType* data_type_ptr)
 {
 	if(data_type_ptr->type==typeConI)		// integer
@@ -96,31 +105,35 @@ int get_type(nodeType* data_type_ptr)
 	}
 }
 
+// USELESS FUNC
+// gets the code field from a given node 
+// returns values like ?? GIGLAMESH
 char* get_code(nodeType* n)
 {
- switch(n->type)
- {
-	  case typeConI:
+	 switch(n->type)
+	 {
+		case typeConI:
 			return n->con_i.code;
 			break;
-	  case typeConC:
+		case typeConC:
 			return n->con_c.code;
 			break;
-	  case typeConF:
+		case typeConF:
 			return n->con_f.code;
 			break;
-	  case typeOpr:
+		case typeOpr:
 			return n->opr.code;
 			break;
-	  case typeId:
+		case typeId:
 			return n->id.code;
 			break;
 
-	  default:
-				printf("Can't get code for unknown node type\n");
-}
+		default:
+			printf("Can't get code for unknown node type\n");
+	}
 }
 
+// gets the place field from a given node
 char* get_place(nodeType* n)
 {
 	 switch(n->type)
@@ -145,6 +158,8 @@ char* get_place(nodeType* n)
 		}
 }
 
+// sets the true label to a label passed as argument
+// memsets are used before strcat
 void set_F(nodeType* n,char* label)
 {
 	switch(n->type)
@@ -178,6 +193,8 @@ void set_F(nodeType* n,char* label)
 	}
 }
 
+// sets the true label to a label passed as argument
+// memsets are used before strcat
 void set_T(nodeType* n,char* label)
 {
 	switch(n->type)
@@ -211,6 +228,8 @@ void set_T(nodeType* n,char* label)
 	}
 }
 
+// gets the false label string from a given node
+// to be used in bool flow ir code
 char* get_F(nodeType* n)
 {
 	 switch(n->type)
@@ -239,6 +258,8 @@ char* get_F(nodeType* n)
 	}
 }
 
+// gets the true label string from a given node
+// to be used in bool flow ir code
 char* get_T(nodeType* n)
 {
 	 switch(n->type)
@@ -276,7 +297,7 @@ nodeType* con_i(int value)
 	p->type = typeConI;
 	p->con_i.value = value;
 	p->con_i.datatype = MY_INT;
-	bzero(buffer,BUFFSIZE);
+	memset(buffer,0,BUFFSIZE);
 	sprintf(buffer,"%d",value);
 	p->con_i.place = strdup(buffer);
 	p->con_i.code = strdup(buffer);
@@ -293,7 +314,7 @@ nodeType* con_b(int value)
 	p->type=typeConB;
 	p->con_b.value=value;
 	p->con_b.datatype=MY_BOOL;
-	bzero(buffer,BUFFSIZE);
+	memset(buffer,0,BUFFSIZE);
 	sprintf(buffer,"%d",value);
 	p->con_b.place = strdup(buffer);
 	p->con_b.code = strdup(buffer);
@@ -309,7 +330,7 @@ nodeType* con_f(float value)
 	p->type=typeConF;
 	p->con_f.value=value;
 	p->con_f.datatype=MY_FLOAT;
-	bzero(buffer,BUFFSIZE);
+	memset(buffer,0,BUFFSIZE);
 	sprintf(buffer,"%f",value);
 	p->con_f.place = strdup(buffer);
 	p->con_f.code = strdup(buffer);
@@ -326,7 +347,7 @@ nodeType* con_c(char value)
 	p->type=typeConC;
 	p->con_c.value=value;
 	p->con_c.datatype=MY_CHAR;
-	bzero(buffer,BUFFSIZE);
+	memset(buffer,0,BUFFSIZE);
 	sprintf(buffer,"%d",value);
 	p->con_c.place = strdup(buffer);
 	p->con_c.code = strdup(buffer);
@@ -343,7 +364,6 @@ nodeType *id(struct sym_record* symrec)
 	p->type = typeId;
 	p->id.symrec = symrec;
 	printf("SSSSSSSSS%dSSSSSSSSSSS  %s\n",p->type,p->id.symrec->sym_name);
-	//printf("KHALI HAIN %s ",symrec->sym_name);
 	p->id.code = strdup(symrec->sym_name);
 	p->id.place = strdup(symrec->sym_name);
 	return p;
@@ -360,6 +380,7 @@ nodeType* empty(int value)
 	p->opr.oper = value;
 	return p;
 }
+
 //
 // 
 nodeType *opr(int oper, int nops, ...) 
@@ -381,6 +402,7 @@ nodeType *opr(int oper, int nops, ...)
 	return p;
 }
 
+// GIGLAMESH
 struct sym_record* install(char* sym_name)
 {
 	printf("installing %s\n",sym_name);
@@ -400,11 +422,21 @@ struct sym_record* install(char* sym_name)
 		}
 		else	// oops the name already exists
 		{
+			if(r->is_class==1)
+			{
+				r=insert(current_st,sym_name);
+				printf("install complete\n");
+				return r;
+			}	
+			else
+				printf("BIG PROBLEM\n");
 		// what to do here?? do we check scope or not
 		}
 	}
-	printf("install complete\n");
+	printf("outside install\n");
 }
+
+// prints header info for the output il file
 void print_header()
 {
 	printf(".assembly extern mscorlib {} \n");
@@ -421,6 +453,8 @@ void print_header()
 	fprintf(output,".module %s.exe\n",out_file);
 }
 
+// debugging utility function
+// no general use
 void traverse(nodeType* n)
 {
  if(n->type == typeOpr)
@@ -430,23 +464,26 @@ void traverse(nodeType* n)
 		 int count = 0;
 		 while(count < number)
 		 {
-			 //~ printf("%d\n",count);
 			 traverse(get_operand(n,count));
 			 count++;
 		 }
 		 printf("Parent Node Type:%d \n",n->type);
 	}
  else
-	 printf("NNode Type:%d \n",n->type);
+	 printf("Node Type:%d \n",n->type);
 }	
 
+// inserts a label into the queue 
+// for use in switch case scenarios
 void insert_queue(nodeType* n, char* label)
 {
 	expr_queue[queue_length] = n;
-	strcpy(label_queue[queue_length],label);
+	strcpy(label_queue[queue_length],label);		// strcpy used GIGLAMESH
 	queue_length++;
 }
 
+// chooses correct instruction to store a variable which might be any of stloc starg etc
+// NEED TO ADD FOR OBJECTS GIGLAMESH
 void print_store_var(nodeType* n)
 {
 	if(n->type != typeId)
@@ -454,11 +491,21 @@ void print_store_var(nodeType* n)
 			printf("Trying to store into non variable \n");
 			exit(0);
 		}	
-	if(n->id.symrec->formal !=1)
+	if(n->id.symrec->formal !=1 && n->id.symrec->is_field !=1)
 		{
 			printf("stloc %s\n",n->id.symrec->uid);
 			fprintf(output,"stloc %s\n",n->id.symrec->uid);
 		}
+	else if(n->id.symrec->is_field==1)
+		{
+			printf("stfld ");
+			fprintf(output,"stfld ");
+			print_type(n);
+			printf("%s::",n->id.symrec->in_st_of);
+			fprintf(output,"%s::",n->id.symrec->in_st_of);
+			printf("%s\n",n->id.symrec->sym_name);
+			fprintf(output,"%s\n",n->id.symrec->sym_name);
+		}		
 	else
 		{
 			printf("starg %s \n",n->id.symrec->uid);
@@ -466,21 +513,34 @@ void print_store_var(nodeType* n)
 		}
 }
 
+// chooses correct instruction to load a variable which might be any of ldloc ldarg etc
+// NEED TO ADD FOR OBJECTS GIGLAMESH
 void print_load_var(nodeType* n)
 {
 	if(n->type != typeId)
 		{
-			printf("Trying to load a non variable \n");
+			printf("Trying to load a non variable \n");		// for safety against ldc.i4 needs
 			exit(0);
 		}
-	if(n->id.symrec->formal !=1)
+	if(n->id.symrec->formal !=1 && n->id.symrec->is_field !=1)		// formal flag off so must be local
 		{
 			printf("ldloc %s\n",n->id.symrec->uid);
 			fprintf(output,"ldloc %s\n",n->id.symrec->uid);
 		}
-	else
+	else if(n->id.symrec->is_field==1)
+		{
+			printf("ldfld ");
+			fprintf(output,"ldfld ");
+			print_type(n);
+			printf("%s::",n->id.symrec->in_st_of);
+			fprintf(output,"%s::",n->id.symrec->in_st_of);
+			printf("%s\n",n->id.symrec->sym_name);
+			fprintf(output,"%s\n",n->id.symrec->sym_name);
+		}	
+	else 			// must be a local variable
 		{
 			printf("ldarg %s \n",n->id.symrec->uid);
 			fprintf(output,"ldarg %s \n",n->id.symrec->uid);
 		}
 }	
+

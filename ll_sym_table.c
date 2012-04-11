@@ -14,7 +14,7 @@ char my_buffer[100];
 
 char* newuid()
 {
-	bzero(my_buffer,100);
+	memset(my_buffer,0,100);
 	sprintf(my_buffer,"V%d",idno++);
 	return my_buffer;
 }
@@ -49,7 +49,8 @@ sym_record* insert(symbol_table* st,char* sym_name)	// inserts a record and retu
 	rv=(sym_record*)malloc(sizeof(sym_record));
 	rv->sym_name = strdup(sym_name);	// copies from yytext
 	rv->uid = strdup(newuid());	
-
+	if(st->owner_name!=NULL)
+		rv->in_st_of=strdup(st->owner_name);		// copy the owner name into symrec
 	sym_record* p=st->Head;
 	if(p==NULL)
 	{

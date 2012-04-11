@@ -282,3 +282,14 @@ void type_check_cast(nodeType* parent,nodeType* node)
 		exit(0);
 	}
 }	
+
+void type_check_obj(nodeType* lhs,nodeType* class_name,nodeType* argexplist)
+{
+	if(strcmp(lhs->id.symrec->sym_name,lhs->id.symrec->sym_name)!=0)
+	{
+		printf("wrong class creation\n");
+		exit(0);
+	}
+	// incomplete
+}
+

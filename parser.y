@@ -156,11 +156,15 @@ nodeType* root;
 %type <nPtr> FormalArg
 %type <nPtr> FormalArgList
 %type <nPtr> FormalArgLIST
+%type <nPtr> FieldArgLIST
+%type <nPtr> FieldArgList
+%type <nPtr> FieldArg
 %type <nPtr> FuncDefn
 %type <nPtr> FuncDefnList
 %type <nPtr> inclusive_or_Expression
 %type <nPtr> IDENT
 %type <nPtr> IdList
+%type <nPtr> InitExpList
 %type <nPtr> IterationStmt
 %type <nPtr> JumpStmt
 %type <nPtr> logical_or_Expression
@@ -225,24 +229,50 @@ ClassDecln
 				{
 				printf("%s\n",yytext);
 				struct sym_record* s=install(yytext);
+				
 				$3 = id(s);
+				
 				st_push(current_st);
 				current_st=new_sym_table(current_st);
 				current_st->owner_name=strdup(yytext);
 				s->my_st=current_st;
+				s->is_class=1;
 				seen_class=1;
 
 				}
+		'(' FieldArgLIST ')'
 		ClassBody ';'	
 		{
-				$$=opr(CLASS,3,$1,$3,$5);
+				$$=opr(CLASS,4,$1,$3,$6,$8);
 		}
 		;						
-
-Mods		:PUBLIC		{$$=con_i(modPUBLIC);}
-		|PRIVATE	{$$=con_i(modPRIVATE);}
-		|PROTECTED	{$$=con_i(modPROTECTED);}
-		;
+		
+FieldArgLIST : FieldArgList	{ $$ = $1;}
+              | {$$= empty(EMPTY);/*empty production*/} 
+	      ;	
+FieldArgList	
+	:FieldArgList ',' FieldArg	{$$=opr(FIELD_ARG_LIST,2,$1,$3);}
+	|FieldArg	{$$=$1;}
+	;
+FieldArg
+	: IDENT {
+				struct sym_record* s = install(yytext);
+				$1 = id(s);
+				s->is_field=1;
+			}
+	 ':' Type
+			{
+				$$=opr(FIELD_ARG,2,$1,$4);
+				 
+				$1->id.symrec->type = $4->con_i.value;
+			}
+	;
+	
+Mods		
+	:PUBLIC		{$$=con_i(modPUBLIC);}
+	|PRIVATE	{$$=con_i(modPRIVATE);}
+	|PROTECTED	{$$=con_i(modPROTECTED);}
+	;
 
 ClassBody	: '{' {seen_class = 0;} FuncDefnList '}'	{
 														$$=$3;
@@ -260,6 +290,7 @@ FuncDefn
 	:DEF IDENT 	{
 					printf("%s\n",yytext);
 					struct sym_record* s=install(yytext);
+					
 					s->is_proc_name=1;
 					$2 = id(s);
 					st_push(current_st);
@@ -405,7 +436,33 @@ VarDec
 					$$ = opr(ARRAY,3,$2,$6,$9);
 					dist_type($$);
 				}
+	|VAL IDENT	{	
+					struct sym_record* s=install(yytext);
+					$2 = id(s);
+				}
+	':' IDENT	
+				{
+					struct sym_record* s=search(current_st,yytext);
+					$5 = id(s);
+					$2->id.symrec->my_st = $5->id.symrec->my_st;
+				}
+	 EQ NEW IDENT 
+				{
+					struct sym_record* s=search(current_st,yytext);
+					$9 = id(s);
+				} 
+	'(' InitExpList ')' 
+	{
+		type_check_obj($5,$9,$12);
+		$$=opr(OBJ,3,$2,$9,$12);
+		printf("Obj done\n");
+	}
 	;
+InitExpList
+	: conditional_Expression	{$$=$1;}
+	| InitExpList ',' conditional_Expression	{$$=opr(INITEXPLIST,2,$1,$3);}
+	| {$$=empty(EMPTY);}	
+	;	
 Type	
 	:TYPE_INT	{$$=con_i(MY_INT);}	
 	|TYPE_FLOAT	{$$=con_i(MY_FLOAT);}
@@ -552,13 +609,21 @@ unary_operator
 %%
 int main(int argc, char** argv)
 {
+	char x10file[50];
 	if(argc > 0)
 	{
+		//printf("ARG V IS %s",argv[2]);
+		//printf("%s",x10file);
+		
+		strcpy(x10file,argv[2]);
+		freopen(x10file,"r",stdin);	
+		
 		out_file=strdup(argv[1]);		// filename without extension
 		output=fopen(strcat(argv[1],".il"),"w");		// create il file
 	}
 	yyparse();
 	fclose(output);
+	fclose(stdin);
 	
 	// following code runs ilasm 
 	char assembler[20]="ilasm ";

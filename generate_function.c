@@ -283,6 +283,10 @@ int generate(nodeType *n)
 							}
 							prepost_put = 0;		
 							break;
+				case OBJ:
+							printf("Matched OBJECT\n");
+							ir_obj(n);
+							break;				
 				case PLUS:
 							printf("Matched PLUS\n");
 							prepost_put = 1;

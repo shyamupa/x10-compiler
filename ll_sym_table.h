@@ -11,11 +11,14 @@ struct sym_record
 	int type;			// type of symbol like 'int'
 	int offset;			// offset of symbol
 	int is_proc_name;		// 1 if ident is proc
+	int is_field;		// 1 if ident is field
+	int is_class;		// 1 if ident is class
 	int formal; 
 	char signature[100];		
-	struct symbol_table* my_st;	//ptr to symbol table of the procedure in case 
+	struct symbol_table* my_st;	//ptr to symbol table of the procedure in case of proc and class in case of class
 	enum modifier access_mode;
 	struct sym_record * next;
+	char* in_st_of;		// name of owner of st in which this symrec belongs
 	char* uid;
 };
 

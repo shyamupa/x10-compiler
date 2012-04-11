@@ -44,6 +44,8 @@ void ir_stmtlist(nodeType* n);
 void ir_var_dec(nodeType* n);
 void ir_while(nodeType* n);
 void ir_switch(nodeType* n);
+void default_constructor();
+void ir_constructor(nodeType* fundef);
 
 
 
