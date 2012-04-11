@@ -559,6 +559,11 @@ int main(int argc, char** argv)
 	}
 	yyparse();
 	fclose(output);
+	
+	// following code runs ilasm 
+	char assembler[20]="ilasm ";
+	strcat(assembler,argv[1]);
+	system(assembler);
 	return 0;
 }
 

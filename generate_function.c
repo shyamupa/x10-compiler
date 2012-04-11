@@ -9,41 +9,40 @@ extern int prepost_put;
 extern FILE* output;
 int generate(nodeType *n)
 {
-	//printf("GENERATE BEGINS\n");
-	char* _code;
-	if(!n) 
+	char* _code;			// UNUSED
+	if(!n) 				// empty node found
 	{
 		printf("Empty Node\n");
 		return ;
 	}	
 	switch(n->type)
 	{
-		case typeConI:
+		case typeConI:				// integer node just load values onto stack
 			printf("ldc.i4 %d \n",n->con_i.value);
 			fprintf(output,"ldc.i4 %d \n",n->con_i.value);
 			break;
-		case typeConC:
+		case typeConC:				// char node just load values onto stack,char repr by int values for now
 			printf("ldc.i4 %c \n",n->con_c.value);
 			fprintf(output,"ldc.i4 %c \n",n->con_c.value);
 			break;
-		case typeConF:
-			printf("ldc.i4 %lf \n",n->con_f.value);
-			fprintf(output,"ldc.i4 %lf \n",n->con_f.value);
+		case typeConF:				// float value GIGLAMESH
+			printf("ldc.r4 %lf \n",n->con_f.value);
+			fprintf(output,"ldc.r4 %lf \n",n->con_f.value);
 			break;
 		case typeConB:
-			if(seen_bool_flow == 0)
+			if(seen_bool_flow == 0)				// not in bool flow so must be used in assign expr
 			{
 			printf("ldc.i4 %d \n",n->con_b.value);
 			fprintf(output,"ldc.i4 %d \n",n->con_b.value);
 			}
-			else
+			else 								// inside bool flow expr so handle T F labels
 			{	
-				if(n->con_b.value == 1)
+				if(n->con_b.value == 1)			// value is true so branch to true label
 				{
 					printf("br.s %s \n",get_T(n));
 					fprintf(output,"br.s %s \n",get_T(n));
 				}
-				else
+				else        					// value is false so branch to false label
 				{
 					printf("br.s %s \n",get_F(n));
 					fprintf(output,"br.s %s \n",get_F(n));
@@ -51,7 +50,7 @@ int generate(nodeType *n)
 			}
 			break;	
 		case typeId:
-			print_load_var(n);
+			print_load_var(n);				// load the value stored in the identifier
 			break;
 		case typeOpr:
 			switch(n->opr.oper)
@@ -75,18 +74,18 @@ int generate(nodeType *n)
 							break;	
 				case ASSIGN:
 							printf("MATCHED ASSIGN\n");
-							in_assign=1;prepost_put = 1;
+							in_assign=1;prepost_put = 1;			// set assign flag and prepost flag
 							ir_assign(n);
-							in_assign =0;prepost_put = 0;
+							in_assign =0;prepost_put = 0;			// reset assign flag and prepost flag
 							break;
 			
 				case BOOL_OR:
 							printf("Matched BOOL_OR\n");
-							if(in_assign==1)
+							if(in_assign==1)						// call normal expr like eval if in assign stmt	
 								ir_bool(n);
-							else
+							else  									// not in assign means inside bool flow
 							{
-								seen_bool_flow = 1;
+								seen_bool_flow = 1;				// set bool flow
 								ir_bool_flow(n);
 								seen_bool_flow = 0;
 							}		
@@ -95,7 +94,7 @@ int generate(nodeType *n)
 							printf("Matched BOOL_AND\n");
 							if(in_assign==1)
 								ir_bool(n);
-							else
+							else 							// not in assign means inside bool flow
 							{
 								seen_bool_flow = 1;
 								ir_bool_flow(n);
@@ -106,7 +105,7 @@ int generate(nodeType *n)
 							printf("Matched BOOL_EQ\n");
 							if(in_assign==1)
 								ir_bool(n);
-							else
+							else 								// not in assign means inside bool flow
 							{
 								seen_bool_flow = 1;prepost_put = 1;
 								ir_bool_flow(n);
@@ -133,7 +132,7 @@ int generate(nodeType *n)
 							printf("Matched CAST\n");
 							ir_cast(n);
 							break;
-				case CONTINUE:
+				case CONTINUE:										// GIGLAMESH
 							printf("Matched CONTINUE\n");
 							break;
 				case CLASSLIST:
@@ -141,11 +140,11 @@ int generate(nodeType *n)
 							ir_class_decln_list(n);
 							break;
 				case CLASS:
-							 printf("Matched CLASS\n");
+							printf("Matched CLASS\n");
 							ir_class_decln(n);
 							break;
 				case COMPOUND:
-							 printf("Matched COMPOUND\n");
+							printf("Matched COMPOUND\n");
 							ir_compound_stmt(n);
 							break;
 				
@@ -153,8 +152,8 @@ int generate(nodeType *n)
 							printf("Matched DIV\n");
 							ir_arithmetic(n);
 							break;
-				case EMPTY:
-							 printf("Matched EMPTY\n");
+				case EMPTY:										// GIGLAMESH
+							printf("Matched EMPTY\n");
 							break;
 				case EXP_LIST:
 							ir_explist(n);
@@ -168,17 +167,15 @@ int generate(nodeType *n)
 							ir_fun_def(n);
 							fflush(stdout);
 							break;
-				case FORMAL_ARG_LIST:
-							 printf("Matched FORMAL_ARG_LIST\n");
-							 break;
-
+				case FORMAL_ARG_LIST:									// GIGLAMESH
+							printf("Matched FORMAL_ARG_LIST\n");
+							break;
 				case FORMAL_ARG:
-							 printf("Matched FORMAL_ARG\n");
-							 break;
-						 
-				case SWITCH :
-							 printf("Matched SWITCH\n");
-							 ir_switch(n);
+							printf("Matched FORMAL_ARG\n");
+							break;
+				case SWITCH:
+							printf("Matched SWITCH\n");
+							ir_switch(n);
 							 break;
 				case CASE_STMT:
 							 printf("Matched CASE_STMT\n");
@@ -198,7 +195,7 @@ int generate(nodeType *n)
 							break;			
 				case GT:
 							printf("Matched GT\n");
-							prepost_put = 1;
+							prepost_put = 1;				
 							if(in_assign==0)
 								ir_relop_flow(n);
 							else
@@ -263,6 +260,12 @@ int generate(nodeType *n)
 							break;
 				case MULT:
 							printf("Matched MULT\n");
+							prepost_put = 1;
+							ir_arithmetic(n);
+							prepost_put = 0;
+							break;
+				case MODULO:
+							printf("Matched MODULO\n");
 							prepost_put = 1;
 							ir_arithmetic(n);
 							prepost_put = 0;

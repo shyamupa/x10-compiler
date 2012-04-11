@@ -1,12 +1,13 @@
 #include "type_checkers.h"
+
 /*
+	TYPE_CHECK_ASSIGN
 	checks type for assign opr
 	type should STRICTLY MATCH
 */
 extern struct symbol_table* current_st;
 void type_check_assign(nodeType* parent,nodeType* lhs,nodeType* rhs)
 {	
-	printf("%d %d HIHI\n",get_type(lhs),get_type(rhs));
 	if(get_type(lhs)!=get_type(rhs))
 	{
 		yyerror("type mismatch in assign");
@@ -16,6 +17,7 @@ void type_check_assign(nodeType* parent,nodeType* lhs,nodeType* rhs)
 	return;
 }
 
+// TYPE_CHECK_BOOLEQ
 // in bool eq or neq check for strict matching of data types
 // int==int float==float is allowed etc etc
 // final result will have data type of bool
@@ -31,6 +33,7 @@ void type_check_booleq(nodeType* parent,nodeType* lhs,nodeType* rhs)
 }
 
 /*
+	TYPE_CHECK_ADDMULT
 	checks type for add and mult 
 	allows all 4 combos of int and float
 */
@@ -39,40 +42,48 @@ void type_check_addmult(nodeType* parent,nodeType* lhs,nodeType* rhs)
 	
 	if(get_type(lhs)==MY_INT && get_type(rhs)==MY_INT)
 	{
-		parent->opr.datatype=get_type(rhs);
-		//printf("case 1\n");
+		parent->opr.datatype=get_type(rhs);			// both int so parent int
 		return;
 	}
 	else if(get_type(lhs)==MY_FLOAT && get_type(rhs)==MY_FLOAT)
 	{
-		parent->opr.datatype=get_type(rhs);
-		//printf("case 2\n");
+		parent->opr.datatype=get_type(rhs);			// both float so parent float
 		return;
 	}
 	else if(get_type(lhs)==MY_FLOAT || get_type(rhs)==MY_FLOAT)
-	{
-		parent->opr.datatype=MY_FLOAT;
-		//printf("case 3\n");
+	{	
+		parent->opr.datatype=MY_FLOAT;				// either is float then parent float
 		return;
 	}
 	yyerror("type mismatch in addmult");
 	exit(0);
 }
 
-void type_check_rel(nodeType* parent,nodeType* lhs,nodeType* rhs)
+// TYPE_CHECK_REL
+// allows all 4 combos of float and int
+void type_check_rel(nodeType* parent,nodeType* lhs,nodeType* rhs)		// was wrong eariler GIGLAMESH
 {	
-	if(get_type(lhs)==MY_INT || get_type(rhs)==MY_FLOAT)
+	if(get_type(lhs)==MY_INT && get_type(rhs)==MY_INT)		//  both int
 	{
-		if(get_type(lhs)==MY_INT || get_type(rhs)==MY_FLOAT)
-		{
-			parent->opr.datatype=MY_BOOL;
+			parent->opr.datatype=MY_BOOL;		// operator node type is bool
 			return;
-		}
+		
+	}
+	else if(get_type(lhs)==MY_FLOAT && get_type(rhs)==MY_FLOAT)		// both float 
+	{
+			parent->opr.datatype=MY_BOOL;		// operator node type is bool
+			return;
+	}
+	else if(get_type(lhs)==MY_INT && get_type(rhs)==MY_FLOAT || get_type(lhs)==MY_FLOAT && get_type(rhs)==MY_INT)	// float int combos
+	{
+			parent->opr.datatype=MY_BOOL;		// operator node type is bool
+			return;
 	}
 	yyerror("type mismatch in relational\n");
 	exit(0);
 }
 
+// both operands should be int and the operator node will be int
 void type_check_int(nodeType* parent,nodeType* lhs,nodeType* rhs)
 {
 	if(get_type(lhs)!=MY_INT || get_type(rhs)!=MY_INT)
@@ -80,10 +91,11 @@ void type_check_int(nodeType* parent,nodeType* lhs,nodeType* rhs)
 		yyerror("type mismatch in int\n");
 		exit(0);
 	}
-	parent->opr.datatype=MY_INT;
+	parent->opr.datatype=MY_INT;		// assign type to parent
 	return;
 }
 
+// both operands should be BOOL and the operator node will be BOOL
 void type_check_bool(nodeType* parent,nodeType* lhs,nodeType* rhs)
 {
 	if(get_type(lhs)!=MY_BOOL || get_type(rhs)!=MY_BOOL)
@@ -95,6 +107,7 @@ void type_check_bool(nodeType* parent,nodeType* lhs,nodeType* rhs)
 	return;
 }
 
+// only int allowed and answer will also be int
 void type_check_shift(nodeType* parent,nodeType* node)
 {
 	if(get_type(node)!=MY_INT)
@@ -108,7 +121,7 @@ void type_check_shift(nodeType* parent,nodeType* node)
 
 void type_check_division(nodeType* parent,nodeType* lhs,nodeType* rhs)
 {	
-	// first check div by 0
+	// first check div by 0 if present then should handle error GIGLAMESH
 	if(rhs->type==typeConI)
 	{
 		if(rhs->con_i.value==0)
@@ -145,6 +158,8 @@ void type_check_division(nodeType* parent,nodeType* lhs,nodeType* rhs)
 	yyerror("type mismatch in division\n");
 	exit(0);
 }
+
+// modulo only allows int operands,also need to check for div by 0
 void type_check_modulo(nodeType* parent,nodeType* lhs,nodeType* rhs)
 {
 	// first check div by 0
@@ -167,6 +182,8 @@ void type_check_modulo(nodeType* parent,nodeType* lhs,nodeType* rhs)
 		exit(0);
 	}
 }
+
+// prepost operations only allowed in float and int right now
 void type_check_prepostfix(nodeType* parent,nodeType* node)
 {
 	if(get_type(node)!=MY_INT && get_type(node)!=MY_FLOAT)
@@ -178,6 +195,7 @@ void type_check_prepostfix(nodeType* parent,nodeType* node)
 	return;
 }
 
+// used to check if node is of identifer type
 void type_check_typeid(nodeType* node)
 {
 	if(node->type!=typeId)
@@ -187,9 +205,10 @@ void type_check_typeid(nodeType* node)
 	}
 	return;
 }
+
+// GIGLAMESH
 void type_check_invoc(nodeType* parent,nodeType* func_name,nodeType* arg_list)
 {
-	printf("izbdidsadbdis\n");
 	char * pch;
 	char* sign;
 	sign = strdup(func_name->id.symrec->signature);
@@ -201,6 +220,8 @@ void type_check_invoc(nodeType* parent,nodeType* func_name,nodeType* arg_list)
 	printf ("Splitting string \"%s\" into tokens:\n",func_name->id.symrec->signature);
 	pch = strtok (sign," ::");
 	int count = 0;
+	
+	// first enter return type value into parent node
 	if(strcmp(pch,"int32")==0)	
 	{
 		printf("PCH IS %s\n",pch);
@@ -210,6 +231,11 @@ void type_check_invoc(nodeType* parent,nodeType* func_name,nodeType* arg_list)
 	{
 		printf("PCH IS %s\n",pch);
 		parent->opr.datatype = MY_FLOAT;
+	}
+	else if(strcmp(pch,"void")==0)	
+	{
+		printf("PCH IS %s\n",pch);
+		parent->opr.datatype = MY_VOID;
 	}
 	
 	while (pch != NULL)
@@ -229,15 +255,16 @@ void type_check_invoc(nodeType* parent,nodeType* func_name,nodeType* arg_list)
 	}
 }	
 
+// GIGLAMESH
 void type_check_array_invoc(nodeType* parent,nodeType* array_name)
 {
-	struct sym_record*p = search(current_st,array_name->id.symrec->sym_name);
+	struct sym_record*p = search(current_st,array_name->id.symrec->sym_name);	// find array in sym_tab
 	if(p==NULL)
 	{
 		yyerror("  Array not declared\n");
 		exit(0);
 	}
-	parent->opr.datatype = p->type;
+	parent->opr.datatype = p->type;			// assign array's data type to parent node
 }	
 
 
