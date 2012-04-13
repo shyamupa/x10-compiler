@@ -120,6 +120,7 @@ when		{yycolumn=yycolumn+yyleng;return WHEN;}
 "["			{yycolumn=yycolumn+yyleng;return '[';}
 "]"			{yycolumn=yycolumn+yyleng;return ']';}
 ":"			{yycolumn=yycolumn+yyleng;return ':';}
+"."			{yycolumn=yycolumn+yyleng;return '.';}
 val			{yycolumn=yycolumn+yyleng;return VAL;}
 
 int			{yycolumn=yycolumn+yyleng;return TYPE_INT;}

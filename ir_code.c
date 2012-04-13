@@ -8,12 +8,17 @@ extern FILE* output;
 extern int queue_length;	//the number of case statements minus one
 extern int idno;
 
+
 // global variables
 char mybuf[100];
 int main_found=0;
 int main_was_found=0;
+
 int seen_bool_flow=0;
 int in_assign=0;
+int seen_bool_and_or=0;
+int relop_flow = 0;
+
 int in_func=0;
 int prepost_put = 0;
 nodeType* root;
@@ -24,7 +29,19 @@ char break_label[16];
 char curr_class_name[64];
 int loop_flag = 0;
 int switch_flag = 0;
+char continue_label[16];
+char thread_id[16];
 
+void ir_continue(nodeType* n)
+{
+	if(loop_flag > 0)		// check if any loop or switch is active (must be active for valid break)
+	{
+		printf("br %s\n",continue_label);			
+		fprintf(output,"br %s\n",continue_label);
+	}
+	else
+		printf("STRAY BREAK\n");
+}	
 
 void ir_fieldlist(nodeType* n)
 {
@@ -52,6 +69,76 @@ void ir_fieldlist(nodeType* n)
 	ir_fieldlist(rc);		// finally print the right child (actually just a formal arg)
 	return;
 }
+//~ // Working correctly
+//~ // generates code for class decln
+//~ void ir_class_decln(nodeType* n)
+//~ {
+	//~ nodeType* mod=get_operand(n,0);
+	//~ nodeType* class_name=get_operand(n,1);
+	//~ nodeType* field_list=get_operand(n,2);
+	//~ nodeType* body=get_operand(n,3);
+	//~ strcpy(curr_class_name,class_name->id.symrec->sym_name);
+	//~ printf("%s IS CURR CLASS\n",curr_class_name);
+	//~ printf(".class ");
+	//~ fprintf(output,".class ");
+	//~ switch(mod->con_i.value)		// print modifer info
+	//~ {
+		//~ case modPUBLIC:
+			//~ printf("public "); 
+			//~ fprintf(output,"public "); 
+			//~ break;
+		//~ case modPRIVATE:
+			//~ printf("private "); 
+			//~ fprintf(output,"private "); 
+			//~ break;
+		//~ case modPROTECTED:
+			//~ printf("protected "); 
+			//~ fprintf(output,"protected "); 
+			//~ break;				
+	//~ }
+	//~ // rest is basically the default class constructor which inherits the object class
+	//~ printf("auto ansi beforefieldinit "); 
+	//~ fprintf(output,"auto ansi beforefieldinit "); 
+	//~ printf("%s ",class_name->id.symrec->sym_name);
+	//~ fprintf(output,"%s ",class_name->id.symrec->sym_name);
+	//~ printf("extends [mscorlib]System.Object\n");
+	//~ fprintf(output,"extends [mscorlib]System.Object\n");
+	//~ printf("{\n");
+	//~ fprintf(output,"{\n");
+	//~ 
+	//~ ir_fieldlist(field_list);		// .field public type fieldname \n .field public type fieldname
+	//~ printf("\n");
+	//~ fprintf(output,"\n");
+	//~ 
+	//~ nodeType* p=body;
+	//~ nodeType* lc;
+	//~ while(p->opr.oper!=FUNC)
+	//~ {
+		//~ lc=get_operand(p,0);
+		//~ printf("%d is p's oper\n",p->opr.oper);
+		//~ p=lc;
+	//~ }
+	//~ printf("%d is p's oper\n",p->opr.oper);
+	//~ printf("%s is name\n",get_operand(p,1)->id.symrec->sym_name);
+	//~ 
+	//~ if(strcmp(curr_class_name,get_operand(p,1)->id.symrec->sym_name)==0)
+	//~ {
+		//~ printf("YES MAN\n");
+		//~ strcpy(class_name->id.symrec->signature,get_operand(p,1)->id.symrec->signature);
+		//~ printf("CLASS SIGNATURE %s \n",class_name->id.symrec->signature);
+		//~ ir_constructor(p);
+	//~ }
+	//~ else
+	//~ {
+		//~ default_constructor();
+	//~ }
+	//~ 
+	//~ generate(body);
+	//~ 
+	//~ printf("}\n");
+	//~ fprintf(output,"}\n");
+//~ }
+
 // Working correctly
 // generates code for class decln
 void ir_class_decln(nodeType* n)
@@ -60,7 +147,7 @@ void ir_class_decln(nodeType* n)
 	nodeType* class_name=get_operand(n,1);
 	nodeType* field_list=get_operand(n,2);
 	nodeType* body=get_operand(n,3);
-	strcpy(curr_class_name,class_name->id.symrec->sym_name);
+	strcpy(curr_class_name,class_name->id.symrec->sym_name);	//
 	printf("%s IS CURR CLASS\n",curr_class_name);
 	printf(".class ");
 	fprintf(output,".class ");
@@ -88,26 +175,27 @@ void ir_class_decln(nodeType* n)
 	fprintf(output,"extends [mscorlib]System.Object\n");
 	printf("{\n");
 	fprintf(output,"{\n");
-	
-	ir_fieldlist(field_list);		// .field public type fieldname \n .field public type fieldname
+	// to print field info now 
+	ir_fieldlist(field_list);		// .field public type fieldname 
 	printf("\n");
 	fprintf(output,"\n");
-	
+	// to search for constructor method
 	nodeType* p=body;
 	nodeType* lc;
-	while(p->opr.oper!=FUNC)
+	while(p->opr.oper!=FUNC)	// iterate till you get left most function
 	{
-		lc=get_operand(p,0);
+		lc=get_operand(p,0);	// look at left child	
 		printf("%d is p's oper\n",p->opr.oper);
 		p=lc;
 	}
-	printf("%d is p's oper\n",p->opr.oper);
-	printf("%s is name\n",get_operand(p,0)->id.symrec->sym_name);
+	printf("%d is p's oper\n",p->opr.oper);		
+	printf("%s is name\n",get_operand(p,1)->id.symrec->sym_name);	// get name of first child
 	
-	if(strcmp(curr_class_name,get_operand(p,0)->id.symrec->sym_name)==0)
+	if(strcmp(curr_class_name,get_operand(p,1)->id.symrec->sym_name)==0)	// constructor found
 	{
 		printf("YES MAN\n");
-		strcpy(class_name->id.symrec->signature,get_operand(p,0)->id.symrec->signature);
+		// copy constr sign into class symrec so that class also has signature
+		strcpy(class_name->id.symrec->signature,get_operand(p,1)->id.symrec->signature);
 		printf("CLASS SIGNATURE %s \n",class_name->id.symrec->signature);
 		ir_constructor(p);
 	}
@@ -121,13 +209,50 @@ void ir_class_decln(nodeType* n)
 	printf("}\n");
 	fprintf(output,"}\n");
 }
+
+
 // expects a fundef node
+//~ void ir_constructor(nodeType* n)
+//~ {
+	//~ nodeType* fun_name = get_operand(n,0);	
+	//~ nodeType* formal_arguments = get_operand(n,1);
+	//~ nodeType* return_type =get_operand(n,2);
+	//~ nodeType* compound =get_operand(n,3);
+	//~ printf("GIGGITY %s\n",fun_name->id.symrec->signature);
+	//~ 
+	//~ printf(".method public hidebysig specialname rtspecialname instance default void '.ctor' (");
+	//~ fprintf(output,".method public hidebysig specialname rtspecialname instance default void '.ctor' (");
+	//~ print_formal_args(formal_arguments);
+	//~ fprintf(output,")  cil managed \n");
+   //~ 
+    //~ printf("{\n");
+    //~ fprintf(output,"{\n");
+	//~ 
+	//~ printf("\t.maxstack %d\n",MAXSTACK_SIZE);
+	//~ fprintf(output,"\t.maxstack %d\n",MAXSTACK_SIZE);
+	//~ printf("\tldarg.0\n");
+	//~ fprintf(output,"\tldarg.0\n");
+	//~ printf("\tcall instance void object::'.ctor'()\n");
+	//~ fprintf(output,"\tcall instance void object::'.ctor'()\n");
+	//~ printf("\tldarg.0\n");
+	//~ fprintf(output,"\tldarg.0\n");
+	//~ 
+	//~ generate(compound);
+	//~ printf("\tret\n"); 
+	//~ fprintf(output,"\tret\n"); 
+    //~ printf("}\n");
+    //~ fprintf(output,"}\n");
+//~ }
+
+// expects a fundef node 
+// constructor cant be static 
+// so static node will have no relevance here
 void ir_constructor(nodeType* n)
 {
-	nodeType* fun_name = get_operand(n,0);	
-	nodeType* formal_arguments = get_operand(n,1);
-	nodeType* return_type =get_operand(n,2);
-	nodeType* compound =get_operand(n,3);
+	nodeType* fun_name = get_operand(n,1);	
+	nodeType* formal_arguments = get_operand(n,2);
+	nodeType* return_type =get_operand(n,3);
+	nodeType* compound =get_operand(n,4);
 	printf("GIGGITY %s\n",fun_name->id.symrec->signature);
 	
 	printf(".method public hidebysig specialname rtspecialname instance default void '.ctor' (");
@@ -144,16 +269,16 @@ void ir_constructor(nodeType* n)
 	fprintf(output,"\tldarg.0\n");
 	printf("\tcall instance void object::'.ctor'()\n");
 	fprintf(output,"\tcall instance void object::'.ctor'()\n");
-	printf("\tldarg.0\n");
-	fprintf(output,"\tldarg.0\n");
+		
+	generate(compound);			// this needs some special changes
 	
-	generate(compound);
 	printf("\tret\n"); 
 	fprintf(output,"\tret\n"); 
     printf("}\n");
     fprintf(output,"}\n");
 }
-// prints default constructor
+
+// prints default constructor which is public (obvsly)
 void default_constructor()
 {
 	printf(".method public hidebysig specialname rtspecialname instance default void '.ctor' ()  cil managed \n");
@@ -171,6 +296,25 @@ void default_constructor()
     printf("}\n");
     fprintf(output,"}\n");
 }
+
+//~ // prints default constructor
+//~ void default_constructor()
+//~ {
+	//~ printf(".method public hidebysig specialname rtspecialname instance default void '.ctor' ()  cil managed \n");
+    //~ fprintf(output,".method public hidebysig specialname rtspecialname instance default void '.ctor' ()  cil managed \n");
+    //~ printf("{\n");
+    //~ fprintf(output,"{\n");
+	//~ printf("\t.maxstack 8\n");
+	//~ fprintf(output,"\t.maxstack 8\n");
+	//~ printf("\tldarg.0\n");
+	//~ fprintf(output,"\tldarg.0\n");
+	//~ printf("\tcall instance void object::'.ctor'()\n");
+	//~ fprintf(output,"\tcall instance void object::'.ctor'()\n");
+	//~ printf("\tret\n"); 
+	//~ fprintf(output,"\tret\n"); 
+    //~ printf("}\n");
+    //~ fprintf(output,"}\n");
+//~ }
 
 // Working correctly
 void ir_class_decln_list(nodeType* n)
@@ -243,9 +387,25 @@ void ir_assign(nodeType* n)
 				printf("stelem.i4\n");
 				fprintf(output,"stelem.i4\n");
 			}
+			else if(unary_exp->opr.oper==FIELD)			// assign to field  THIS PART NEEDS TO BE INCLUDED IN LATER CASES
+			{
+				
+				ir_load_ref(unary_exp);			// first load the obj ref
+				generate(ass_exp);				// generate whatever is to be assigned
+				print_store_var(get_operand(unary_exp,1));		// store in field using stfld
+				
+			}
 			else
-			{		
+			{	
+				// this will only be used inside constr for field vars
+				if(unary_exp->id.symrec->is_field==1)	// inside constructor to print 
+				{
+					printf("ldarg.0\n");			// load obj ref which is always 0 in constr
+					fprintf(output,"ldarg.0\n");		
+				}
+				prepost_put = 1;	
 				generate(ass_exp);
+				prepost_put = 0;
 				print_store_var(unary_exp);		// use store_var function to decide instruction
 			}	
 			break;
@@ -262,9 +422,12 @@ void ir_assign(nodeType* n)
 			}
 			else
 			{			
-				
 				print_load_var(unary_exp);		// first load to perform add
+				
+				prepost_put = 1;
 				generate(ass_exp);
+				prepost_put = 0;
+				
 				printf("add\n");
 				fprintf(output,"add\n");
 				print_store_var(unary_exp);		// then store value back
@@ -276,7 +439,11 @@ void ir_assign(nodeType* n)
 			{	
 				ir_array_lhs(unary_exp);
 				ir_array_rhs(unary_exp);
+				
+				//~ prepost_put = 1;
 				generate(ass_exp);
+				//~ prepost_put = 0;
+				
 				printf("sub\n");
 				fprintf(output,"sub\n");
 				printf("stelem.i4\n");
@@ -285,7 +452,11 @@ void ir_assign(nodeType* n)
 			else
 			{			
 				print_load_var(unary_exp);
+				
+				prepost_put = 1;
 				generate(ass_exp);
+				prepost_put = 0;
+				
 				printf("sub\n");
 				fprintf(output,"sub\n");
 				print_store_var(unary_exp);
@@ -296,7 +467,11 @@ void ir_assign(nodeType* n)
 			{	
 				ir_array_lhs(unary_exp);
 				ir_array_rhs(unary_exp);
+				
+				//~ prepost_put = 1;
 				generate(ass_exp);
+				//~ prepost_put = 0;
+				
 				printf("mul\n");
 				fprintf(output,"mul\n");
 				printf("stelem.i4\n");
@@ -304,9 +479,12 @@ void ir_assign(nodeType* n)
 			}
 			else
 			{			
-				
 				print_load_var(unary_exp);
+				
+				prepost_put = 1;
 				generate(ass_exp);
+				prepost_put = 0;
+				
 				printf("mul\n");
 				fprintf(output,"mul\n");
 				print_store_var(unary_exp);
@@ -318,7 +496,11 @@ void ir_assign(nodeType* n)
 			{	
 				ir_array_lhs(unary_exp);
 				ir_array_rhs(unary_exp);
+				
+				//~ prepost_put = 1;
 				generate(ass_exp);
+				//~ prepost_put = 0;
+				
 				printf("div\n");
 				fprintf(output,"div\n");
 				printf("stelem.i4\n");
@@ -326,9 +508,12 @@ void ir_assign(nodeType* n)
 			}
 			else
 			{			
-				
 				print_load_var(unary_exp);
+				
+				prepost_put = 1;
 				generate(ass_exp);
+				prepost_put = 0;
+				
 				printf("div\n");
 				fprintf(output,"div\n");
 				print_store_var(unary_exp);
@@ -569,36 +754,75 @@ void insert_signature(nodeType* fun_name,nodeType* formalarg,nodeType* return_ty
 
 void ir_fun_def(nodeType* n)
 {
-	nodeType* fun_name = get_operand(n,0);	
-	nodeType* formal_arguments = get_operand(n,1);
-	nodeType* return_type =get_operand(n,2);
-	nodeType* compound =get_operand(n,3);
+	nodeType* static_or_not = get_operand(n,0);	
+	nodeType* fun_name = get_operand(n,1);	
+	nodeType* formal_arguments = get_operand(n,2);
+	nodeType* return_type =get_operand(n,3);
+	nodeType* compound =get_operand(n,4);
 
-	if(strcmp(curr_class_name,fun_name->id.symrec->sym_name)==0)
+	if(strcmp(curr_class_name,fun_name->id.symrec->sym_name)==0)		// this function is some class's constructor method
 	{
-		return;
+		return;		// must have dealt with eariler so skip
 	}
 
-	// only static for time being
-	printf(".method static ");
-	fprintf(output,".method static ");
-	
-	print_type(return_type);
-	printf("%s",fun_name->id.symrec->sym_name);
-	fprintf(output,"%s",fun_name->id.symrec->sym_name);
-	if(strcmp(fun_name->id.symrec->sym_name,"main")==0)
+	// all are public right now
+	printf(".method public ");
+	fprintf(output,".method public ");
+	if(static_or_not->opr.oper!=EMPTY)		// if static node is not empty the method is static 
+	{
+		printf("static ");
+		fprintf(output,"static ");
+	}
+	if(strcmp(fun_name->id.symrec->sym_name,"main")==0)		// func name is main so main found
 	{
 		main_found=1;
 		main_was_found=1;
-	}	
+	}
+	
+	print_type(return_type);		// print return type info
+	printf("%s",fun_name->id.symrec->sym_name);	// print func name
+	fprintf(output,"%s",fun_name->id.symrec->sym_name);
+		
 	printf("(");
 	fprintf(output,"(");
-	print_formal_args(formal_arguments);
+	print_formal_args(formal_arguments);		// print formal args
 	printf(") cil managed\n");
 	fprintf(output,") cil managed\n");
 	in_func=1;
-	generate(compound);
+	generate(compound);				// generate the body
 }
+//~ void ir_fun_def(nodeType* n)
+//~ {
+	//~ nodeType* fun_name = get_operand(n,0);	
+	//~ nodeType* formal_arguments = get_operand(n,1);
+	//~ nodeType* return_type =get_operand(n,2);
+	//~ nodeType* compound =get_operand(n,3);
+//~ 
+	//~ if(strcmp(curr_class_name,fun_name->id.symrec->sym_name)==0)
+	//~ {
+		//~ return;
+	//~ }
+//~ 
+	//~ // only static for time being
+	//~ printf(".method static ");
+	//~ fprintf(output,".method static ");
+	//~ 
+	//~ print_type(return_type);
+	//~ printf("%s",fun_name->id.symrec->sym_name);
+	//~ fprintf(output,"%s",fun_name->id.symrec->sym_name);
+	//~ if(strcmp(fun_name->id.symrec->sym_name,"main")==0)
+	//~ {
+		//~ main_found=1;
+		//~ main_was_found=1;
+	//~ }	
+	//~ printf("(");
+	//~ fprintf(output,"(");
+	//~ print_formal_args(formal_arguments);
+	//~ printf(") cil managed\n");
+	//~ fprintf(output,") cil managed\n");
+	//~ in_func=1;
+	//~ generate(compound);
+//~ }
 
 void print_vardec_code(nodeType* Idlist,nodeType* Type)
 {
@@ -674,6 +898,7 @@ void ir_relop(nodeType* n)
 
 void ir_bool(nodeType* n)
 {
+	printf("in ir_bool\n");
 	nodeType* B1 = get_operand(n,0);
 	nodeType* B2 = get_operand(n,1);
 	char* label1;
@@ -740,15 +965,20 @@ void ir_fun_invoc(nodeType* n)
 {
 	nodeType* func_name = get_operand(n,0);
 	nodeType* explist = get_operand(n,1);
-	if((strcmp(func_name->id.symrec->sym_name,"println")!=0) && (strcmp(func_name->id.symrec->sym_name,"print")!=0))
+	if(func_name->opr.oper==FIELD)			// is of type objref.method and method is definitely not static
 	{
-		generate(explist);
-		printf("call ");
-		fprintf(output,"call ");
-		printf("%s ",func_name->id.symrec->signature);
-		fprintf(output,"%s \n",func_name->id.symrec->signature);
+			nodeType* objref=get_operand(func_name,0);
+			nodeType* method=get_operand(func_name,1);
+			
+			print_load_var(objref);		// load the obj ref first
+			
+			generate(explist);		// generate arguments
+			
+			printf("callvirt instance %s\n",method->id.symrec->signature);		// as method is not static so callvirt used
+			fprintf(output,"callvirt instance %s\n",method->id.symrec->signature);
+			
 	}
-	else if(strcmp(func_name->id.symrec->sym_name,"println")==0)  		// println function called
+	else if(strcmp(func_name->id.symrec->sym_name,"println")==0)  		// println function for ints
 	{
 		generate(explist);
 		printf("call void [mscorlib]System.Console::WriteLine");
@@ -761,7 +991,7 @@ void ir_fun_invoc(nodeType* n)
 		fprintf(output,"int32");
 		fprintf(output,")\n");
 	}
-	else if(strcmp(func_name->id.symrec->sym_name,"print")==0) 		// default print function called
+	else if(strcmp(func_name->id.symrec->sym_name,"print")==0) 		// print function for ints
 	{
 		generate(explist);
 		printf("call void [mscorlib]System.Console::Write");
@@ -773,8 +1003,72 @@ void ir_fun_invoc(nodeType* n)
 		fprintf(output,"(");
 		fprintf(output,"int32");
 		fprintf(output,")\n");
+	}
+	else if(strcmp(func_name->id.symrec->sym_name,"scanf")==0)		//scanf function for ints
+	{
+		printf("call string class [mscorlib]System.Console::ReadLine()\n");
+		printf("call int32 int32::Parse(string)\n");
+
+		fprintf(output,"call string class [mscorlib]System.Console::ReadLine()\n");
+		fprintf(output,"call int32 int32::Parse(string)\n");
+	}
+	else    				// method called must be static here
+	{
+		generate(explist);		//generate arguments
+		printf("call ");
+		fprintf(output,"call ");
+		printf("%s ",func_name->id.symrec->signature);		// call using signature
+		fprintf(output,"%s \n",func_name->id.symrec->signature);
 	}	
 }
+
+//~ void ir_fun_invoc(nodeType* n)
+//~ {
+	//~ nodeType* func_name = get_operand(n,0);
+	//~ nodeType* explist = get_operand(n,1);
+	//~ if(strcmp(func_name->id.symrec->sym_name,"println")==0)  		// println function called
+	//~ {
+		//~ generate(explist);
+		//~ printf("call void [mscorlib]System.Console::WriteLine");
+		//~ printf("(");
+		//~ printf("int32");
+		//~ printf(")\n");
+//~ 
+		//~ fprintf(output,"call void [mscorlib]System.Console::WriteLine");
+		//~ fprintf(output,"(");
+		//~ fprintf(output,"int32");
+		//~ fprintf(output,")\n");
+	//~ }
+	//~ else if(strcmp(func_name->id.symrec->sym_name,"print")==0) 		// print function called
+	//~ {
+		//~ generate(explist);
+		//~ printf("call void [mscorlib]System.Console::Write");
+		//~ printf("(");
+		//~ printf("int32");
+		//~ printf(")\n");
+//~ 
+		//~ fprintf(output,"call void [mscorlib]System.Console::Write");
+		//~ fprintf(output,"(");
+		//~ fprintf(output,"int32");
+		//~ fprintf(output,")\n");
+	//~ }
+	//~ else if(strcmp(func_name->id.symrec->sym_name,"scanf")==0)		//scanf function called
+	//~ {
+		//~ printf("call string class [mscorlib]System.Console::ReadLine()\n");
+		//~ printf("call int32 int32::Parse(string)\n");
+//~ 
+		//~ fprintf(output,"call string class [mscorlib]System.Console::ReadLine()\n");
+		//~ fprintf(output,"call int32 int32::Parse(string)\n");
+	//~ }
+	//~ else 
+	//~ {
+		//~ generate(explist);
+		//~ printf("call ");
+		//~ fprintf(output,"call ");
+		//~ printf("%s ",func_name->id.symrec->signature);
+		//~ fprintf(output,"%s \n",func_name->id.symrec->signature);
+	//~ }	
+//~ }
 
 void ir_return(nodeType* n)
 {
@@ -790,6 +1084,8 @@ void ir_return(nodeType* n)
 				
 void ir_relop_flow(nodeType* n)
 {
+	int temp_bool_flow = seen_bool_flow;
+	seen_bool_flow = 0;
 	nodeType* B1 = get_operand(n,0);
 	nodeType* B2 = get_operand(n,1);
 	generate(B1);
@@ -827,6 +1123,7 @@ void ir_relop_flow(nodeType* n)
 		default:
 			printf("Relational Flow default\n");
 	}
+	seen_bool_flow = temp_bool_flow;
 }
 void ir_if(nodeType* n)
 {
@@ -839,9 +1136,11 @@ void ir_if(nodeType* n)
 	strcat(stmt->opr.next,n->opr.next);
 	printf("expr true label:%s\n",get_T(expr));
 	printf("expr false label:%s\n",get_F(expr));
-	seen_bool_flow = 1;
+	
+	seen_bool_flow = 1;prepost_put = 1;
 	generate(expr);
-	seen_bool_flow = 0;
+	seen_bool_flow = 0;prepost_put = 0;
+	
 	printf("%s:\n",get_T(expr));
 	fprintf(output,"%s:\n",get_T(expr));
 	generate(stmt);
@@ -860,9 +1159,9 @@ void ir_if_else(nodeType* n)
 	strcpy(stmt1->opr.next,n->opr.next);
 	strcpy(stmt2->opr.next,n->opr.next);
 	
-	seen_bool_flow = 1;
+	seen_bool_flow = 1;prepost_put = 1;
 	generate(expr);
-	seen_bool_flow = 0;
+	seen_bool_flow = 0;prepost_put = 0;
 	
 	printf("%s:\n",get_T(expr));
 	fprintf(output,"%s:\n",get_T(expr));
@@ -872,7 +1171,40 @@ void ir_if_else(nodeType* n)
 	printf("%s:\n",get_F(expr));
 	fprintf(output,"%s:\n",get_F(expr));
 	generate(stmt2);
+}	
+void ir_ternary(nodeType* n)
+{
+	nodeType* expr = get_operand(n,0);
+	nodeType* stmt1 = get_operand(n,1);
+	nodeType* stmt2 = get_operand(n,2);
+	set_T(expr,newlabel());
+	set_F(expr,newlabel());
+	memset(stmt1->opr.next,0,16);
+	memset(stmt2->opr.next,0,16);
+	memset(n->opr.next,0,16);
+	strcpy(stmt1->opr.next,n->opr.next);
+	strcpy(stmt2->opr.next,n->opr.next);
+	strcpy(n->opr.next,newlabel());
+	//printf("n->opr.next is %s\n",n->opr.next);
 	
+	seen_bool_flow = 1;
+	generate(expr);
+	seen_bool_flow = 0;
+	
+	printf("%s:\n",get_T(expr));
+	fprintf(output,"%s:\n",get_T(expr));
+	prepost_put = 1;
+	generate(stmt1);
+	prepost_put = 0;
+	printf("br.s %s\n ",n->opr.next);
+	fprintf(output,"br.s %s\n",n->opr.next);
+	printf("%s:\n",get_F(expr));
+	fprintf(output,"%s:\n",get_F(expr));
+	prepost_put = 1;
+	generate(stmt2);
+	prepost_put = 0;
+	printf("%s:\n",n->opr.next);
+	fprintf(output,"%s:\n",n->opr.next);
 }	
 void ir_while(nodeType* n)
 {
@@ -887,9 +1219,11 @@ void ir_while(nodeType* n)
 	strcpy(stmt->opr.next,begin);
 	printf("%s:\n",begin);
 	fprintf(output,"%s:\n",begin);
-	seen_bool_flow = 1;
+	
+	seen_bool_flow = 1;prepost_put = 1;
 	generate(expr);
-	seen_bool_flow = 0;
+	seen_bool_flow = 0;prepost_put = 0;
+	
 	printf("%s:\n",get_T(expr));
 	fprintf(output,"%s:\n",get_T(expr));
 
@@ -900,9 +1234,18 @@ void ir_while(nodeType* n)
 	memset(break_label,0,16);
 	loop_flag = loop_flag + 1;
 	strcat(break_label,n->opr.next);
-	//####################
+	//#####for continue statement############
+	char initial_continue_label[16];
+	memset(initial_continue_label,0,16);
+	strcpy(initial_continue_label,continue_label);
+	memset(continue_label,0,16);
+	strcpy(continue_label,begin);
+	printf("CONTINUE LABEL: %s\n",continue_label);
+	//#######################################
+
 	
 	generate(stmt);
+	
 	printf("br.s %s\n ",begin);
 	fprintf(output,"br.s %s\n",begin);
 
@@ -910,6 +1253,8 @@ void ir_while(nodeType* n)
 	loop_flag = loop_flag - 1;
 	memset(break_label,0,16);
 	strcat(break_label,initial_break_label);
+	memset(continue_label,0,16);
+	strcpy(continue_label,initial_continue_label);	
 }	
 	
 void ir_bool_flow(nodeType* n)
@@ -929,11 +1274,15 @@ void ir_bool_flow(nodeType* n)
 		generate(B1);
 		printf("%s:",get_F(B1)); 
 		fprintf(output,"%s:",get_F(B1)); 
+		printf("seen_bool_flow : %d\n",seen_bool_flow);
 		generate(B2);
 		break;
 	case BOOL_EQ:
+		//the rule is to load value of B1 and B2 on stack then use beq to jump accordingly so we have to switch of seen_bool_flow flag and restart later.
+		seen_bool_flow = 0;
 		generate(B1);
 		generate(B2);
+		seen_bool_flow = 1;
 		printf("MATCHED BOOL_EQ in ir_relop_flow\n");
 		printf("beq %s\n",get_T(n));
 		fprintf(output,"beq %s\n",get_T(n));
@@ -941,8 +1290,12 @@ void ir_bool_flow(nodeType* n)
 		fprintf(output,"br %s\n",get_F(n));
 		break;
 	case NEQ:
+		printf("NOT EQUAL TO\n");
+		//the rule is to load value of B1 and B2 on stack then use bne.un to jump accordingly so we have to switch of seen_bool_flow flag and restart later.
+		seen_bool_flow = 0;
 		generate(B1);
 		generate(B2);
+		seen_bool_flow = 1;
 		printf("MATCHED NEQ in ir_relop_flow\n");
 		printf("bne.un %s\n",get_T(n));
 		fprintf(output,"bne.un %s\n",get_T(n));
@@ -989,21 +1342,21 @@ void ir_stmtlist(nodeType* n)
 	//~ free(n);
 }
 
-void ir_asynch_list(nodeType* n)
+char* ir_async(nodeType* n)
 {
 	printf("Entered Async\n");
 	nodeType* func = get_operand(n,0);
 	nodeType* fun_name = get_operand(func,0);
 	char* sign,*pch;
 	sign = strdup(fun_name->id.symrec->signature);
-	
-	printf(".locals init (class [mscorlib]System.Threading.Thread V%d)\n",idno);
-	fprintf(output,".locals init (class [mscorlib]System.Threading.Thread V%d)\n",idno);
+	memset(thread_id,0,16);
+	strcpy(thread_id,newuid());
+	printf(".locals init (class [mscorlib]System.Threading.Thread %s)\n",thread_id);
+	fprintf(output,".locals init (class [mscorlib]System.Threading.Thread %s)\n",thread_id);
 	printf("ldnull\n");
 	fprintf(output,"ldnull\n");
 	printf("ldftn ");
 	fprintf(output,"ldftn ");
-	
 	
 	if(strcmp(sign,"")==0)	
 		return;	
@@ -1019,48 +1372,71 @@ void ir_asynch_list(nodeType* n)
 	fprintf(output,"%s",fun_name->id.symrec->sym_name);
 	printf("()\n");
 	fprintf(output,"()\n");
-	
 	printf("newobj instance void class [mscorlib]System.Threading.ThreadStart::'.ctor'(object, native int)\n");
 	fprintf(output,"newobj instance void class [mscorlib]System.Threading.ThreadStart::'.ctor'(object, native int)\n");
 	printf("newobj instance void class [mscorlib]System.Threading.Thread::'.ctor'(class [mscorlib]System.Threading.ThreadStart)\n");
 	fprintf(output,"newobj instance void class [mscorlib]System.Threading.Thread::'.ctor'(class [mscorlib]System.Threading.ThreadStart)\n");
-	printf("stloc V%d\n",idno); 
-	fprintf(output,"stloc V%d\n",idno); 
-	printf("ldloc V%d\n",idno); 
-	fprintf(output,"ldloc V%d\n",idno); 
+	printf("stloc %s\n",thread_id); 
+	fprintf(output,"stloc %s\n",thread_id); 
+	printf("ldloc %s\n",thread_id); 
+	fprintf(output,"ldloc %s\n",thread_id); 
 	printf("callvirt instance void class [mscorlib]System.Threading.Thread::Start()\n");
 	fprintf(output,"callvirt instance void class [mscorlib]System.Threading.Thread::Start()\n");
-	idno++;
+	return thread_id;
 }
 
-//~ void ir_for(nodeType* n)
-//~ {
-	//~ nodeType* initialize = get_operand(n,0);
-	//~ nodeType* expr = get_operand(n,1);
-	//~ nodeType* increament = get_operand(n,2);
-	//~ nodeType* stmt = get_operand(n,3);
-	//~ char initializenext[16], begin[16];
-	//~ memset(initializenext,0,16);
-	//~ memset(begin,0,16);
-	//~ strcat(initializenext,newlabel());
-	//~ strcat(begin,newlabel());
-	//~ set_T(expr,begin);
-	//~ set_F(expr,n->opr.next);
-	//~ generate(initialize);
-	//~ 
-	//~ printf("br.s %s\n",initializenext);
-	//~ fprintf(output,"br.s %s\n",initializenext);
-	//~ printf("%s: \n",begin);
-	//~ fprintf(output,"%s: ",begin);
-	//~ generate(stmt);
-	//~ generate(increament);
-	//~ printf("%s: ",initializenext);
-	//~ fprintf(output,"%s: ",initializenext);
-	//~ seen_bool_flow = 1;
-	//~ generate(expr);
-	//~ seen_bool_flow = 0;
-//~ }	
+void ir_finish(nodeType* n)
+{
+	//the first child node of n would be a ASYNC_LIST node or ASYNC node...
+	printf("In finish\n");
+	nodeType* async_stmt_list = get_operand(n,0);
+	char thread_id[16];
+	memset(thread_id,0,16);
+	if(async_stmt_list->opr.oper == ASYNC)
+		{
+			printf("single async in finish\n");
+			strcpy(thread_id,ir_async(async_stmt_list));
+			printf("ldloc %s\n",thread_id); 
+			fprintf(output,"ldloc %s\n",thread_id); 
+			//the below lines perform thread.join operation of the thread just started
+			printf("callvirt instance void class [mscorlib]System.Threading.Thread::Join()\n");
+			fprintf(output,"callvirt instance void class [mscorlib]System.Threading.Thread::Join()\n");
+		}
+	else generate(async_stmt_list);
+}	
 
+void ir_async_stmt_list(nodeType* n)
+{
+	printf("In ir_async_stmt_list\n");
+	nodeType* async_stmt = get_operand(n,0);
+	nodeType* async_stmt_list = get_operand(n,1);
+	char thread_id[16];  //since X10 does not associate explicit thread id with a thread during async we generate one explicitly for code gen and store it in thread_id..
+	nodeType* temp_node;
+	temp_node = n;
+	while(n->opr.oper == ASYNC_LIST)
+	{
+		async_stmt = get_operand(n,0);
+		async_stmt_list = get_operand(n,1);
+		printf("TRTRTRTR\n");
+		memset(thread_id,0,16);
+		strcpy(thread_id , ir_async(async_stmt));
+		printf("ldloc %s\n",thread_id); 
+		fprintf(output,"ldloc %s\n",thread_id); 
+		//the below lines perform thread.join operation of the thread just started
+		printf("callvirt instance void class [mscorlib]System.Threading.Thread::Join()\n");
+		fprintf(output,"callvirt instance void class [mscorlib]System.Threading.Thread::Join()\n");
+		n = async_stmt_list;
+	}
+	//the loop would break when n->oper.opr is ASYNC so perform its codegen below...
+	memset(thread_id,0,16);
+	strcpy(thread_id , ir_async(async_stmt_list));
+	printf("ldloc %s\n",thread_id); 
+	fprintf(output,"ldloc %s\n",thread_id); 
+	printf("callvirt instance void class [mscorlib]System.Threading.Thread::Join()\n");
+	fprintf(output,"callvirt instance void class [mscorlib]System.Threading.Thread::Join()\n");
+	memset(thread_id,0,16);
+	
+}
 void ir_for(nodeType* n)
 {
 	nodeType* initialize = get_operand(n,0);
@@ -1074,28 +1450,42 @@ void ir_for(nodeType* n)
 	strcat(begin,newlabel());
 	set_T(expr,begin);
 	set_F(expr,n->opr.next);
-	generate(initialize);
+	generate(initialize);				//generate code for initialization expression
 	
 	//##for break statement##
 	char initial_break_label[16];
 	memset(initial_break_label,0,16);
-	strcat(initial_break_label,break_label);
+	strcpy(initial_break_label,break_label);
 	memset(break_label,0,16);
-	strcat(break_label,newlabel());
+	strcpy(break_label,newlabel());
+	//#####for continue statement############
+	char initial_continue_label[16];
+	memset(initial_continue_label,0,16);
+	strcpy(initial_continue_label,continue_label);
+	memset(continue_label,0,16);
+	strcpy(continue_label,newlabel());
+	//#######################################
 	loop_flag = loop_flag + 1;
-	//####################
-	
+
 	printf("br %s\n",initializenext);
 	fprintf(output,"br %s\n",initializenext);
 	printf("%s: \n",begin);
 	fprintf(output,"%s: ",begin);
+	
 	generate(stmt);
+	
 	prepost_put = 0;
+	printf("%s:\n",continue_label);
+	fprintf(output,"%s:\n",continue_label);
+	
 	generate(increament);
+	
 	printf("%s: ",initializenext);
 	fprintf(output,"%s: ",initializenext);
 	seen_bool_flow = 1;
+	
 	generate(expr);
+	
 	seen_bool_flow = 0;
 	printf("%s: \n",break_label);
 	fprintf(output,"%s: \n",break_label);
@@ -1103,8 +1493,9 @@ void ir_for(nodeType* n)
 	//for break statement
 	loop_flag = loop_flag - 1;
 	memset(break_label,0,16);
-	strcat(break_label,initial_break_label);
-
+	strcpy(break_label,initial_break_label);
+	memset(continue_label,0,16);
+	strcpy(continue_label,initial_continue_label);
 }
 
 void ir_array_declaration(nodeType* n)
@@ -1316,9 +1707,9 @@ void ir_prefix(nodeType* n)
 {	
 	nodeType* operator = get_operand(n,0);
 	nodeType* unary_exp = get_operand(n,1);
-	printf("IN IR PREFIX %d, PP = %d\n",operator->con_i.value,MY_PP);
+	printf("IN IR PREFIX %d, PP = %d, Prepost flag = %d\n",operator->con_i.value,MY_PP, prepost_put);
 	
-	generate(unary_exp);
+	print_load_var(unary_exp);
 	printf("ldc.i4 1\n");			// load 1 to add or sub
 	fprintf(output,"ldc.i4 1\n");
 	
@@ -1361,6 +1752,32 @@ void ir_postfix(nodeType* n)
 	print_store_var(postfix_exp);
 }
 
+//~ void ir_obj(nodeType* n)
+//~ {
+	//~ nodeType* ident = get_operand(n,0);	// ident	
+	//~ nodeType* class_name = get_operand(n,1);	// class name
+	//~ nodeType* initexplist = get_operand(n,2);	// class name
+	//~ 
+	//~ printf(".locals init( class\n");
+	//~ fprintf(output,".locals init( class");
+	//~ 
+	//~ printf(" %s ",class_name->id.symrec->sym_name);
+	//~ fprintf(output," %s ",class_name->id.symrec->sym_name);
+	//~ 
+	//~ printf(" %s) \n",ident->id.symrec->uid); 
+	//~ fprintf(output," %s) \n",ident->id.symrec->uid);
+	//~ 
+	//~ ir_explist(initexplist);
+	//~ 
+	//~ printf("newobj instance %s\n",class_name->id.symrec->signature); 
+	//~ fprintf(output,"newobj instance %s\n",class_name->id.symrec->signature);	
+	//~ 
+	//~ 
+	//~ printf("stloc %s \n",ident->id.symrec->uid); 
+	//~ fprintf(output,"stloc %s \n",ident->id.symrec->uid);
+//~ 
+//~ }
+
 void ir_obj(nodeType* n)
 {
 	nodeType* ident = get_operand(n,0);	// ident	
@@ -1370,19 +1787,50 @@ void ir_obj(nodeType* n)
 	printf(".locals init( class\n");
 	fprintf(output,".locals init( class");
 	
-	printf(" %s ",class_name->id.symrec->sym_name);
+	printf(" %s ",class_name->id.symrec->sym_name);		// .locals init(class ClassName V12)
 	fprintf(output," %s ",class_name->id.symrec->sym_name);
 	
 	printf(" %s) \n",ident->id.symrec->uid); 
 	fprintf(output," %s) \n",ident->id.symrec->uid);
 	
-	ir_explist(initexplist);
+	// generate arguments
+	generate(initexplist);
 	
-	printf("newobj instance %s\n",class_name->id.symrec->signature); 
-	fprintf(output,"newobj instance %s\n",class_name->id.symrec->signature);	
-	
+	if(strlen(class_name->id.symrec->signature)!=0)		
+	{
+		// signature found means non default constr specified
+		printf("NULL NAHI MILA\n");
+		printf("newobj instance %s\n",class_name->id.symrec->signature); 
+		fprintf(output,"newobj instance %s\n",class_name->id.symrec->signature);	
+	}
+	else
+	{
+		// use default constr
+		printf("newobj instance void class %s::'.ctor'()\n",class_name->id.symrec->sym_name); 
+		fprintf(output,"newobj instance void class %s::'.ctor'()\n",class_name->id.symrec->sym_name);	
+	}
 	
 	printf("stloc %s \n",ident->id.symrec->uid); 
 	fprintf(output,"stloc %s \n",ident->id.symrec->uid);
 
+}
+
+// expects a unary exp node which has FIELD as oper and loads the reference to object
+void ir_load_ref(nodeType* n)
+{
+	printf("IN IR_LOAD_REF\n");
+	nodeType* ident = get_operand(n,0);	// ident from ident.field	
+	printf("ldloc %s\n",ident->id.symrec->uid ); //	load the object reference
+	fprintf(output,"ldloc %s\n",ident->id.symrec->uid ); 
+}
+
+// to handle situations 
+void ir_method_invoc(nodeType* n)
+{
+	nodeType* ident = get_operand(n,0);	// ident	
+	nodeType* method = get_operand(n,1);	// method
+	nodeType* arglist = get_operand(n,2);	// arglist
+	ir_load_ref(n);
+	generate(arglist);
+	
 }

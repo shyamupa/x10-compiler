@@ -513,23 +513,36 @@ void print_store_var(nodeType* n)
 		}
 }
 
+
+
 // chooses correct instruction to load a variable which might be any of ldloc ldarg etc
 // NEED TO ADD FOR OBJECTS GIGLAMESH
 void print_load_var(nodeType* n)
 {
-	if(n->type != typeId)
+	if(n->type != typeId && n->opr.oper!=FIELD)	// neither ident nor field so error
 		{
+			printf("CASE 1\n");
 			printf("Trying to load a non variable \n");		// for safety against ldc.i4 needs
 			exit(0);
 		}
-	if(n->id.symrec->formal !=1 && n->id.symrec->is_field !=1)		// formal flag off so must be local
+	else if(n->opr.oper==FIELD)			// when field acc used in expr like a=obj.fval+1
+	{
+		printf("CASE 2\n");
+		nodeType* myid=get_operand(n,0);
+		nodeType* myfield=get_operand(n,1);
+		print_load_var(myid);			// load objref
+		print_load_var(myfield);		// load fld using ldfld
+	}	
+	else if(n->id.symrec->formal !=1 && n->id.symrec->is_field !=1)		// formal flag off and not field so must be local
 		{
+			printf("CASE 3\n");
 			printf("ldloc %s\n",n->id.symrec->uid);
 			fprintf(output,"ldloc %s\n",n->id.symrec->uid);
 		}
-	else if(n->id.symrec->is_field==1)
+	else if(n->id.symrec->is_field==1)		// is field of some class so use ldfld
 		{
-			printf("ldfld ");
+			printf("CASE 4\n");
+			printf("ldfld ");		
 			fprintf(output,"ldfld ");
 			print_type(n);
 			printf("%s::",n->id.symrec->in_st_of);
@@ -539,8 +552,44 @@ void print_load_var(nodeType* n)
 		}	
 	else 			// must be a local variable
 		{
+			printf("CASE 5\n");
 			printf("ldarg %s \n",n->id.symrec->uid);
 			fprintf(output,"ldarg %s \n",n->id.symrec->uid);
 		}
+	printf("LOAD VAR JOB IS DONE\n");	
 }	
+
+
+
+
+// chooses correct instruction to load a variable which might be any of ldloc ldarg etc
+// NEED TO ADD FOR OBJECTS GIGLAMESH
+//~ void print_load_var(nodeType* n)
+//~ {
+	//~ if(n->type != typeId)
+		//~ {
+			//~ printf("Trying to load a non variable \n");		// for safety against ldc.i4 needs
+			//~ exit(0);
+		//~ }
+	//~ if(n->id.symrec->formal !=1 && n->id.symrec->is_field !=1)		// formal flag off so must be local
+		//~ {
+			//~ printf("ldloc %s\n",n->id.symrec->uid);
+			//~ fprintf(output,"ldloc %s\n",n->id.symrec->uid);
+		//~ }
+	//~ else if(n->id.symrec->is_field==1)
+		//~ {
+			//~ printf("ldfld ");
+			//~ fprintf(output,"ldfld ");
+			//~ print_type(n);
+			//~ printf("%s::",n->id.symrec->in_st_of);
+			//~ fprintf(output,"%s::",n->id.symrec->in_st_of);
+			//~ printf("%s\n",n->id.symrec->sym_name);
+			//~ fprintf(output,"%s\n",n->id.symrec->sym_name);
+		//~ }	
+	//~ else 			// must be a local variable
+		//~ {
+			//~ printf("ldarg %s \n",n->id.symrec->uid);
+			//~ fprintf(output,"ldarg %s \n",n->id.symrec->uid);
+		//~ }
+//~ }	
 

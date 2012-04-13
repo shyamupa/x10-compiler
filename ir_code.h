@@ -25,7 +25,9 @@ void ir_case_stmt_list(nodeType* n);
 void ir_case_stmt(nodeType* n);
 void ir_class_decln(nodeType* n);
 void ir_class_decln_list(nodeType* n);
+void ir_constructor(nodeType* fundef);
 void ir_compound_stmt(nodeType* n);
+void default_constructor();
 void ir_default_stmt(nodeType* n);
 void ir_explist(nodeType* n);
 void ir_fun_def(nodeType* n);
@@ -41,11 +43,17 @@ void ir_relop(nodeType* n);
 void ir_relop_flow(nodeType* n);
 void ir_return(nodeType* n);
 void ir_stmtlist(nodeType* n);
+void ir_ternary(nodeType* n);
 void ir_var_dec(nodeType* n);
 void ir_while(nodeType* n);
 void ir_switch(nodeType* n);
-void default_constructor();
-void ir_constructor(nodeType* fundef);
+char* ir_async(nodeType* n);
+void ir_finish(nodeType* n);
+void ir_async_stmt_list(nodeType* n);
+void ir_continue(nodeType* n);
+void ir_load_ref(nodeType* n);
+void ir_method_invoc(nodeType* n);
+
 
 
 

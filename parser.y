@@ -54,6 +54,8 @@ int idno = 1;
 FILE* output;			// output file
 char* out_file;
 nodeType* root;
+int debug_flag=0;
+
 /*global variables*/
 
 %}
@@ -124,7 +126,7 @@ nodeType* root;
 %token RETURN DEF
 %token PUBLIC PRIVATE PROTECTED
 %token LT GT LE GE TRUE FALSE 
-%token ';' '{' '}' '(' ')' '[' ']' ':'
+%token ';' '{' '}' '(' ')' '[' ']' ':' '.'
 %token IDENT
 %token ARRAY ELLIPSIS ASSERT
 %token EQ PLUS_EQ MULT_EQ MINUS_EQ  DIV_EQ PP MM
@@ -137,6 +139,7 @@ nodeType* root;
 %type <nPtr> AssOp
 %type <nPtr> ArgExpList
 %type <nPtr> AsyncStmt
+%type <nPtr> AsyncStmtList
 %type <nPtr> BasicForStmt
 %type <nPtr> CaseStmt
 %type <nPtr> CaseStmtList
@@ -153,6 +156,7 @@ nodeType* root;
 %type <nPtr> exclusive_or_Expression
 %type <nPtr> Expression
 %type <nPtr> ExpressionStmt
+%type <nPtr> FinishStmt
 %type <nPtr> FormalArg
 %type <nPtr> FormalArgList
 %type <nPtr> FormalArgLIST
@@ -180,6 +184,7 @@ nodeType* root;
 %type <nPtr> shift_Expression
 %type <nPtr> StmtList
 %type <nPtr> Stmt 
+%type <nPtr> Static_or_not
 %type <nPtr> SelectionStmt
 %type <nPtr> Type
 %type <nPtr> TypeName   
@@ -204,6 +209,7 @@ Defn_or_Decln
 				current_st=new_sym_table(current_st);
 				install("println");
 				install("print");
+				install("scanf");
 				//printf("$$$$$$$$$$$$$$$$$$$$$$$$$$$$\n");
 			}	
 		}	
@@ -285,27 +291,33 @@ FuncDefnList
 	:FuncDefnList FuncDefn	{$$ = opr(FUNC_DEF_LIST,2,$1,$2);}
 	|FuncDefn		{$$ = $1;}
 	;
-
 FuncDefn
-	:DEF IDENT 	{
+	:DEF Static_or_not IDENT 	
+				{
 					printf("%s\n",yytext);
 					struct sym_record* s=install(yytext);
 					
-					s->is_proc_name=1;
-					$2 = id(s);
+					s->is_proc_name=1;		// is a func name
+					$3 = id(s);
+					
 					st_push(current_st);
 					current_st=new_sym_table(current_st);
 					current_st->owner_name=strdup(yytext);
 					s->my_st=current_st;
-					seen_func=1;
+					
+					seen_func=1;		// for compound stmt
 				}
-	'(' FormalArgLIST ')' ':' ReturnType {insert_signature($2,$5,$8);} CompoundStmt	
-														{ 												   
-														$$=opr(FUNC,4,$2,$5,$8,$10);
-														printf("FUNCTION MATCHED\n");
-														} 
+	'(' FormalArgLIST ')' ':' ReturnType {insert_signature($3,$6,$9);} 
+	CompoundStmt	
+				{ 												   
+					$$=opr(FUNC,5,$2,$3,$6,$9,$11);
+					printf("FUNCTION MATCHED\n");
+				} 
 	;
-
+Static_or_not
+	:STATIC		{$$=con_i(STATIC);}
+	|			{$$=empty(EMPTY);}
+	;
 ReturnType
 	:Type	{$$=$1;}
 	;
@@ -346,7 +358,13 @@ Stmt
 	|NonFuncDeclaration 	{$$=$1;}
 	|AsyncStmt		{$$=$1;}
 	|JumpStmt		{$$=$1;}
+	|FinishStmt		{$$=$1;}
+    
 	;
+
+FinishStmt
+		: FINISH '{' AsyncStmtList '}' ';' {$$ = opr(FINISH,1,$3);}  
+		;
 
 JumpStmt
 	:CONTINUE ';'		{$$=opr(CONTINUE,0);}	
@@ -355,8 +373,13 @@ JumpStmt
 	|RETURN Expression ';'	{$$=opr(RETURN,1,$2);}
 	;
 	
+AsyncStmtList
+			:AsyncStmt AsyncStmtList  {$$ = opr(ASYNC_LIST,2,$1,$2);/* beware right recursion here*/}
+			|AsyncStmt {$$ = $1; printf("HERE HERE!!\n");}
+			;
+
 AsyncStmt
-	:ASYNC '{' postfix_Expression ';' '}'		{ $$=opr(ASYNC,2,$3);}
+	:ASYNC '{' postfix_Expression ';' '}' ';'		{ $$=opr(ASYNC,2,$3);}
 	;
 	
 CompoundStmt	
@@ -435,6 +458,7 @@ VarDec
 				{
 					$$ = opr(ARRAY,3,$2,$6,$9);
 					dist_type($$);
+					type_check_array($6);
 				}
 	|VAL IDENT	{	
 					struct sym_record* s=install(yytext);
@@ -515,7 +539,7 @@ assignment_Expression
 
 conditional_Expression	
 	:logical_or_Expression	{$$=$1;}
-	|logical_or_Expression QM Expression ':' conditional_Expression	{$$=opr(TERNARY,3,$1,$3,$5);}
+	|logical_or_Expression QM Expression ':' conditional_Expression	{$$=opr(TERNARY,3,$1,$3,$5);type_check_ternary($$,$1,$3,$5);}
 	;
 
 logical_or_Expression	
@@ -588,12 +612,51 @@ unary_Expression
 	;
 postfix_Expression
 	: primary_Expression				{$$ = $1;}
-	| postfix_Expression '[' Expression ']'		{$$=opr(ARRAY_INVOC,2,$1,$3);type_check_array_invoc($$,$1);}
-	| postfix_Expression '('ArgExpList ')'		{$$=opr(INVOC,2,$1,$3);type_check_invoc($$,$1,$3);}
-	| postfix_Expression '(' ')'			{$$=opr(INVOC,2,$1,empty(EMPTY));}
-	| postfix_Expression '.' IDENT 							
-	| postfix_Expression PP			{$$=opr(POSTFIX,2,$1,con_i(MY_PP));type_check_prepostfix($$,$1);}
-	| postfix_Expression MM			{$$=opr(POSTFIX,2,$1,con_i(MY_MM));type_check_prepostfix($$,$1);}
+	| postfix_Expression '[' Expression ']'
+										{
+											$$=opr(ARRAY_INVOC,2,$1,$3);
+											type_check_array_invoc($$,$1,$3);
+										}
+	| postfix_Expression '('ArgExpList ')'		
+										{
+											$$=opr(INVOC,2,$1,$3);
+											type_check_invoc($$,$1,$3);
+										}
+	| postfix_Expression '(' ')'				
+										{
+											$$=opr(INVOC,2,$1,empty(EMPTY));
+											type_check_invoc($$,$1,empty(EMPTY));
+										}
+	| postfix_Expression '.' IDENT 	{
+										struct sym_record* s=search($1->id.symrec->my_st,yytext);
+										
+										if(s==NULL)
+										{
+											printf("Field not valid\n");
+										}
+										
+										$3=id(s);
+										
+										if(s->is_proc_name==1)
+										{
+											$3->id.symrec->is_field=0;
+										}
+										else
+										{
+											$3->id.symrec->is_field=1;
+										}	
+										$$=opr(FIELD,2,$1,$3);
+										$$->opr.datatype = s->type;
+									}								
+	| postfix_Expression PP			
+									{
+										$$=opr(POSTFIX,2,$1,con_i(MY_PP));
+										type_check_prepostfix($$,$1);
+									}
+	| postfix_Expression MM			{
+										$$=opr(POSTFIX,2,$1,con_i(MY_MM));
+										type_check_prepostfix($$,$1);
+									}
 	;
 
 ArgExpList
@@ -620,6 +683,15 @@ int main(int argc, char** argv)
 		
 		out_file=strdup(argv[1]);		// filename without extension
 		output=fopen(strcat(argv[1],".il"),"w");		// create il file
+	}
+	else if(argc==4)
+	{
+		printf("DEBUG FLAG %s\n",argv[3]);
+		fflush(stdout);
+		if(strcmp(argv[3],"debug")==0)
+		{
+			debug_flag=1;
+		}
 	}
 	yyparse();
 	fclose(output);

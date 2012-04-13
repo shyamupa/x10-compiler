@@ -25,7 +25,6 @@
 #define COMPOUND 1358
 #define CLASSLIST 1359
 #define IF_ELSE 1360
-#define ASYNCH 1361
 #define CASE_STMT_LIST 1362
 #define CASE_STMT	1363
 #define MY_PLUS	1364
@@ -37,7 +36,9 @@
 #define OBJ 1370
 #define INITEXPLIST 1371
 #define CLASSBODY 1372
-
+#define ASYNC_LIST 1373
+#define FIELD 1374
+#define METHOD_INVOC 1375
 
 #define YYDEBUG 1	//enable debugging
 
