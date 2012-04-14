@@ -48,7 +48,7 @@ nodeType* get_operand(nodeType* opnode,int index)
 		return opnode->opr.op[index];
 	else
 		{
-			debugger("get operand main fasa\n");
+			debugger("operand index out of range\n");
 			exit(0);
 		}	
 }
@@ -520,6 +520,7 @@ void print_store_var(nodeType* n)
 // NEED TO ADD FOR OBJECTS GIGLAMESH
 void print_load_var(nodeType* n)
 {
+	debugger("IN LOAD VAR\n");	
 	if(n->type != typeId && n->opr.oper!=FIELD)	// neither ident nor field so error
 		{
 			debugger("CASE 1\n");
@@ -557,7 +558,6 @@ void print_load_var(nodeType* n)
 			debugger("ldarg %s \n",n->id.symrec->uid);
 			fprintf(output,"ldarg %s \n",n->id.symrec->uid);
 		}
-	debugger("LOAD VAR JOB IS DONE\n");	
 }	
 
 // use like printf 
@@ -579,21 +579,26 @@ void assign_acc_mod(nodeType* func_name,nodeType* mods)
 	if(mods->opr.oper==EMPTY)
 	{
 		func_name->id.symrec->access_mode=modPUBLIC;		// default is public mode
+		debugger("%s %d\n",func_name->id.symrec->sym_name,func_name->id.symrec->access_mode);
 		return;
 	}		
 	switch(mods->con_i.value)
 		{
 				case modPUBLIC: 
 							func_name->id.symrec->access_mode=modPUBLIC;
+							debugger("%s %d\n",func_name->id.symrec->sym_name,func_name->id.symrec->access_mode);
 							break;
 				case modPRIVATE: 
 							func_name->id.symrec->access_mode=modPRIVATE;
+							debugger("%s %d\n",func_name->id.symrec->sym_name,func_name->id.symrec->access_mode);
 							break;
 				case modPROTECTED:
 							func_name->id.symrec->access_mode=modPROTECTED;
+							debugger("%s %d\n",func_name->id.symrec->sym_name,func_name->id.symrec->access_mode);
 							break;
 				default:	
-							debugger("IN default of assign_acc_mod\n");
+							debugger("In default of assign_acc_mod\n");
 							break;					
 		}
+	return;	
 }

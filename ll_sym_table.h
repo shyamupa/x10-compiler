@@ -15,9 +15,9 @@ struct sym_record
 	int is_class;		// 1 if ident is class
 	int is_static;		// 1 if ident is static method
 	int formal; 
+	enum modifier access_mode;
 	char signature[100];		
 	struct symbol_table* my_st;	//ptr to symbol table of the procedure in case of proc and class in case of class
-	enum modifier access_mode;
 	struct sym_record * next;
 	char* in_st_of;		// name of owner of st in which this symrec belongs
 	char* uid;

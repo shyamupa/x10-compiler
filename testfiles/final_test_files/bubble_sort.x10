@@ -3,7 +3,7 @@ public class myclass()
 	def static main():void
 	{	
 		var i,j,temp,c,d:int;
-		var a = Array[int](8);
+		var a = new Array[int](8);
 		a[0]= 34;
 		a[1] = 1;
 		a[2] = 555;

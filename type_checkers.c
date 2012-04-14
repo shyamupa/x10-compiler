@@ -11,7 +11,6 @@ void type_check_assign(nodeType* parent,nodeType* lhs,nodeType* rhs)
 	if(get_type(lhs)!=get_type(rhs))
 	{
 		yyerror("type mismatch in assign");
-		exit(0);
 	}
 	parent->opr.datatype=get_type(rhs);
 	return;
@@ -26,7 +25,6 @@ void type_check_booleq(nodeType* parent,nodeType* lhs,nodeType* rhs)
 	if(get_type(lhs)!=get_type(rhs))
 	{
 		yyerror("type mismatch in bool eq/neq");
-		exit(0);
 	}
 	parent->opr.datatype=MY_BOOL;
 	return;
@@ -56,7 +54,6 @@ void type_check_addmult(nodeType* parent,nodeType* lhs,nodeType* rhs)
 		return;
 	}
 	yyerror("type mismatch in addmult");
-	exit(0);
 }
 
 // TYPE_CHECK_REL
@@ -80,7 +77,6 @@ void type_check_rel(nodeType* parent,nodeType* lhs,nodeType* rhs)		// was wrong 
 			return;
 	}
 	yyerror("type mismatch in relational\n");
-	exit(0);
 }
 
 // both operands should be int and the operator node will be int
@@ -89,7 +85,6 @@ void type_check_int(nodeType* parent,nodeType* lhs,nodeType* rhs)
 	if(get_type(lhs)!=MY_INT || get_type(rhs)!=MY_INT)
 	{
 		yyerror("type mismatch in int\n");
-		exit(0);
 	}
 	parent->opr.datatype=MY_INT;		// assign type to parent
 	return;
@@ -101,7 +96,6 @@ void type_check_bool(nodeType* parent,nodeType* lhs,nodeType* rhs)
 	if(get_type(lhs)!=MY_BOOL || get_type(rhs)!=MY_BOOL)
 	{
 		yyerror("type mismatch in bool\n");
-		exit(0);
 	}
 	parent->opr.datatype=MY_BOOL;
 	return;
@@ -113,7 +107,6 @@ void type_check_shift(nodeType* parent,nodeType* node)
 	if(get_type(node)!=MY_INT)
 	{
 		yyerror("type mismatch in shift\n");
-		exit(0);
 	}
 	parent->opr.datatype=MY_INT;
 	return;
@@ -127,7 +120,6 @@ void type_check_division(nodeType* parent,nodeType* lhs,nodeType* rhs)
 		if(rhs->con_i.value==0)
 		{
 			yyerror("Division by zero\n");
-			exit(0);
 		}	
 	}
 	else if(rhs->type==typeConF)
@@ -135,7 +127,6 @@ void type_check_division(nodeType* parent,nodeType* lhs,nodeType* rhs)
 		if(rhs->con_f.value!=0.0)
 		{
 			yyerror("Division by zero\n");
-			exit(0);
 		}		
 	}
 	
@@ -156,7 +147,6 @@ void type_check_division(nodeType* parent,nodeType* lhs,nodeType* rhs)
 		return;
 	}
 	yyerror("type mismatch in division\n");
-	exit(0);
 }
 
 // modulo only allows int operands,also need to check for div by 0
@@ -168,7 +158,6 @@ void type_check_modulo(nodeType* parent,nodeType* lhs,nodeType* rhs)
 		if(rhs->con_i.value==0)
 		{
 			yyerror("Modulo by zero\n");
-			exit(0);
 		}	
 	}
 	if(get_type(lhs)==MY_INT && get_type(rhs)==MY_INT)		//both are only allowed to be int right now
@@ -194,7 +183,6 @@ void type_check_prepostfix(nodeType* parent,nodeType* node)
 	else if(node->type != typeId)
 	{
 		yyerror("No identifier in the increment operation\n");
-		exit(0);
 	}
 	parent->opr.datatype=get_type(node);
 	return;
@@ -206,7 +194,6 @@ void type_check_typeid(nodeType* node)
 	if(node->type!=typeId)
 	{
 		yyerror("type undefined\n");
-		exit(0);
 	}
 	return;
 }
@@ -219,8 +206,10 @@ void type_check_invoc(nodeType* parent,nodeType* func_name,nodeType* arg_list)
 		debugger("TYPE CHECK IN FIELD\n");
 		// incomplete
 		nodeType* objref=get_operand(func_name,0);
-		nodeType* func_name=get_operand(func_name,1);
+		func_name=get_operand(func_name,1);
+		
 		enum modifier accmod=func_name->id.symrec->access_mode;
+		
 		if(accmod==modPRIVATE)
 		{
 			yyerror("calling private function");
@@ -242,7 +231,7 @@ void type_check_invoc(nodeType* parent,nodeType* func_name,nodeType* arg_list)
 		sign = strdup(func_name->id.symrec->signature);
 		if(strcmp(sign,"")==0)
 		{
-			debugger("SIGN IS NULL\n");
+			debugger("FUNCTION SIGNATURE IS NULL for %s \n",func_name->id.symrec->sym_name);
 			return;
 		}	
 		debugger ("Splitting string \"%s\" into tokens:\n",func_name->id.symrec->signature);
@@ -292,14 +281,12 @@ void type_check_array_invoc(nodeType* parent,nodeType* array_name,nodeType* type
 {
 	if(get_type(type_of_arg) != MY_INT)
 	{
-		yyerror("Array arguement should be a int");
-		exit(0);
+		yyerror("Array arguement should be a int\n");
 	}
 	struct sym_record*p = search(current_st,array_name->id.symrec->sym_name);	// find array in sym_tab
 	if(p==NULL)
 	{
-		yyerror("  Array not declared\n");
-		exit(0);
+		yyerror("Array not declared\n");
 	}
 	parent->opr.datatype = p->type;			// assign array's data type to parent node
 }	
@@ -309,7 +296,6 @@ void type_check_array(nodeType* type)
 	if(get_type(type)!=MY_INT)
 	{
 		yyerror("Array arguement should be a int");
-		exit(0);
 	}
 }
 
@@ -324,7 +310,6 @@ void type_check_cast(nodeType* parent,nodeType* node)
 	else
 	{
 		yyerror("type mismatch in addmult");
-		exit(0);
 	}
 }	
 
@@ -333,7 +318,6 @@ void type_check_obj(nodeType* lhs,nodeType* class_name,nodeType* argexplist)
 	if(strcmp(lhs->id.symrec->sym_name,lhs->id.symrec->sym_name)!=0)
 	{
 		yyerror("wrong class creation\n");
-		exit(0);
 	}
 	// incomplete
 }

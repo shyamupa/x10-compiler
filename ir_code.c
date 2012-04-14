@@ -1241,7 +1241,7 @@ void ir_async_stmt_list(nodeType* n)
 	debugger("In ir_async_stmt_list\n");
 	nodeType* async_stmt = get_operand(n,0);
 	nodeType* async_stmt_list = get_operand(n,1);
-	char thread_id[16];  		// GIGLAMESH !!!
+	//char thread_id[16];  		// GIGLAMESH !!!
 	//since X10 does not associate explicit thread id with a thread during async we generate one explicitly for code gen and store it in thread_id..
 	nodeType* temp_node;
 	temp_node = n;
@@ -1249,7 +1249,6 @@ void ir_async_stmt_list(nodeType* n)
 	{
 		async_stmt = get_operand(n,0);
 		async_stmt_list = get_operand(n,1);
-		debugger("TRTRTRTR\n");
 		memset(thread_id,0,16);
 		strcpy(thread_id,ir_async(async_stmt));
 		debugger("ldloc %s\n",thread_id); 
@@ -1375,7 +1374,7 @@ void ir_array_rhs(nodeType* n)
 
 void ir_cast(nodeType* n)
 {
-	debugger("CASTTTTTTTTTTTTTTT\n");
+	debugger("IN IRCAST\n");
 	nodeType* unary_op = get_operand(n,0);
 	nodeType* cast_exp = get_operand(n,1);
 	if(unary_op->con_i.value == MY_MINUS)
@@ -1467,7 +1466,7 @@ void ir_switch(nodeType* n)
 		
 		if(count <= queue_length-1- default_present)		//do not do it after the last statement //recheck this condition
 			{
-			debugger("KJKJOK\n");
+			//debugger("KJKJOK\n");
 			generate(expr);				//basically this will load the value of x in switch(x) on the stack 
 			}
 		count++;
@@ -1503,8 +1502,6 @@ void ir_case_stmt(nodeType* n)
 	debugger("%s: ",mylabel);
 	fprintf(output,"%s: ",mylabel);
 	generate(stmt);
-	//~ debugger("br %s\n",switch_label);
-	//~ fprintf(output,"br %s \n",switch_label);
 	insert_queue(const_exp,mylabel);
 }	
 
@@ -1517,8 +1514,6 @@ void ir_default_stmt(nodeType* n)
 	debugger("%s: ",mylabel);
 	fprintf(output,"%s: ",mylabel);
 	generate(stmt);
-	//~ debugger("br %s\n",switch_label);
-	//~ fprintf(output,"br %s \n",switch_label);
 	nodeType* const_exp = empty(EMPTY);
 	insert_queue(const_exp,mylabel);
 }	

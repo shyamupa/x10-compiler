@@ -54,6 +54,7 @@ FILE* output;			// output file
 char* out_file;
 nodeType* root;
 int debug_flag=0;
+int error_found=0;
 
 /*global variables*/
 
@@ -201,11 +202,11 @@ int debug_flag=0;
 %%
 Defn_or_Decln	
 	:	{
-			print_header();
 			if(current_st==NULL)
 			{
 				debugger("first sym table created\n");
 				current_st=new_sym_table(current_st);
+				
 				install("println");
 				install("print");
 				install("scanf");
@@ -215,9 +216,8 @@ Defn_or_Decln
 			{
 				$$=$2;
 				print_st(current_st);
-				debugger("Starting traversal:\n");
 				root = $$;
-				generate($$);
+				
 			}
 	;
 
@@ -248,9 +248,10 @@ ClassDecln
 		}
 		;						
 		
-FieldArgLIST : FieldArgList	{ $$ = $1;}
-              | {$$= empty(EMPTY);/*empty production*/} 
-	      ;	
+FieldArgLIST 
+		: FieldArgList	{ $$ = $1;}
+        |				{$$= empty(EMPTY);/*empty production*/} 
+	    ;	
 FieldArgList	
 	:FieldArgList ',' FieldArg	{$$=opr(FIELD_ARG_LIST,2,$1,$3);}
 	|FieldArg	{$$=$1;}
@@ -373,7 +374,7 @@ JumpStmt
 	
 AsyncStmtList
 			:AsyncStmt AsyncStmtList  {$$ = opr(ASYNC_LIST,2,$1,$2);/* beware right recursion here*/}
-			|AsyncStmt {$$ = $1; debugger("HERE HERE!!\n");}
+			|AsyncStmt {$$ = $1;}
 			;
 
 AsyncStmt
@@ -399,10 +400,13 @@ CompoundStmt
 			current_st=st_pop();
 		}
 	  '}'		{$$=opr(COMPOUND,1,$3);}
-	| error '}'	{yyerror("error in compound stmt");}
+	|error '}'	{yyerror("error in compound stmt");}
 	;
-NonFuncDeclaration	:VarDec	{$$=$1;}
-			;
+	
+NonFuncDeclaration	
+	:VarDec	';' {$$=$1;}
+	|VarDec error ';'	{yyerror("error in non func decln stmt");}
+	;
 ExpressionStmt	
 	:Expression ';'	{$$=$1;}
 	|';'		{$$=empty(EMPTY);}
@@ -417,16 +421,16 @@ SelectionStmt
 	;
 
 CaseStmtList 
-	: CaseStmtList CaseStmt  DefaultStmt {$$=opr(CASE_STMT_LIST,3,$1,$2,$3);}
-	| CaseStmt { $$ = $1;}
+	:CaseStmtList CaseStmt  DefaultStmt {$$=opr(CASE_STMT_LIST,3,$1,$2,$3);}
+	|CaseStmt { $$ = $1;}
 
 CaseStmt	
-	:CASE ConstExp ':' Stmt	{debugger("LLLLLLLLLLLL\n");$$=opr(CASE_STMT,2,$2,$4);}
+	:CASE ConstExp ':' Stmt	{$$=opr(CASE_STMT,2,$2,$4);}
 	;
 
 DefaultStmt
-	:DEFAULT ':'	Stmt {debugger("KKKKKKKKK\n"); $$ = opr(DEFAULT,1,$3);}
-	|{$$ = empty(EMPTY);/*empty production*/}
+	:DEFAULT ':'	Stmt	{$$ = opr(DEFAULT,1,$3);}
+	|						{$$ = empty(EMPTY);/*empty production*/}
 	;
 
 IterationStmt	
@@ -436,9 +440,11 @@ IterationStmt
 BasicForStmt	
 	:FOR '(' Expression ';' Expression ';' Expression ')' Stmt {$$=opr(FOR,4,$3,$5,$7,$9);}
 	;
+	
 ObjCreation	
 	:NEW TypeName '(' Expression ')' {$$=opr(NEW,2,$2,$4);}	
 	;
+	
 TypeName
 	:IDENT	{$$=$1;}
 	;
@@ -452,11 +458,11 @@ AssOp
 	;
 VarDec	
 	:VAR IdList ':' Type {$$=opr(VAR_DEC,2,$2,$4);dist_type($$);}
-	|VAR IdList	AssOp ARRAY '[' Type ']' '(' Expression ')'	
+	|VAR IdList EQ NEW ARRAY '[' Type ']' '(' Expression ')'	
 				{
-					$$ = opr(ARRAY,3,$2,$6,$9);
+					$$ = opr(ARRAY,3,$2,$7,$10);
 					dist_type($$);
-					type_check_array($6);
+					type_check_array($7);
 				}
 	|VAL IDENT	{	
 					struct sym_record* s=install(yytext);
@@ -480,10 +486,11 @@ VarDec
 		debugger("Obj done\n");
 	}
 	;
+	
 InitExpList
-	: conditional_Expression	{$$=$1;}
-	| InitExpList ',' conditional_Expression	{$$=opr(INITEXPLIST,2,$1,$3);}
-	| {$$=empty(EMPTY);}	
+	:conditional_Expression					{$$=$1;}
+	|InitExpList ',' conditional_Expression	{$$=opr(INITEXPLIST,2,$1,$3);}
+	|										{$$=empty(EMPTY);}	
 	;	
 Type	
 	:TYPE_INT	{$$=con_i(MY_INT);}	
@@ -493,34 +500,34 @@ Type
 	|TYPE_VOID	{$$=con_i(MY_VOID);}
 	;
 IdList	
-	:IDENT			{struct sym_record* s=install(yytext);$$=id(s);}
+	:IDENT				{struct sym_record* s=install(yytext);$$=id(s);}
 	|IdList ',' IDENT 	{
-				struct sym_record* s=install(yytext);
-				$3 = id(s);
-				$$=opr(ID_LIST,2,$1,$3);
-				}
+							struct sym_record* s=install(yytext);
+							$3 = id(s);
+							$$=opr(ID_LIST,2,$1,$3);
+						}
 	;
 primary_Expression	
 	:IDENT			{
 						struct sym_record*s =search(current_st,yytext);
-						debugger("s is NULL is true = %d\n",s==NULL);					
+						debugger("Ident %s not found in st = %d\n",yytext,s==NULL);					
 						$$=id(s);
-				}
-	|ConstExp		{$$=$1;}
+					}
+	|ConstExp				{$$=$1;}
 	|'(' Expression ')' 	{$$=$2;}
 	;
 ConstExp	
-	:INTEGER	{$$=con_i($1);debugger("INTEGERSSSSSSSSs %d\n",$1);}
-	|FLOAT		{$$=con_f($1);debugger("FLOATSSSSSSSSSs %lf\n",$1);}
+	:INTEGER	{$$=con_i($1);debugger("INTEGER VAL SEEN %d\n",$1);}
+	|FLOAT		{$$=con_f($1);debugger("FLOAT VAL SEEN %lf\n",$1);}
 	|CHAR		{$$=con_c($1);}
 	|TRUE		{$$=con_b(1);}	
 	|FALSE		{$$=con_b(0);}	
 	;
 
 Expression
-	: assignment_Expression		{$$=$1;}
-	| Expression ',' assignment_Expression  {$$=opr(EXP_LIST,2,$1,$3);}
-	| ObjCreation
+	:assignment_Expression		{$$=$1;}
+	|Expression ',' assignment_Expression  {$$=opr(EXP_LIST,2,$1,$3);}
+	|ObjCreation
 	;
 
 assignment_Expression	
@@ -528,10 +535,6 @@ assignment_Expression
 	|unary_Expression AssOp assignment_Expression	{
 													$$=opr(ASSIGN,3,$1,$2,$3) ;
 													type_check_assign($$,$1,$3);
-													/*debugger("MAKING ASSIGN NODE:\n");
-													debugger("Unary Exp name:%s\n",$1->id.symrec->sym_name);
-													debugger("Assop Type:%d\n",$2->type);
-													debugger("Assignment Exp value:%d type:%d \n",$3->con_i.value,$3->type);													*/
 													}
 	;
 
@@ -581,51 +584,51 @@ relational_Expression
 
 shift_Expression
 	:additive_Expression						{$$ = $1;}
-	|shift_Expression LSH additive_Expression			{$$=opr(LSH,2,$1,$3);type_check_shift($$,$3);}
-	|shift_Expression RSH additive_Expression			{$$=opr(RSH,2,$1,$3);type_check_shift($$,$3);}
+	|shift_Expression LSH additive_Expression	{$$=opr(LSH,2,$1,$3);type_check_shift($$,$3);}
+	|shift_Expression RSH additive_Expression	{$$=opr(RSH,2,$1,$3);type_check_shift($$,$3);}
 	;
 
 additive_Expression
-	:multiplicative_Expression				{$$ = $1;}
-	|additive_Expression PLUS multiplicative_Expression	{$$=opr(PLUS,2,$1,$3);type_check_addmult($$,$1,$3);}
+	:multiplicative_Expression								{$$ = $1;}
+	|additive_Expression PLUS multiplicative_Expression		{$$=opr(PLUS,2,$1,$3);type_check_addmult($$,$1,$3);}
 	|additive_Expression MINUS multiplicative_Expression	{$$=opr(MINUS,2,$1,$3);type_check_addmult($$,$1,$3);}
 	;
 
 multiplicative_Expression
-	: cast_Expression					{$$ = $1;}
-	| multiplicative_Expression MULT cast_Expression	{$$=opr(MULT,2,$1,$3);type_check_addmult($$,$1,$3);}
-	| multiplicative_Expression DIV cast_Expression		{$$=opr(DIV,2,$1,$3);type_check_division($$,$1,$3);}
-	| multiplicative_Expression MODULO cast_Expression		{$$=opr(MODULO,2,$1,$3);type_check_modulo($$,$1,$3);}
+	:cast_Expression									{$$ = $1;}
+	|multiplicative_Expression MULT cast_Expression	{$$=opr(MULT,2,$1,$3);type_check_addmult($$,$1,$3);}
+	|multiplicative_Expression DIV cast_Expression		{$$=opr(DIV,2,$1,$3);type_check_division($$,$1,$3);}
+	|multiplicative_Expression MODULO cast_Expression	{$$=opr(MODULO,2,$1,$3);type_check_modulo($$,$1,$3);}
 	;
 
 cast_Expression
-	: unary_Expression
+	:unary_Expression
 	;
 
 unary_Expression
-	: postfix_Expression	{$$=$1;}
-	| PP unary_Expression	{$$=opr(PREFIX,2,con_i(MY_PP),$2);type_check_prepostfix($$,$2);}
-	| MM unary_Expression	{$$=opr(PREFIX,2,con_i(MY_MM),$2);type_check_prepostfix($$,$2);}
-	| unary_operator cast_Expression	{$$=opr(CAST,2,$1,$2);type_check_cast($$,$2);}
+	:postfix_Expression				{$$=$1;}
+	|PP unary_Expression				{$$=opr(PREFIX,2,con_i(MY_PP),$2);type_check_prepostfix($$,$2);}
+	|MM unary_Expression				{$$=opr(PREFIX,2,con_i(MY_MM),$2);type_check_prepostfix($$,$2);}
+	|unary_operator cast_Expression	{$$=opr(CAST,2,$1,$2);type_check_cast($$,$2);}
 	;
 postfix_Expression
-	: primary_Expression				{$$ = $1;}
-	| postfix_Expression '[' Expression ']'
+	:primary_Expression				{$$ = $1;}
+	|postfix_Expression '[' Expression ']'
 										{
 											$$=opr(ARRAY_INVOC,2,$1,$3);
 											type_check_array_invoc($$,$1,$3);
 										}
-	| postfix_Expression '('ArgExpList ')'		
+	|postfix_Expression '('ArgExpList ')'		
 										{
 											$$=opr(INVOC,2,$1,$3);
 											type_check_invoc($$,$1,$3);
 										}
-	| postfix_Expression '(' ')'				
+	|postfix_Expression '(' ')'				
 										{
 											$$=opr(INVOC,2,$1,empty(EMPTY));
 											type_check_invoc($$,$1,empty(EMPTY));
 										}
-	| postfix_Expression '.' IDENT 	{
+	|postfix_Expression '.' IDENT 	{
 										struct sym_record* s=search($1->id.symrec->my_st,yytext);
 										
 										if(s==NULL)
@@ -646,20 +649,20 @@ postfix_Expression
 										$$=opr(FIELD,2,$1,$3);
 										$$->opr.datatype = s->type;
 									}								
-	| postfix_Expression PP			
+	|postfix_Expression PP			
 									{
 										$$=opr(POSTFIX,2,$1,con_i(MY_PP));
 										type_check_prepostfix($$,$1);
 									}
-	| postfix_Expression MM			{
+	|postfix_Expression MM			{
 										$$=opr(POSTFIX,2,$1,con_i(MY_MM));
 										type_check_prepostfix($$,$1);
 									}
 	;
 
 ArgExpList
-	: conditional_Expression	{$$=$1;}
-	| ArgExpList ',' conditional_Expression	{$$=opr(ARGEXPLIST,2,$1,$3);}
+	:conditional_Expression	{$$=$1;}
+	|ArgExpList ',' conditional_Expression	{$$=opr(ARGEXPLIST,2,$1,$3);}
 	;
 unary_operator
 	:PLUS		{$$=con_i(MY_PLUS);}
@@ -677,40 +680,56 @@ int main(int argc, char** argv)
 		debugger("INCORRECT USAGE\n");
 		return 0;
 	}
-	if(argc >= 3)					
-	{
-		//debugger("ARG V IS %s",argv[2]);
-		//debugger("%s",x10file);
-		
-		strcpy(x10file,argv[2]);
-		freopen(x10file,"r",stdin);	
-		
-		out_file=strdup(argv[1]);						// filename without extension
-		output=fopen(strcat(argv[1],".il"),"w");		// create il file
-	}
+	int i,create_exe=0;
 	
-	if(argc==4)			// debug flag used
+	for(i=1;i<argc;i++)
 	{
-		debugger("DEBUG FLAG %s\n",argv[3]);
-		if(strcmp(argv[3],"debug")==0)
+		if(i==1)
+		{
+			out_file=strdup(argv[1]);						// filename without extension
+		}
+		if(i==2)
+		{
+			strcpy(x10file,argv[2]);
+			freopen(x10file,"r",stdin);	
+		}
+		if(strcmp(argv[i],"debug")==0)
 		{
 			debug_flag=1;
 		}
+		if(strcmp(argv[i],"-x")==0)
+		{
+			create_exe=1;
+		}
 	}
+
 	yyparse();
+	
+	output=fopen(strcat(argv[1],".il"),"w");		// create il file
+	print_header();
+	generate(root);
 	fclose(output);
+	
+	if(create_exe==1 && error_found==0)			// 
+	{
+		
+		// following code runs ilasm 
+		char assembler[20]="ilasm ";
+		strcat(assembler,argv[1]);
+		system(assembler);
+	}
+
+	
 	fclose(stdin);
 	
-	// following code runs ilasm 
-	char assembler[20]="ilasm ";
-	strcat(assembler,argv[1]);
-	system(assembler);
 	return 0;
+	
 }
 
 
 void yyerror (char *s) /* Called by yyparse on error */
 {
+	error_found=1;
 	printf("%d:%d:error:%s at %s  \n",yyline_no,yycolumn-yyleng,s,yytext);
 }
 
