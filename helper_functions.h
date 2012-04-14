@@ -33,6 +33,7 @@ void traverse(nodeType* n);
 void insert_queue(nodeType* n, char* label);
 void print_store_var(nodeType* n);
 void print_load_var(nodeType* n);
+void debugger(char* format_str, ...);
 
 
 

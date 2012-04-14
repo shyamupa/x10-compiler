@@ -216,12 +216,21 @@ void type_check_invoc(nodeType* parent,nodeType* func_name,nodeType* arg_list)
 {
 	if(func_name->opr.oper==FIELD)
 	{
-		printf("HERE WE ARE\n");
+		debugger("TYPE CHECK IN FIELD\n");
+		// incomplete
+		nodeType* objref=get_operand(func_name,0);
+		nodeType* func_name=get_operand(func_name,1);
+		enum modifier accmod=func_name->id.symrec->access_mode;
+		if(accmod==modPRIVATE)
+		{
+			yyerror("calling private function");
+			return;
+		}
 	}
-	//Making node as int node for taking int input
-	//Currently we can take only int inputs
 	else
 	{
+		//Making node as int node for taking int input
+		//Currently we can take only int inputs
 		if(strcmp(func_name->id.symrec->sym_name,"scanf")==0)
 		{
 			parent->opr.datatype = MY_INT;
@@ -233,27 +242,27 @@ void type_check_invoc(nodeType* parent,nodeType* func_name,nodeType* arg_list)
 		sign = strdup(func_name->id.symrec->signature);
 		if(strcmp(sign,"")==0)
 		{
-			printf("SIGN IS NULL\n");
+			debugger("SIGN IS NULL\n");
 			return;
 		}	
-		printf ("Splitting string \"%s\" into tokens:\n",func_name->id.symrec->signature);
+		debugger ("Splitting string \"%s\" into tokens:\n",func_name->id.symrec->signature);
 		pch = strtok (sign," ::");
 		int count = 0;
 		
 		// first enter return type value into parent node
 		if(strcmp(pch,"int32")==0)	
 		{
-			printf("PCH IS %s\n",pch);
+			debugger("PCH IS %s\n",pch);
 			parent->opr.datatype = MY_INT;
 		}
 		else if(strcmp(pch,"float32")==0)	
 		{
-			printf("PCH IS %s\n",pch);
+			debugger("PCH IS %s\n",pch);
 			parent->opr.datatype = MY_FLOAT;
 		}
 		else if(strcmp(pch,"void")==0)	
 		{
-			printf("PCH IS %s\n",pch);
+			debugger("PCH IS %s\n",pch);
 			parent->opr.datatype = MY_VOID;
 		}
 		
@@ -265,7 +274,7 @@ void type_check_invoc(nodeType* parent,nodeType* func_name,nodeType* arg_list)
 			if(count>3)
 			{
 				
-				printf("%s\n",pch);
+				debugger("%s\n",pch);
 				pch = strtok (NULL, " )(,::");
 			}
 			else
@@ -277,65 +286,6 @@ void type_check_invoc(nodeType* parent,nodeType* func_name,nodeType* arg_list)
 		}
 	}	
 }	
-//~ // GIGLAMESH
-//~ void type_check_invoc(nodeType* parent,nodeType* func_name,nodeType* arg_list)
-//~ {
-	//~ //Making node as int node for taking int input
-	//~ //Currently we can take only int inputs
-	//~ if(strcmp(func_name->id.symrec->sym_name,"scanf")==0)
-	//~ {
-		//~ parent->opr.datatype = MY_INT;
-		//~ return;
-	//~ }
-	//~ 
-	//~ char * pch;
-	//~ char* sign;
-	//~ sign = strdup(func_name->id.symrec->signature);
-	//~ if(strcmp(sign,"")==0)
-	//~ {
-		//~ printf("SIGN IS NULL\n");
-		//~ return;
-	//~ }	
-	//~ printf ("Splitting string \"%s\" into tokens:\n",func_name->id.symrec->signature);
-	//~ pch = strtok (sign," ::");
-	//~ int count = 0;
-	//~ 
-	//~ // first enter return type value into parent node
-	//~ if(strcmp(pch,"int32")==0)	
-	//~ {
-		//~ printf("PCH IS %s\n",pch);
-		//~ parent->opr.datatype = MY_INT;
-	//~ }
-	//~ else if(strcmp(pch,"float32")==0)	
-	//~ {
-		//~ printf("PCH IS %s\n",pch);
-		//~ parent->opr.datatype = MY_FLOAT;
-	//~ }
-	//~ else if(strcmp(pch,"void")==0)	
-	//~ {
-		//~ printf("PCH IS %s\n",pch);
-		//~ parent->opr.datatype = MY_VOID;
-	//~ }
-	//~ 
-	//~ if(arg_list->opr.oper==EMPTY)
-		//~ return;
-	//~ 
-	//~ while (pch != NULL)
-	//~ {
-		//~ if(count>3)
-		//~ {
-			//~ 
-			//~ printf("%s\n",pch);
-			//~ pch = strtok (NULL, " )(,::");
-		//~ }
-		//~ else
-		//~ {
-				//~ count = count+1;
-				//~ pch = strtok (NULL, " )(,::");
-		//~ }
-//~ 
-	//~ }
-//~ }	
 
 // GIGLAMESH
 void type_check_array_invoc(nodeType* parent,nodeType* array_name,nodeType* type_of_arg)
@@ -382,7 +332,7 @@ void type_check_obj(nodeType* lhs,nodeType* class_name,nodeType* argexplist)
 {
 	if(strcmp(lhs->id.symrec->sym_name,lhs->id.symrec->sym_name)!=0)
 	{
-		printf("wrong class creation\n");
+		yyerror("wrong class creation\n");
 		exit(0);
 	}
 	// incomplete

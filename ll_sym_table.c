@@ -22,7 +22,7 @@ char* newuid()
 
 symbol_table* new_sym_table(symbol_table* parent)
 {
-	printf("NEW SYM TAB CREATED\n");
+	debugger("NEW SYM TAB CREATED\n");
 	symbol_table* st;
 	st=(symbol_table*)malloc(sizeof(symbol_table));
 	st->parent=parent;
@@ -81,18 +81,18 @@ sym_record* search(symbol_table* st,char* target_name)	//searches for a record a
 }
 void print_st(symbol_table* st)
 {
-	printf("####################\n");
+	debugger("####################\n");
 	if(st->owner_name!=NULL)
-		printf("PRINTING SYM_T of %s \n",st->owner_name);
+		debugger("PRINTING SYM_T of %s \n",st->owner_name);
 	else
-		printf("PRINTING SYM_T of block \n");	
+		debugger("PRINTING SYM_T of block \n");	
 	struct sym_record* p=st->Head;
 	while(p!=NULL)
 	{
-		printf("%s %s type %d \n",p->sym_name,p->uid,p->type);
+		debugger("%s %s type %d \n",p->sym_name,p->uid,p->type);
 		p=p->next;
 	}
-	printf("####################\n");
+	debugger("####################\n");
 }
 int search_keywords(char* sym_name)
 {

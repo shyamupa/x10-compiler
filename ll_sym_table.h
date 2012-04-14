@@ -13,6 +13,7 @@ struct sym_record
 	int is_proc_name;		// 1 if ident is proc
 	int is_field;		// 1 if ident is field
 	int is_class;		// 1 if ident is class
+	int is_static;		// 1 if ident is static method
 	int formal; 
 	char signature[100];		
 	struct symbol_table* my_st;	//ptr to symbol table of the procedure in case of proc and class in case of class

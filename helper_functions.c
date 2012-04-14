@@ -6,6 +6,7 @@ extern int labelno;
 extern struct symbol_table* current_st;
 extern FILE* output;
 extern char* out_file;
+extern int debug_flag;
 
 // global variables
 nodeType* expr_queue[MAXQUEUE];
@@ -47,7 +48,7 @@ nodeType* get_operand(nodeType* opnode,int index)
 		return opnode->opr.op[index];
 	else
 		{
-			printf("get operand main fasa\n");
+			debugger("get operand main fasa\n");
 			exit(0);
 		}	
 }
@@ -56,8 +57,8 @@ nodeType* get_operand(nodeType* opnode,int index)
 // takes a VarDec node and spread the type info 
 void dist_type(nodeType* nptr)
 {
-	printf("%d\n",nptr->type); // should be typeOp
-	printf("%d is the type to be assigned\n",get_operand(nptr,1)->con_i.value);
+	debugger("%d\n",nptr->type); // should be typeOp
+	debugger("%d is the type to be assigned\n",get_operand(nptr,1)->con_i.value);
 	int TypeToAssign=get_operand(nptr,1)->con_i.value;
 	nodeType* idlist=get_operand(nptr,0);
 	if(idlist->type==typeId)
@@ -99,7 +100,7 @@ int get_type(nodeType* data_type_ptr)
 	{
 		return data_type_ptr->id.symrec->type;
 	}
-	else if(data_type_ptr->type==typeOpr)
+	else if(data_type_ptr->type==typeOpr)		// operator node has data type of result
 	{
 		return data_type_ptr->opr.datatype;
 	}
@@ -129,7 +130,7 @@ char* get_code(nodeType* n)
 			break;
 
 		default:
-			printf("Can't get code for unknown node type\n");
+			debugger("Can't get code for unknown node type\n");
 	}
 }
 
@@ -154,7 +155,7 @@ char* get_place(nodeType* n)
 				return n->id.place;
 				break;
 		  default:
-					printf("Can't get place for unknown node type\n");
+					debugger("Can't get place for unknown node type\n");
 		}
 }
 
@@ -189,7 +190,7 @@ void set_F(nodeType* n,char* label)
 			strcat(n->id.F,label);
 			break;
 		default:
-			printf("Can't set F for unknown node type\n");
+			debugger("Can't set F for unknown node type\n");
 	}
 }
 
@@ -224,7 +225,7 @@ void set_T(nodeType* n,char* label)
 			strcat(n->id.T,label);
 			break;
 		default:
-			printf("Can't set T for unknown node type\n");
+			debugger("Can't set T for unknown node type\n");
 	}
 }
 
@@ -254,7 +255,7 @@ char* get_F(nodeType* n)
 			break;			
 			
 	  default:
-				printf("Can't get F for unknown node type\n");
+				debugger("Can't get F for unknown node type\n");
 	}
 }
 
@@ -283,7 +284,7 @@ char* get_T(nodeType* n)
 			return n->con_b.T;
 			break;			
 	  default:
-				printf("Can't get T for unknown node type\n");
+				debugger("Can't get T for unknown node type\n");
 		}
 }
 
@@ -363,7 +364,7 @@ nodeType *id(struct sym_record* symrec)
 		yyerror("out of memory");
 	p->type = typeId;
 	p->id.symrec = symrec;
-	printf("SSSSSSSSS%dSSSSSSSSSSS  %s\n",p->type,p->id.symrec->sym_name);
+	debugger("IN ID() initialised type to %d and name to %s\n",p->type,p->id.symrec->sym_name);
 	p->id.code = strdup(symrec->sym_name);
 	p->id.place = strdup(symrec->sym_name);
 	return p;
@@ -405,19 +406,19 @@ nodeType *opr(int oper, int nops, ...)
 // GIGLAMESH
 struct sym_record* install(char* sym_name)
 {
-	printf("installing %s\n",sym_name);
+	debugger("installing %s\n",sym_name);
 	struct sym_record* r;
 	int rv=search_keywords(sym_name);
 	if(rv==1)
-		printf("using reserved keyword\n");
+		debugger("using reserved keyword\n");
 	else
 	{
 		r=search(current_st,sym_name);
 		if(r==NULL)	// sym_name not already in table add it
 		{
-			//printf("I AM HERE\n");
+			//debugger("I AM HERE\n");
 			r=insert(current_st,sym_name);
-			printf("install complete\n");
+			debugger("install complete\n");
 			return r;
 		}
 		else	// oops the name already exists
@@ -425,31 +426,31 @@ struct sym_record* install(char* sym_name)
 			if(r->is_class==1)
 			{
 				r=insert(current_st,sym_name);
-				printf("install complete\n");
+				debugger("install complete\n");
 				return r;
 			}	
 			else
-				printf("BIG PROBLEM\n");
+				debugger("BIG PROBLEM\n");
 		// what to do here?? do we check scope or not
 		}
 	}
-	printf("outside install\n");
+	debugger("outside install\n");
 }
 
 // prints header info for the output il file
 void print_header()
 {
-	printf(".assembly extern mscorlib {} \n");
+	debugger(".assembly extern mscorlib {} \n");
 	fprintf(output,".assembly extern mscorlib {} \n");
-	printf(".assembly output\n");
+	debugger(".assembly output\n");
 	fprintf(output,".assembly output\n");
-	printf("{\n");
+	debugger("{\n");
 	fprintf(output,"{\n");
-	printf(".ver  0:0:0:0\n");
+	debugger(".ver  0:0:0:0\n");
 	fprintf(output,".ver  0:0:0:0\n");
-	printf("}\n");
+	debugger("}\n");
 	fprintf(output,"}\n");
-	printf(".module output.exe\n");
+	debugger(".module output.exe\n");
 	fprintf(output,".module %s.exe\n",out_file);
 }
 
@@ -459,7 +460,7 @@ void traverse(nodeType* n)
 {
  if(n->type == typeOpr)
 	{
-		 printf("found opr node\n");
+		 debugger("found opr node\n");
 		 int number = n->opr.nops;
 		 int count = 0;
 		 while(count < number)
@@ -467,10 +468,10 @@ void traverse(nodeType* n)
 			 traverse(get_operand(n,count));
 			 count++;
 		 }
-		 printf("Parent Node Type:%d \n",n->type);
+		 debugger("Parent Node Type:%d \n",n->type);
 	}
  else
-	 printf("Node Type:%d \n",n->type);
+	 debugger("Node Type:%d \n",n->type);
 }	
 
 // inserts a label into the queue 
@@ -488,27 +489,27 @@ void print_store_var(nodeType* n)
 {
 	if(n->type != typeId)
 		{
-			printf("Trying to store into non variable \n");
+			debugger("Trying to store into non variable \n");
 			exit(0);
 		}	
 	if(n->id.symrec->formal !=1 && n->id.symrec->is_field !=1)
 		{
-			printf("stloc %s\n",n->id.symrec->uid);
+			debugger("stloc %s\n",n->id.symrec->uid);
 			fprintf(output,"stloc %s\n",n->id.symrec->uid);
 		}
 	else if(n->id.symrec->is_field==1)
 		{
-			printf("stfld ");
+			debugger("stfld ");
 			fprintf(output,"stfld ");
 			print_type(n);
-			printf("%s::",n->id.symrec->in_st_of);
+			debugger("%s::",n->id.symrec->in_st_of);
 			fprintf(output,"%s::",n->id.symrec->in_st_of);
-			printf("%s\n",n->id.symrec->sym_name);
+			debugger("%s\n",n->id.symrec->sym_name);
 			fprintf(output,"%s\n",n->id.symrec->sym_name);
 		}		
 	else
 		{
-			printf("starg %s \n",n->id.symrec->uid);
+			debugger("starg %s \n",n->id.symrec->uid);
 			fprintf(output,"starg %s \n",n->id.symrec->uid);
 		}
 }
@@ -521,13 +522,13 @@ void print_load_var(nodeType* n)
 {
 	if(n->type != typeId && n->opr.oper!=FIELD)	// neither ident nor field so error
 		{
-			printf("CASE 1\n");
-			printf("Trying to load a non variable \n");		// for safety against ldc.i4 needs
+			debugger("CASE 1\n");
+			debugger("Trying to load a non variable \n");		// for safety against ldc.i4 needs
 			exit(0);
 		}
 	else if(n->opr.oper==FIELD)			// when field acc used in expr like a=obj.fval+1
 	{
-		printf("CASE 2\n");
+		debugger("CASE 2\n");
 		nodeType* myid=get_operand(n,0);
 		nodeType* myfield=get_operand(n,1);
 		print_load_var(myid);			// load objref
@@ -535,61 +536,64 @@ void print_load_var(nodeType* n)
 	}	
 	else if(n->id.symrec->formal !=1 && n->id.symrec->is_field !=1)		// formal flag off and not field so must be local
 		{
-			printf("CASE 3\n");
-			printf("ldloc %s\n",n->id.symrec->uid);
+			debugger("CASE 3\n");
+			debugger("ldloc %s\n",n->id.symrec->uid);
 			fprintf(output,"ldloc %s\n",n->id.symrec->uid);
 		}
 	else if(n->id.symrec->is_field==1)		// is field of some class so use ldfld
 		{
-			printf("CASE 4\n");
-			printf("ldfld ");		
+			debugger("CASE 4\n");
+			debugger("ldfld ");		
 			fprintf(output,"ldfld ");
 			print_type(n);
-			printf("%s::",n->id.symrec->in_st_of);
+			debugger("%s::",n->id.symrec->in_st_of);
 			fprintf(output,"%s::",n->id.symrec->in_st_of);
-			printf("%s\n",n->id.symrec->sym_name);
+			debugger("%s\n",n->id.symrec->sym_name);
 			fprintf(output,"%s\n",n->id.symrec->sym_name);
 		}	
 	else 			// must be a local variable
 		{
-			printf("CASE 5\n");
-			printf("ldarg %s \n",n->id.symrec->uid);
+			debugger("CASE 5\n");
+			debugger("ldarg %s \n",n->id.symrec->uid);
 			fprintf(output,"ldarg %s \n",n->id.symrec->uid);
 		}
-	printf("LOAD VAR JOB IS DONE\n");	
+	debugger("LOAD VAR JOB IS DONE\n");	
 }	
 
+// use like printf 
+void debugger(char* format_str, ...)
+{
+	if(debug_flag==1)
+	{
+		char debugbuf[256];
+		va_list listptr;
+		va_start(listptr,format_str);
+		vsprintf(debugbuf,format_str,listptr);
+		printf("%s",debugbuf);
+		va_end(listptr);
+	}
+}
 
-
-
-// chooses correct instruction to load a variable which might be any of ldloc ldarg etc
-// NEED TO ADD FOR OBJECTS GIGLAMESH
-//~ void print_load_var(nodeType* n)
-//~ {
-	//~ if(n->type != typeId)
-		//~ {
-			//~ printf("Trying to load a non variable \n");		// for safety against ldc.i4 needs
-			//~ exit(0);
-		//~ }
-	//~ if(n->id.symrec->formal !=1 && n->id.symrec->is_field !=1)		// formal flag off so must be local
-		//~ {
-			//~ printf("ldloc %s\n",n->id.symrec->uid);
-			//~ fprintf(output,"ldloc %s\n",n->id.symrec->uid);
-		//~ }
-	//~ else if(n->id.symrec->is_field==1)
-		//~ {
-			//~ printf("ldfld ");
-			//~ fprintf(output,"ldfld ");
-			//~ print_type(n);
-			//~ printf("%s::",n->id.symrec->in_st_of);
-			//~ fprintf(output,"%s::",n->id.symrec->in_st_of);
-			//~ printf("%s\n",n->id.symrec->sym_name);
-			//~ fprintf(output,"%s\n",n->id.symrec->sym_name);
-		//~ }	
-	//~ else 			// must be a local variable
-		//~ {
-			//~ printf("ldarg %s \n",n->id.symrec->uid);
-			//~ fprintf(output,"ldarg %s \n",n->id.symrec->uid);
-		//~ }
-//~ }	
-
+void assign_acc_mod(nodeType* func_name,nodeType* mods)
+{
+	if(mods->opr.oper==EMPTY)
+	{
+		func_name->id.symrec->access_mode=modPUBLIC;		// default is public mode
+		return;
+	}		
+	switch(mods->con_i.value)
+		{
+				case modPUBLIC: 
+							func_name->id.symrec->access_mode=modPUBLIC;
+							break;
+				case modPRIVATE: 
+							func_name->id.symrec->access_mode=modPRIVATE;
+							break;
+				case modPROTECTED:
+							func_name->id.symrec->access_mode=modPROTECTED;
+							break;
+				default:	
+							debugger("IN default of assign_acc_mod\n");
+							break;					
+		}
+}

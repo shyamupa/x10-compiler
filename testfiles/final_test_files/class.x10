@@ -6,10 +6,16 @@ public class newclass(a:int,e:int)
 		a=i;
 		e=j+a;
 	}
+	def private fun2():void
+	{
+		println(17);
+		return;
+	}
 	def myfun(x:int,y:int):void
 	{
 		var b:boolean;
 		b = false;
+		fun2();
 		println(6);		
 		return; 
 	}

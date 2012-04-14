@@ -11,8 +11,8 @@ typedef struct
 	int value;
 	char* code;
 	char* place;
-	char* T;
-	char* F;
+	char* T;		// true label
+	char* F;		// false label
 
 }con_iNodeType;
 

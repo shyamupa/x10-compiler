@@ -14,7 +14,6 @@
 #include "type_checkers.h"
 
 
-
 extern struct sym_record sym_table;
 extern yyline_no;
 extern int yylex();
@@ -205,24 +204,20 @@ Defn_or_Decln
 			print_header();
 			if(current_st==NULL)
 			{
-				printf("first sym table created\n");
+				debugger("first sym table created\n");
 				current_st=new_sym_table(current_st);
 				install("println");
 				install("print");
 				install("scanf");
-				//printf("$$$$$$$$$$$$$$$$$$$$$$$$$$$$\n");
 			}	
 		}	
-	ClassDeclnList	{
+	ClassDeclnList	
+			{
 				$$=$2;
 				print_st(current_st);
-				printf("Starting traversal:\n");
+				debugger("Starting traversal:\n");
 				root = $$;
-				//traverse($$);
 				generate($$);
-				//printf("\n$$$$$$$$$$$$$$$$$$$$$$$$$$$$\n");
-				//printf("FINAL CODE:\n");
-				//printf("%s\n",$$->opr.code);
 			}
 	;
 
@@ -233,7 +228,7 @@ ClassDeclnList
 ClassDecln
 	:Mods CLASS IDENT
 				{
-				printf("%s\n",yytext);
+				debugger("%s\n",yytext);
 				struct sym_record* s=install(yytext);
 				
 				$3 = id(s);
@@ -278,6 +273,7 @@ Mods
 	:PUBLIC		{$$=con_i(modPUBLIC);}
 	|PRIVATE	{$$=con_i(modPRIVATE);}
 	|PROTECTED	{$$=con_i(modPROTECTED);}
+	|			{$$=empty(EMPTY);}
 	;
 
 ClassBody	: '{' {seen_class = 0;} FuncDefnList '}'	{
@@ -292,13 +288,15 @@ FuncDefnList
 	|FuncDefn		{$$ = $1;}
 	;
 FuncDefn
-	:DEF Static_or_not IDENT 	
+	:DEF Mods Static_or_not IDENT 	
 				{
-					printf("%s\n",yytext);
+					debugger("%s\n",yytext);
 					struct sym_record* s=install(yytext);
 					
 					s->is_proc_name=1;		// is a func name
-					$3 = id(s);
+					$4 = id(s);
+					
+					assign_acc_mod($4,$2);
 					
 					st_push(current_st);
 					current_st=new_sym_table(current_st);
@@ -307,11 +305,11 @@ FuncDefn
 					
 					seen_func=1;		// for compound stmt
 				}
-	'(' FormalArgLIST ')' ':' ReturnType {insert_signature($3,$6,$9);} 
+	'(' FormalArgLIST ')' ':' ReturnType {insert_signature($4,$7,$10);} 
 	CompoundStmt	
 				{ 												   
-					$$=opr(FUNC,5,$2,$3,$6,$9,$11);
-					printf("FUNCTION MATCHED\n");
+					$$=opr(FUNC,6,$2,$3,$4,$7,$10,$12);
+					debugger("FUNCTION MATCHED\n");
 				} 
 	;
 Static_or_not
@@ -369,13 +367,13 @@ FinishStmt
 JumpStmt
 	:CONTINUE ';'		{$$=opr(CONTINUE,0);}	
 	|BREAK ';'		{$$=opr(BREAK,0);}
-	|RETURN ';'		{printf("In Return \n");$$=opr(RETURN,0);}
+	|RETURN ';'		{debugger("In Return \n");$$=opr(RETURN,0);}
 	|RETURN Expression ';'	{$$=opr(RETURN,1,$2);}
 	;
 	
 AsyncStmtList
 			:AsyncStmt AsyncStmtList  {$$ = opr(ASYNC_LIST,2,$1,$2);/* beware right recursion here*/}
-			|AsyncStmt {$$ = $1; printf("HERE HERE!!\n");}
+			|AsyncStmt {$$ = $1; debugger("HERE HERE!!\n");}
 			;
 
 AsyncStmt
@@ -423,11 +421,11 @@ CaseStmtList
 	| CaseStmt { $$ = $1;}
 
 CaseStmt	
-	:CASE ConstExp ':' Stmt	{printf("LLLLLLLLLLLL\n");$$=opr(CASE_STMT,2,$2,$4);}
+	:CASE ConstExp ':' Stmt	{debugger("LLLLLLLLLLLL\n");$$=opr(CASE_STMT,2,$2,$4);}
 	;
 
 DefaultStmt
-	:DEFAULT ':'	Stmt {printf("KKKKKKKKK\n"); $$ = opr(DEFAULT,1,$3);}
+	:DEFAULT ':'	Stmt {debugger("KKKKKKKKK\n"); $$ = opr(DEFAULT,1,$3);}
 	|{$$ = empty(EMPTY);/*empty production*/}
 	;
 
@@ -479,7 +477,7 @@ VarDec
 	{
 		type_check_obj($5,$9,$12);
 		$$=opr(OBJ,3,$2,$9,$12);
-		printf("Obj done\n");
+		debugger("Obj done\n");
 	}
 	;
 InitExpList
@@ -505,15 +503,15 @@ IdList
 primary_Expression	
 	:IDENT			{
 						struct sym_record*s =search(current_st,yytext);
-						printf("s is NULL is true = %d\n",s==NULL);					
+						debugger("s is NULL is true = %d\n",s==NULL);					
 						$$=id(s);
 				}
 	|ConstExp		{$$=$1;}
 	|'(' Expression ')' 	{$$=$2;}
 	;
 ConstExp	
-	:INTEGER	{$$=con_i($1);printf("INTEGERSSSSSSSSs %d\n",$1);}
-	|FLOAT		{$$=con_f($1);printf("FLOATSSSSSSSSSs %lf\n",$1);}
+	:INTEGER	{$$=con_i($1);debugger("INTEGERSSSSSSSSs %d\n",$1);}
+	|FLOAT		{$$=con_f($1);debugger("FLOATSSSSSSSSSs %lf\n",$1);}
 	|CHAR		{$$=con_c($1);}
 	|TRUE		{$$=con_b(1);}	
 	|FALSE		{$$=con_b(0);}	
@@ -530,10 +528,10 @@ assignment_Expression
 	|unary_Expression AssOp assignment_Expression	{
 													$$=opr(ASSIGN,3,$1,$2,$3) ;
 													type_check_assign($$,$1,$3);
-													/*printf("MAKING ASSIGN NODE:\n");
-													printf("Unary Exp name:%s\n",$1->id.symrec->sym_name);
-													printf("Assop Type:%d\n",$2->type);
-													printf("Assignment Exp value:%d type:%d \n",$3->con_i.value,$3->type);													*/
+													/*debugger("MAKING ASSIGN NODE:\n");
+													debugger("Unary Exp name:%s\n",$1->id.symrec->sym_name);
+													debugger("Assop Type:%d\n",$2->type);
+													debugger("Assignment Exp value:%d type:%d \n",$3->con_i.value,$3->type);													*/
 													}
 	;
 
@@ -632,7 +630,7 @@ postfix_Expression
 										
 										if(s==NULL)
 										{
-											printf("Field not valid\n");
+											debugger("Field not valid\n");
 										}
 										
 										$3=id(s);
@@ -673,21 +671,27 @@ unary_operator
 int main(int argc, char** argv)
 {
 	char x10file[50];
-	if(argc > 0)
+		
+	if(argc < 3)		// something is wrong
 	{
-		//printf("ARG V IS %s",argv[2]);
-		//printf("%s",x10file);
+		debugger("INCORRECT USAGE\n");
+		return 0;
+	}
+	if(argc >= 3)					
+	{
+		//debugger("ARG V IS %s",argv[2]);
+		//debugger("%s",x10file);
 		
 		strcpy(x10file,argv[2]);
 		freopen(x10file,"r",stdin);	
 		
-		out_file=strdup(argv[1]);		// filename without extension
+		out_file=strdup(argv[1]);						// filename without extension
 		output=fopen(strcat(argv[1],".il"),"w");		// create il file
 	}
-	else if(argc==4)
+	
+	if(argc==4)			// debug flag used
 	{
-		printf("DEBUG FLAG %s\n",argv[3]);
-		fflush(stdout);
+		debugger("DEBUG FLAG %s\n",argv[3]);
 		if(strcmp(argv[3],"debug")==0)
 		{
 			debug_flag=1;
@@ -707,7 +711,7 @@ int main(int argc, char** argv)
 
 void yyerror (char *s) /* Called by yyparse on error */
 {
-	printf ("%d:%d:error:%s at %s  \n",yyline_no,yycolumn-yyleng,s,yytext);
+	printf("%d:%d:error:%s at %s  \n",yyline_no,yycolumn-yyleng,s,yytext);
 }
 
 
