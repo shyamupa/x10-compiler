@@ -201,13 +201,18 @@ void type_check_typeid(nodeType* node)
 // GIGLAMESH
 void type_check_invoc(nodeType* parent,nodeType* func_name,nodeType* arg_list)
 {
-	if(func_name->opr.oper==FIELD)
+	if(func_name->opr.oper==FIELD)		// call is of form objref.func 
 	{
 		debugger("TYPE CHECK IN FIELD\n");
 		// incomplete
 		nodeType* objref=get_operand(func_name,0);
 		func_name=get_operand(func_name,1);
-		
+		// check method is not static
+		if(func_name->id.symrec->is_static==1)
+		{
+			yyerror("incorrect usage of static function");
+			return;
+		}
 		enum modifier accmod=func_name->id.symrec->access_mode;
 		
 		if(accmod==modPRIVATE)
@@ -315,9 +320,13 @@ void type_check_cast(nodeType* parent,nodeType* node)
 
 void type_check_obj(nodeType* lhs,nodeType* class_name,nodeType* argexplist)
 {
+	if(lhs==NULL || class_name==NULL || argexplist==NULL)
+	{
+		yyerror("something wrong in object creation"); 
+	}
 	if(strcmp(lhs->id.symrec->sym_name,lhs->id.symrec->sym_name)!=0)
 	{
-		yyerror("wrong class creation\n");
+		yyerror("The objref type and class name dont match");
 	}
 	// incomplete
 }

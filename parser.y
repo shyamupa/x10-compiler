@@ -3,6 +3,7 @@
 #include<ctype.h>
 #include<stdlib.h>
 #include<string.h>
+#include<assert.h>
 #include<math.h>
 #include "ll_sym_table.h"		// definitions of the symbol table
 #include "st_stack.h"			// sym_tab stack
@@ -55,6 +56,7 @@ char* out_file;
 nodeType* root;
 int debug_flag=0;
 int error_found=0;
+int seen_main=0;
 
 /*global variables*/
 
@@ -66,7 +68,7 @@ int error_found=0;
 	char cVal;
 	char* str;
 	struct sym_record *sPtr; // pointer to position in sym_table
-	union nodeTypeTag *nPtr;	 // node pointer
+	union Gen_Node *nPtr;	 // node pointer
 }
 %token VAL VAR
 %token ARRAY_INVOC
@@ -222,7 +224,7 @@ Defn_or_Decln
 	;
 
 ClassDeclnList
-	:ClassDeclnList ClassDecln	{$$=opr(CLASSLIST,2,$1,$2);}
+	:ClassDeclnList ClassDecln	{$$=make_node(CLASSLIST,2,$1,$2);}
 	|ClassDecln			{$$=$1;}
 	
 ClassDecln
@@ -231,7 +233,7 @@ ClassDecln
 				debugger("%s\n",yytext);
 				struct sym_record* s=install(yytext);
 				
-				$3 = id(s);
+				$3 = make_id(s);
 				
 				st_push(current_st);
 				current_st=new_sym_table(current_st);
@@ -244,7 +246,7 @@ ClassDecln
 		'(' FieldArgLIST ')'
 		ClassBody ';'	
 		{
-				$$=opr(CLASS,4,$1,$3,$6,$8);
+				$$=make_node(CLASS,4,$1,$3,$6,$8);
 		}
 		;						
 		
@@ -253,18 +255,18 @@ FieldArgLIST
         |				{$$= empty(EMPTY);/*empty production*/} 
 	    ;	
 FieldArgList	
-	:FieldArgList ',' FieldArg	{$$=opr(FIELD_ARG_LIST,2,$1,$3);}
+	:FieldArgList ',' FieldArg	{$$=make_node(FIELD_ARG_LIST,2,$1,$3);}
 	|FieldArg	{$$=$1;}
 	;
 FieldArg
 	: IDENT {
 				struct sym_record* s = install(yytext);
-				$1 = id(s);
+				$1 = make_id(s);
 				s->is_field=1;
 			}
 	 ':' Type
 			{
-				$$=opr(FIELD_ARG,2,$1,$4);
+				$$=make_node(FIELD_ARG,2,$1,$4);
 				 
 				$1->id.symrec->type = $4->con_i.value;
 			}
@@ -274,18 +276,18 @@ Mods
 	:PUBLIC		{$$=con_i(modPUBLIC);}
 	|PRIVATE	{$$=con_i(modPRIVATE);}
 	|PROTECTED	{$$=con_i(modPROTECTED);}
-	|			{$$=empty(EMPTY);}
+	|			{$$=con_i(EMPTY);}
 	;
 
 ClassBody	: '{' {seen_class = 0;} FuncDefnList '}'	{
-														$$=$3;
-														print_st(current_st);
-														current_st=st_pop();
+															$$=$3;
+															print_st(current_st);
+															current_st=st_pop();
 														}
 		;
 
 FuncDefnList
-	:FuncDefnList FuncDefn	{$$ = opr(FUNC_DEF_LIST,2,$1,$2);}
+	:FuncDefnList FuncDefn	{$$ = make_node(FUNC_DEF_LIST,2,$1,$2);}
 	|FuncDefn		{$$ = $1;}
 	;
 FuncDefn
@@ -293,23 +295,36 @@ FuncDefn
 				{
 					debugger("%s\n",yytext);
 					struct sym_record* s=install(yytext);
+					if(s!=NULL)
+					{
+						if(strcmp(yytext,"main")==0)
+						{
+							seen_main++;
+						}
+						s->is_proc_name=1;		// is a func name
+						if($3->opr.oper!=EMPTY)
+						{
+							s->is_static=1;
+						}
+						$4 = make_id(s);
+						assign_acc_mod($4,$2);
 					
-					s->is_proc_name=1;		// is a func name
-					$4 = id(s);
+						st_push(current_st);
+						current_st=new_sym_table(current_st);
+						current_st->owner_name=strdup(yytext);
+						s->my_st=current_st;
 					
-					assign_acc_mod($4,$2);
-					
-					st_push(current_st);
-					current_st=new_sym_table(current_st);
-					current_st->owner_name=strdup(yytext);
-					s->my_st=current_st;
-					
-					seen_func=1;		// for compound stmt
+						seen_func=1;		// for compound stmt
+					}
+					else
+					{
+						$4=NULL;
+					}
 				}
 	'(' FormalArgLIST ')' ':' ReturnType {insert_signature($4,$7,$10);} 
 	CompoundStmt	
 				{ 												   
-					$$=opr(FUNC,6,$2,$3,$4,$7,$10,$12);
+					$$=make_node(FUNC,6,$2,$3,$4,$7,$10,$12);
 					debugger("FUNCTION MATCHED\n");
 				} 
 	;
@@ -325,18 +340,18 @@ FormalArgLIST : FormalArgList	{ $$ = $1;}
               | {$$= empty(EMPTY);/*empty production*/} 
 	      ;	
 FormalArgList	
-	:FormalArgList ',' FormalArg	{$$=opr(FORMAL_ARG_LIST,2,$1,$3);}
+	:FormalArgList ',' FormalArg	{$$=make_node(FORMAL_ARG_LIST,2,$1,$3);}
 	|FormalArg	{$$=$1;}
 	;
 FormalArg
 	: IDENT {
 				struct sym_record* s = install(yytext);
-				$1 = id(s);
+				$1 = make_id(s);
 				s->formal=1;
 			}
 	 ':' Type
 			{
-				$$=opr(FORMAL_ARG,2,$1,$4);
+				$$=make_node(FORMAL_ARG,2,$1,$4);
 				 
 				$1->id.symrec->type = $4->con_i.value;
 			}
@@ -345,7 +360,7 @@ FormalArg
 	
 StmtList
 	:Stmt	{$$=$1;} 			
-	|StmtList Stmt {$$=opr(STMT_LIST,2,$1,$2);}	
+	|StmtList Stmt {$$=make_node(STMT_LIST,2,$1,$2);}	
 	;
 		
 Stmt	
@@ -354,7 +369,7 @@ Stmt
 	|BasicForStmt 		{$$=$1;}
 	|SelectionStmt		{$$=$1;}
 	|CompoundStmt		{$$=$1;}
-	|NonFuncDeclaration 	{$$=$1;}
+	|NonFuncDeclaration	{$$=$1;}
 	|AsyncStmt		{$$=$1;}
 	|JumpStmt		{$$=$1;}
 	|FinishStmt		{$$=$1;}
@@ -362,23 +377,23 @@ Stmt
 	;
 
 FinishStmt
-		: FINISH '{' AsyncStmtList '}' ';' {$$ = opr(FINISH,1,$3);}  
+		: FINISH '{' AsyncStmtList '}' ';' {$$ = make_node(FINISH,1,$3);}  
 		;
 
 JumpStmt
-	:CONTINUE ';'		{$$=opr(CONTINUE,0);}	
-	|BREAK ';'		{$$=opr(BREAK,0);}
-	|RETURN ';'		{debugger("In Return \n");$$=opr(RETURN,0);}
-	|RETURN Expression ';'	{$$=opr(RETURN,1,$2);}
+	:CONTINUE ';'		{$$=make_node(CONTINUE,0);}	
+	|BREAK ';'			{$$=make_node(BREAK,0);}
+	|RETURN ';'			{debugger("In Return \n");$$=make_node(RETURN,0);}
+	|RETURN Expression ';'	{$$=make_node(RETURN,1,$2);}
 	;
 	
 AsyncStmtList
-			:AsyncStmt AsyncStmtList  {$$ = opr(ASYNC_LIST,2,$1,$2);/* beware right recursion here*/}
+			:AsyncStmt AsyncStmtList  {$$ = make_node(ASYNC_LIST,2,$1,$2);/* beware right recursion here*/}
 			|AsyncStmt {$$ = $1;}
 			;
 
 AsyncStmt
-	:ASYNC '{' postfix_Expression ';' '}' ';'		{ $$=opr(ASYNC,2,$3);}
+	:ASYNC '{' postfix_Expression ';' '}' ';'		{ $$=make_node(ASYNC,2,$3);}
 	;
 	
 CompoundStmt	
@@ -399,7 +414,7 @@ CompoundStmt
 			print_st(current_st);
 			current_st=st_pop();
 		}
-	  '}'		{$$=opr(COMPOUND,1,$3);}
+	  '}'		{$$=make_node(COMPOUND,1,$3);}
 	|error '}'	{yyerror("error in compound stmt");}
 	;
 	
@@ -415,34 +430,34 @@ ExpressionStmt
 	;
 	
 SelectionStmt	
-	:IF '(' Expression ')' Stmt %prec IFX	{$$=opr(IF,2,$3,$5);}
-	|IF '(' Expression ')' Stmt ELSE Stmt	{$$=opr(IF_ELSE,3,$3,$5,$7);}
-	|SWITCH '(' Expression ')' '{' CaseStmtList '}'		{$$=opr(SWITCH,2,$3,$6);}
+	:IF '(' Expression ')' Stmt %prec IFX	{$$=make_node(IF,2,$3,$5);}
+	|IF '(' Expression ')' Stmt ELSE Stmt	{$$=make_node(IF_ELSE,3,$3,$5,$7);}
+	|SWITCH '(' Expression ')' '{' CaseStmtList '}'		{$$=make_node(SWITCH,2,$3,$6);}
 	;
 
 CaseStmtList 
-	:CaseStmtList CaseStmt  DefaultStmt {$$=opr(CASE_STMT_LIST,3,$1,$2,$3);}
+	:CaseStmtList CaseStmt  DefaultStmt {$$=make_node(CASE_STMT_LIST,3,$1,$2,$3);}
 	|CaseStmt { $$ = $1;}
 
 CaseStmt	
-	:CASE ConstExp ':' Stmt	{$$=opr(CASE_STMT,2,$2,$4);}
+	:CASE ConstExp ':' Stmt	{$$=make_node(CASE_STMT,2,$2,$4);}
 	;
 
 DefaultStmt
-	:DEFAULT ':'	Stmt	{$$ = opr(DEFAULT,1,$3);}
+	:DEFAULT ':'	Stmt	{$$ = make_node(DEFAULT,1,$3);}
 	|						{$$ = empty(EMPTY);/*empty production*/}
 	;
 
 IterationStmt	
-	:WHILE '(' Expression ')' Stmt			{$$ = opr(WHILE, 2, $3, $5);}
+	:WHILE '(' Expression ')' Stmt			{$$ = make_node(WHILE, 2, $3, $5);}
 	;
 
 BasicForStmt	
-	:FOR '(' Expression ';' Expression ';' Expression ')' Stmt {$$=opr(FOR,4,$3,$5,$7,$9);}
+	:FOR '(' Expression ';' Expression ';' Expression ')' Stmt {$$=make_node(FOR,4,$3,$5,$7,$9);}
 	;
 	
 ObjCreation	
-	:NEW TypeName '(' Expression ')' {$$=opr(NEW,2,$2,$4);}	
+	:NEW TypeName '(' Expression ')' {$$=make_node(NEW,2,$2,$4);}	
 	;
 	
 TypeName
@@ -457,39 +472,49 @@ AssOp
 	|DIV_EQ		{$$=con_i(DIV_EQ);}
 	;
 VarDec	
-	:VAR IdList ':' Type {$$=opr(VAR_DEC,2,$2,$4);dist_type($$);}
+	:VAR IdList ':' Type {$$=make_node(VAR_DEC,2,$2,$4);dist_type($$);}
 	|VAR IdList EQ NEW ARRAY '[' Type ']' '(' Expression ')'	
 				{
-					$$ = opr(ARRAY,3,$2,$7,$10);
+					$$ = make_node(ARRAY,3,$2,$7,$10);
 					dist_type($$);
 					type_check_array($7);
 				}
 	|VAL IDENT	{	
 					struct sym_record* s=install(yytext);
-					$2 = id(s);
+					$2 = make_id(s);
 				}
 	':' IDENT	
 				{
 					struct sym_record* s=search(current_st,yytext);
-					$5 = id(s);
-					$2->id.symrec->my_st = $5->id.symrec->my_st;
+					if(s!=NULL && s->is_class==1)
+					{
+						$5 = make_id(s);
+						$2->id.symrec->my_st = $5->id.symrec->my_st;
+					}
+					else
+						yyerror("Instantiating something that is not a class");	
 				}
 	 EQ NEW IDENT 
 				{
 					struct sym_record* s=search(current_st,yytext);
-					$9 = id(s);
+					if(s!=NULL && s->is_class==1)
+					{
+						$9 = make_id(s);
+					}
+					else
+						yyerror("Instantiating something that is not a class");	
 				} 
 	'(' InitExpList ')' 
 	{
 		type_check_obj($5,$9,$12);
-		$$=opr(OBJ,3,$2,$9,$12);
+		$$=make_node(OBJ,3,$2,$9,$12);
 		debugger("Obj done\n");
 	}
 	;
 	
 InitExpList
 	:conditional_Expression					{$$=$1;}
-	|InitExpList ',' conditional_Expression	{$$=opr(INITEXPLIST,2,$1,$3);}
+	|InitExpList ',' conditional_Expression	{$$=make_node(INITEXPLIST,2,$1,$3);}
 	|										{$$=empty(EMPTY);}	
 	;	
 Type	
@@ -500,18 +525,18 @@ Type
 	|TYPE_VOID	{$$=con_i(MY_VOID);}
 	;
 IdList	
-	:IDENT				{struct sym_record* s=install(yytext);$$=id(s);}
+	:IDENT				{struct sym_record* s=install(yytext);$$=make_id(s);}
 	|IdList ',' IDENT 	{
 							struct sym_record* s=install(yytext);
-							$3 = id(s);
-							$$=opr(ID_LIST,2,$1,$3);
+							$3 = make_id(s);
+							$$=make_node(ID_LIST,2,$1,$3);
 						}
 	;
 primary_Expression	
 	:IDENT			{
 						struct sym_record*s =search(current_st,yytext);
 						debugger("Ident %s not found in st = %d\n",yytext,s==NULL);					
-						$$=id(s);
+						$$=make_id(s);
 					}
 	|ConstExp				{$$=$1;}
 	|'(' Expression ')' 	{$$=$2;}
@@ -526,79 +551,79 @@ ConstExp
 
 Expression
 	:assignment_Expression		{$$=$1;}
-	|Expression ',' assignment_Expression  {$$=opr(EXP_LIST,2,$1,$3);}
+	|Expression ',' assignment_Expression  {$$=make_node(EXP_LIST,2,$1,$3);}
 	|ObjCreation
 	;
 
 assignment_Expression	
 	:conditional_Expression		{$$=$1;}
 	|unary_Expression AssOp assignment_Expression	{
-													$$=opr(ASSIGN,3,$1,$2,$3) ;
+													$$=make_node(ASSIGN,3,$1,$2,$3) ;
 													type_check_assign($$,$1,$3);
 													}
 	;
 
 conditional_Expression	
 	:logical_or_Expression	{$$=$1;}
-	|logical_or_Expression QM Expression ':' conditional_Expression	{$$=opr(TERNARY,3,$1,$3,$5);type_check_ternary($$,$1,$3,$5);}
+	|logical_or_Expression QM Expression ':' conditional_Expression	{$$=make_node(TERNARY,3,$1,$3,$5);type_check_ternary($$,$1,$3,$5);}
 	;
 
 logical_or_Expression	
 	:logical_and_Expression	{$$=$1;}
-	|logical_or_Expression BOOL_OR logical_and_Expression	{$$=opr(BOOL_OR,2,$1,$3);type_check_bool($$,$1,$3);}
+	|logical_or_Expression BOOL_OR logical_and_Expression	{$$=make_node(BOOL_OR,2,$1,$3);type_check_bool($$,$1,$3);}
 	;
 
 logical_and_Expression
 	:inclusive_or_Expression	{$$=$1;}
-	|logical_and_Expression BOOL_AND inclusive_or_Expression	{$$=opr(BOOL_AND,2,$1,$3);type_check_bool($$,$1,$3);}
+	|logical_and_Expression BOOL_AND inclusive_or_Expression	{$$=make_node(BOOL_AND,2,$1,$3);type_check_bool($$,$1,$3);}
 	;
 
 inclusive_or_Expression
 	:exclusive_or_Expression	{$$=$1;}
-	|inclusive_or_Expression BIT_OR exclusive_or_Expression		{$$=opr(BIT_OR,2,$1,$3);type_check_int($$,$1,$3);}
+	|inclusive_or_Expression BIT_OR exclusive_or_Expression		{$$=make_node(BIT_OR,2,$1,$3);type_check_int($$,$1,$3);}
 	;
 
 exclusive_or_Expression
 	:and_Expression	{$$=$1;}
-	|exclusive_or_Expression XOR and_Expression	{$$=opr(XOR,2,$1,$3);type_check_int($$,$1,$3);}
+	|exclusive_or_Expression XOR and_Expression	{$$=make_node(XOR,2,$1,$3);type_check_int($$,$1,$3);}
 	;
 
 and_Expression
 	:equality_Expression	{$$=$1;}
-	|and_Expression BIT_AND equality_Expression	{$$=opr(BIT_AND,2,$1,$3);type_check_int($$,$1,$3);}
+	|and_Expression BIT_AND equality_Expression	{$$=make_node(BIT_AND,2,$1,$3);type_check_int($$,$1,$3);}
 	;
 
 equality_Expression
 	:relational_Expression		{$$=$1;}	
-	|equality_Expression BOOL_EQ relational_Expression	{$$=opr(BOOL_EQ,2,$1,$3);type_check_booleq($$,$1,$3);}
-	|equality_Expression NEQ relational_Expression		{$$=opr(NEQ,2,$1,$3);type_check_booleq($$,$1,$3);}
+	|equality_Expression BOOL_EQ relational_Expression	{$$=make_node(BOOL_EQ,2,$1,$3);type_check_booleq($$,$1,$3);}
+	|equality_Expression NEQ relational_Expression		{$$=make_node(NEQ,2,$1,$3);type_check_booleq($$,$1,$3);}
 	;
 
 relational_Expression
 	:shift_Expression	{$$=$1;}
-	|relational_Expression LT shift_Expression	{$$=opr(LT,2,$1,$3);type_check_rel($$,$1,$3);}
-	|relational_Expression GT shift_Expression	{$$=opr(GT,2,$1,$3);type_check_rel($$,$1,$3);}
-	|relational_Expression LE shift_Expression	{$$=opr(LE,2,$1,$3);type_check_rel($$,$1,$3);}
-	|relational_Expression GE shift_Expression	{$$=opr(GE,2,$1,$3);type_check_rel($$,$1,$3);}
+	|relational_Expression LT shift_Expression	{$$=make_node(LT,2,$1,$3);type_check_rel($$,$1,$3);}
+	|relational_Expression GT shift_Expression	{$$=make_node(GT,2,$1,$3);type_check_rel($$,$1,$3);}
+	|relational_Expression LE shift_Expression	{$$=make_node(LE,2,$1,$3);type_check_rel($$,$1,$3);}
+	|relational_Expression GE shift_Expression	{$$=make_node(GE,2,$1,$3);type_check_rel($$,$1,$3);}
 	;
 
 shift_Expression
 	:additive_Expression						{$$ = $1;}
-	|shift_Expression LSH additive_Expression	{$$=opr(LSH,2,$1,$3);type_check_shift($$,$3);}
-	|shift_Expression RSH additive_Expression	{$$=opr(RSH,2,$1,$3);type_check_shift($$,$3);}
+	|shift_Expression LSH additive_Expression	{$$=make_node(LSH,2,$1,$3);type_check_shift($$,$3);}
+	|shift_Expression RSH additive_Expression	{$$=make_node(RSH,2,$1,$3);type_check_shift($$,$3);}
 	;
 
 additive_Expression
 	:multiplicative_Expression								{$$ = $1;}
-	|additive_Expression PLUS multiplicative_Expression		{$$=opr(PLUS,2,$1,$3);type_check_addmult($$,$1,$3);}
-	|additive_Expression MINUS multiplicative_Expression	{$$=opr(MINUS,2,$1,$3);type_check_addmult($$,$1,$3);}
+	|additive_Expression PLUS multiplicative_Expression		{$$=make_node(PLUS,2,$1,$3);type_check_addmult($$,$1,$3);}
+	|additive_Expression MINUS multiplicative_Expression	{$$=make_node(MINUS,2,$1,$3);type_check_addmult($$,$1,$3);}
 	;
 
 multiplicative_Expression
 	:cast_Expression									{$$ = $1;}
-	|multiplicative_Expression MULT cast_Expression	{$$=opr(MULT,2,$1,$3);type_check_addmult($$,$1,$3);}
-	|multiplicative_Expression DIV cast_Expression		{$$=opr(DIV,2,$1,$3);type_check_division($$,$1,$3);}
-	|multiplicative_Expression MODULO cast_Expression	{$$=opr(MODULO,2,$1,$3);type_check_modulo($$,$1,$3);}
+	|multiplicative_Expression MULT cast_Expression	{$$=make_node(MULT,2,$1,$3);type_check_addmult($$,$1,$3);}
+	|multiplicative_Expression DIV cast_Expression		{$$=make_node(DIV,2,$1,$3);type_check_division($$,$1,$3);}
+	|multiplicative_Expression MODULO cast_Expression	{$$=make_node(MODULO,2,$1,$3);type_check_modulo($$,$1,$3);}
 	;
 
 cast_Expression
@@ -606,26 +631,26 @@ cast_Expression
 	;
 
 unary_Expression
-	:postfix_Expression				{$$=$1;}
-	|PP unary_Expression				{$$=opr(PREFIX,2,con_i(MY_PP),$2);type_check_prepostfix($$,$2);}
-	|MM unary_Expression				{$$=opr(PREFIX,2,con_i(MY_MM),$2);type_check_prepostfix($$,$2);}
-	|unary_operator cast_Expression	{$$=opr(CAST,2,$1,$2);type_check_cast($$,$2);}
+	:postfix_Expression					{$$=$1;}
+	|PP unary_Expression				{$$=make_node(PREFIX,2,con_i(MY_PP),$2);type_check_prepostfix($$,$2);}
+	|MM unary_Expression				{$$=make_node(PREFIX,2,con_i(MY_MM),$2);type_check_prepostfix($$,$2);}
+	|unary_operator cast_Expression		{$$=make_node(CAST,2,$1,$2);type_check_cast($$,$2);}
 	;
 postfix_Expression
 	:primary_Expression				{$$ = $1;}
 	|postfix_Expression '[' Expression ']'
 										{
-											$$=opr(ARRAY_INVOC,2,$1,$3);
+											$$=make_node(ARRAY_INVOC,2,$1,$3);
 											type_check_array_invoc($$,$1,$3);
 										}
 	|postfix_Expression '('ArgExpList ')'		
 										{
-											$$=opr(INVOC,2,$1,$3);
+											$$=make_node(INVOC,2,$1,$3);
 											type_check_invoc($$,$1,$3);
 										}
 	|postfix_Expression '(' ')'				
 										{
-											$$=opr(INVOC,2,$1,empty(EMPTY));
+											$$=make_node(INVOC,2,$1,empty(EMPTY));
 											type_check_invoc($$,$1,empty(EMPTY));
 										}
 	|postfix_Expression '.' IDENT 	{
@@ -633,36 +658,39 @@ postfix_Expression
 										
 										if(s==NULL)
 										{
-											debugger("Field not valid\n");
-										}
-										
-										$3=id(s);
-										
-										if(s->is_proc_name==1)
-										{
-											$3->id.symrec->is_field=0;
+											yyerror("field not valid");
+											
 										}
 										else
 										{
-											$3->id.symrec->is_field=1;
-										}	
-										$$=opr(FIELD,2,$1,$3);
-										$$->opr.datatype = s->type;
+											$3=make_id(s);
+										
+											if(s->is_proc_name==1)
+											{
+												$3->id.symrec->is_field=0;
+											}
+											else
+											{
+												$3->id.symrec->is_field=1;
+											}	
+											$$=make_node(FIELD,2,$1,$3);
+											$$->opr.datatype = s->type;
+										}
 									}								
 	|postfix_Expression PP			
 									{
-										$$=opr(POSTFIX,2,$1,con_i(MY_PP));
+										$$=make_node(POSTFIX,2,$1,con_i(MY_PP));
 										type_check_prepostfix($$,$1);
 									}
 	|postfix_Expression MM			{
-										$$=opr(POSTFIX,2,$1,con_i(MY_MM));
+										$$=make_node(POSTFIX,2,$1,con_i(MY_MM));
 										type_check_prepostfix($$,$1);
 									}
 	;
 
 ArgExpList
 	:conditional_Expression	{$$=$1;}
-	|ArgExpList ',' conditional_Expression	{$$=opr(ARGEXPLIST,2,$1,$3);}
+	|ArgExpList ',' conditional_Expression	{$$=make_node(ARGEXPLIST,2,$1,$3);}
 	;
 unary_operator
 	:PLUS		{$$=con_i(MY_PLUS);}
@@ -705,20 +733,30 @@ int main(int argc, char** argv)
 
 	yyparse();
 	
-	output=fopen(strcat(argv[1],".il"),"w");		// create il file
-	print_header();
-	generate(root);
-	fclose(output);
-	
-	if(create_exe==1 && error_found==0)			// 
+	if(seen_main!=1)
 	{
-		
-		// following code runs ilasm 
-		char assembler[20]="ilasm ";
-		strcat(assembler,argv[1]);
-		system(assembler);
+		if(seen_main==0)
+			yyerror("no main function found");
+		else
+			yyerror("multiple main definitions");	
 	}
-
+	
+	if(error_found==0)
+	{
+		output=fopen(strcat(argv[1],".il"),"w");		// create il file
+		print_header();
+		generate(root);
+		fclose(output);
+	
+		if(create_exe==1)			// 
+		{
+		
+			// following code runs ilasm 
+			char assembler[20]="ilasm ";
+			strcat(assembler,argv[1]);
+			system(assembler);
+		}
+	}	
 	
 	fclose(stdin);
 	

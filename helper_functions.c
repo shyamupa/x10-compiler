@@ -295,13 +295,14 @@ nodeType* con_i(int value)
 	{
 		yyerror("out of memory");
 	}
-	p->type = typeConI;
-	p->con_i.value = value;
-	p->con_i.datatype = MY_INT;
+	
 	memset(buffer,0,BUFFSIZE);
 	sprintf(buffer,"%d",value);
 	p->con_i.place = strdup(buffer);
 	p->con_i.code = strdup(buffer);
+	p->type = typeConI;
+	p->con_i.value = value;
+	p->con_i.datatype = MY_INT;
 	
 	return p;
 }
@@ -312,13 +313,14 @@ nodeType* con_b(int value)
 	{
 		yyerror("out of memory");
 	}
-	p->type=typeConB;
-	p->con_b.value=value;
-	p->con_b.datatype=MY_BOOL;
 	memset(buffer,0,BUFFSIZE);
 	sprintf(buffer,"%d",value);
 	p->con_b.place = strdup(buffer);
 	p->con_b.code = strdup(buffer);
+	p->type=typeConB;
+	p->con_b.value=value;
+	p->con_b.datatype=MY_BOOL;
+
 	return p;
 }
 nodeType* con_f(float value)
@@ -328,11 +330,11 @@ nodeType* con_f(float value)
 	{
 		yyerror("out of memory");
 	}
+	memset(buffer,0,BUFFSIZE);
+	sprintf(buffer,"%f",value);
 	p->type=typeConF;
 	p->con_f.value=value;
 	p->con_f.datatype=MY_FLOAT;
-	memset(buffer,0,BUFFSIZE);
-	sprintf(buffer,"%f",value);
 	p->con_f.place = strdup(buffer);
 	p->con_f.code = strdup(buffer);
 	return p;
@@ -345,28 +347,28 @@ nodeType* con_c(char value)
 	{
 		yyerror("out of memory");
 	}
+	memset(buffer,0,BUFFSIZE);
+	sprintf(buffer,"%d",value);
 	p->type=typeConC;
 	p->con_c.value=value;
 	p->con_c.datatype=MY_CHAR;
-	memset(buffer,0,BUFFSIZE);
-	sprintf(buffer,"%d",value);
 	p->con_c.place = strdup(buffer);
 	p->con_c.code = strdup(buffer);
 	return p;
 }
 
-// Having installed a ident in the symbol table we call id() with its sym_record pointer
+// Having installed a ident in the symbol table we call make_id() with its sym_record pointer
 // this creates a node for the ident which will be used in the Syntax Tree
-nodeType *id(struct sym_record* symrec)	 
+nodeType *make_id(struct sym_record* symrec)	 
 {
 	nodeType *p;
 	if ((p = malloc(sizeof(idNodeType))) == NULL)
 		yyerror("out of memory");
-	p->type = typeId;
-	p->id.symrec = symrec;
-	debugger("IN ID() initialised type to %d and name to %s\n",p->type,p->id.symrec->sym_name);
 	p->id.code = strdup(symrec->sym_name);
 	p->id.place = strdup(symrec->sym_name);
+	p->type = typeId;
+	p->id.symrec = symrec;
+	debugger("IN make_id() initialised type to %d and name to %s\n",p->type,p->id.symrec->sym_name);
 	return p;
 }
 
@@ -384,7 +386,7 @@ nodeType* empty(int value)
 
 //
 // 
-nodeType *opr(int oper, int nops, ...) 
+nodeType *make_node(int oper, int nops, ...) 
 {
 	va_list ap;
 	nodeType *p;
@@ -410,7 +412,9 @@ struct sym_record* install(char* sym_name)
 	struct sym_record* r;
 	int rv=search_keywords(sym_name);
 	if(rv==1)
-		debugger("using reserved keyword\n");
+	{
+		yyerror("using reserved keyword\n");
+	}	
 	else
 	{
 		r=search(current_st,sym_name);
@@ -423,14 +427,19 @@ struct sym_record* install(char* sym_name)
 		}
 		else	// oops the name already exists
 		{
-			if(r->is_class==1)
+			if(r->is_class==1)			// class constructor
 			{
 				r=insert(current_st,sym_name);
 				debugger("install complete\n");
 				return r;
 			}	
 			else
-				debugger("BIG PROBLEM\n");
+			{
+				char buf[64]="redeclaration of ";
+				strcat(buf,sym_name);
+				yyerror(buf);
+				return NULL;
+			}	
 		// what to do here?? do we check scope or not
 		}
 	}
@@ -576,29 +585,30 @@ void debugger(char* format_str, ...)
 
 void assign_acc_mod(nodeType* func_name,nodeType* mods)
 {
-	if(mods->opr.oper==EMPTY)
+	if(mods->con_i.value==EMPTY)
 	{
 		func_name->id.symrec->access_mode=modPUBLIC;		// default is public mode
 		debugger("%s %d\n",func_name->id.symrec->sym_name,func_name->id.symrec->access_mode);
 		return;
-	}		
+	}
+			
 	switch(mods->con_i.value)
 		{
-				case modPUBLIC: 
-							func_name->id.symrec->access_mode=modPUBLIC;
-							debugger("%s %d\n",func_name->id.symrec->sym_name,func_name->id.symrec->access_mode);
-							break;
-				case modPRIVATE: 
-							func_name->id.symrec->access_mode=modPRIVATE;
-							debugger("%s %d\n",func_name->id.symrec->sym_name,func_name->id.symrec->access_mode);
-							break;
-				case modPROTECTED:
-							func_name->id.symrec->access_mode=modPROTECTED;
-							debugger("%s %d\n",func_name->id.symrec->sym_name,func_name->id.symrec->access_mode);
-							break;
-				default:	
-							debugger("In default of assign_acc_mod\n");
-							break;					
+			case modPUBLIC: 
+				func_name->id.symrec->access_mode=modPUBLIC;
+				debugger("%s %d\n",func_name->id.symrec->sym_name,func_name->id.symrec->access_mode);
+				break;
+			case modPRIVATE: 
+				func_name->id.symrec->access_mode=modPRIVATE;
+				debugger("%s %d\n",func_name->id.symrec->sym_name,func_name->id.symrec->access_mode);
+				break;
+			case modPROTECTED:
+				func_name->id.symrec->access_mode=modPROTECTED;
+				debugger("%s %d\n",func_name->id.symrec->sym_name,func_name->id.symrec->access_mode);
+				break;
+			default:	
+				debugger("In default of assign_acc_mod\n");
+				break;					
 		}
 	return;	
 }

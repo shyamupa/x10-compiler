@@ -603,41 +603,45 @@ void create_formal_args(nodeType* n)
 void insert_signature(nodeType* fun_name,nodeType* formalarg,nodeType* return_type)
 {
 	debugger("DOING SIGNATURE\n");
-	
-	memset(fun_name->id.symrec->signature,0,100);
-	switch(return_type->con_i.value)
-	{
-		case MY_INT:
-					strcat(fun_name->id.symrec->signature,"int32 ");
-					break;
-		case MY_FLOAT:
-					strcat(fun_name->id.symrec->signature,"float32 ");
-					break;			
-		case MY_VOID:
-					strcat(fun_name->id.symrec->signature,"void ");
-					break;			
-	}
-	strcat(fun_name->id.symrec->signature,"class ");
-	strcat(fun_name->id.symrec->signature,fun_name->id.symrec->my_st->parent->owner_name);
-	strcat(fun_name->id.symrec->signature,"::");
-	if(strcmp(fun_name->id.symrec->my_st->parent->owner_name,fun_name->id.symrec->sym_name)==0)
-	{
-		strcat(fun_name->id.symrec->signature,"'.ctor'");
-	}
+	if(fun_name==NULL || return_type==NULL)
+			yyerror("function name or return type not in symbol table");
 	else
-	{
-		strcat(fun_name->id.symrec->signature,fun_name->id.symrec->sym_name);
+	{	
+		memset(fun_name->id.symrec->signature,0,100);
+		switch(return_type->con_i.value)
+		{
+			case MY_INT:
+						strcat(fun_name->id.symrec->signature,"int32 ");
+						break;
+			case MY_FLOAT:
+						strcat(fun_name->id.symrec->signature,"float32 ");
+						break;			
+			case MY_VOID:
+						strcat(fun_name->id.symrec->signature,"void ");
+						break;			
+		}
+		strcat(fun_name->id.symrec->signature,"class ");
+		strcat(fun_name->id.symrec->signature,fun_name->id.symrec->my_st->parent->owner_name);
+		strcat(fun_name->id.symrec->signature,"::");
+		if(strcmp(fun_name->id.symrec->my_st->parent->owner_name,fun_name->id.symrec->sym_name)==0)
+		{
+			strcat(fun_name->id.symrec->signature,"'.ctor'");
+		}
+		else
+		{
+			strcat(fun_name->id.symrec->signature,fun_name->id.symrec->sym_name);
+		}	
+		strcat(fun_name->id.symrec->signature," ( ");
+		
+		memset(mybuf,0,100);
+		create_formal_args(formalarg);
+		
+		strcat(fun_name->id.symrec->signature,mybuf);
+		memset(mybuf,0,100);
+		strcat(fun_name->id.symrec->signature," ) ");
+		
+		debugger("FINAL SIGNATURE:%s\n",fun_name->id.symrec->signature);
 	}	
-	strcat(fun_name->id.symrec->signature," ( ");
-	
-	memset(mybuf,0,100);
-	create_formal_args(formalarg);
-	
-	strcat(fun_name->id.symrec->signature,mybuf);
-	memset(mybuf,0,100);
-	strcat(fun_name->id.symrec->signature," ) ");
-	
-	debugger("FINAL SIGNATURE:%s\n",fun_name->id.symrec->signature);
 }
 
 void ir_fun_def(nodeType* n)
@@ -657,7 +661,7 @@ void ir_fun_def(nodeType* n)
 	// all are public or private right now
 	debugger(".method ");
 	fprintf(output,".method ");
-	if(mods->opr.oper!=EMPTY)		// if static node is not empty the method is private 
+	if(mods->con_i.value!=EMPTY)		// if static node is not empty the method is private 
 	{
 		debugger("private ");
 		fprintf(output,"private ");

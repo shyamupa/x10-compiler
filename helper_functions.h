@@ -4,6 +4,7 @@
 #include<stdlib.h>
 #include<stdarg.h> // for variable arguments
 #include<string.h>
+#include<assert.h>
 #ifndef helper_functions_h_included
 #define helper_functions_h_included
 #define MAXQUEUE 100
@@ -26,8 +27,8 @@ nodeType* con_i(int value);
 nodeType* con_b(int value);
 nodeType* con_c(char value);
 nodeType* empty(int value);
-nodeType *id(struct sym_record* symrec);
-nodeType *opr(int oper, int nops, ...); 
+nodeType *make_id(struct sym_record* symrec);
+nodeType *make_node(int oper, int nops, ...); 
 struct sym_record* install(char* sym_name);
 void traverse(nodeType* n);
 void insert_queue(nodeType* n, char* label);

@@ -13,7 +13,7 @@ public class newclass(a:int,e:int)
 	}
 	def myfun(x:int,y:int):void
 	{
-		var b:boolean
+		var b:boolean;
 		fun2();
 		println(6);		
 		return; 
@@ -31,7 +31,6 @@ public class myclass()
 		println(6);
 		val obj:newclass=new newclass(1,2);
 		obj.myfun(12,1);
-		//obj.fun2();
 		obj.a=123;
 		obj.e=133;
 		

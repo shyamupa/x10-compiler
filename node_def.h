@@ -74,7 +74,7 @@ typedef struct
 	int oper;
 	int nops;
 	int datatype;
-	union nodeTypeTag *op[1];
+	union Gen_Node *op[1];
 	char* begin;
 	char* place;
 	char* code;
@@ -85,7 +85,7 @@ typedef struct
 
 }oprNodeType;
 
-union nodeTypeTag 
+union Gen_Node 
 {
 	nodeEnum type;		// type of node
 	con_iNodeType con_i;

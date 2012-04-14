@@ -53,6 +53,6 @@
 
 #include "y.tab.h"
 
-typedef union nodeTypeTag nodeType;	
+typedef union Gen_Node nodeType;	
 
 #endif
