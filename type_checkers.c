@@ -1,5 +1,5 @@
 #include "type_checkers.h"
-
+int curr_return_type = 0;
 /*
 	TYPE_CHECK_ASSIGN
 	checks type for assign opr
@@ -48,7 +48,7 @@ void type_check_addmult(nodeType* parent,nodeType* lhs,nodeType* rhs)
 		parent->opr.datatype=get_type(rhs);			// both float so parent float
 		return;
 	}
-	else if(get_type(lhs)==MY_FLOAT || get_type(rhs)==MY_FLOAT)
+	else if((get_type(lhs)==MY_FLOAT && get_type(rhs)==MY_INT) || (get_type(rhs)==MY_FLOAT && get_type(lhs)==MY_INT))
 	{	
 		parent->opr.datatype=MY_FLOAT;				// either is float then parent float
 		return;
@@ -71,12 +71,12 @@ void type_check_rel(nodeType* parent,nodeType* lhs,nodeType* rhs)		// was wrong 
 			parent->opr.datatype=MY_BOOL;		// operator node type is bool
 			return;
 	}
-	else if(get_type(lhs)==MY_INT && get_type(rhs)==MY_FLOAT || get_type(lhs)==MY_FLOAT && get_type(rhs)==MY_INT)	// float int combos
+	else if((get_type(lhs)==MY_INT && get_type(rhs)==MY_FLOAT) || (get_type(lhs)==MY_FLOAT && get_type(rhs)==MY_INT))	// float int combos
 	{
 			parent->opr.datatype=MY_BOOL;		// operator node type is bool
 			return;
 	}
-	yyerror("type mismatch in relational\n");
+	yyerror("type mismatch in relational");
 }
 
 // both operands should be int and the operator node will be int
@@ -84,7 +84,7 @@ void type_check_int(nodeType* parent,nodeType* lhs,nodeType* rhs)
 {
 	if(get_type(lhs)!=MY_INT || get_type(rhs)!=MY_INT)
 	{
-		yyerror("type mismatch in int\n");
+		yyerror("type mismatch in int");
 	}
 	parent->opr.datatype=MY_INT;		// assign type to parent
 	return;
@@ -95,7 +95,7 @@ void type_check_bool(nodeType* parent,nodeType* lhs,nodeType* rhs)
 {
 	if(get_type(lhs)!=MY_BOOL || get_type(rhs)!=MY_BOOL)
 	{
-		yyerror("type mismatch in bool\n");
+		yyerror("type mismatch in bool");
 	}
 	parent->opr.datatype=MY_BOOL;
 	return;
@@ -106,7 +106,7 @@ void type_check_shift(nodeType* parent,nodeType* node)
 {
 	if(get_type(node)!=MY_INT)
 	{
-		yyerror("type mismatch in shift\n");
+		yyerror("type mismatch in shift");
 	}
 	parent->opr.datatype=MY_INT;
 	return;
@@ -119,14 +119,14 @@ void type_check_division(nodeType* parent,nodeType* lhs,nodeType* rhs)
 	{
 		if(rhs->con_i.value==0)
 		{
-			yyerror("Division by zero\n");
+			yyerror("Division by zero");
 		}	
 	}
 	else if(rhs->type==typeConF)
 	{
-		if(rhs->con_f.value!=0.0)
+		if(rhs->con_f.value==0.0)
 		{
-			yyerror("Division by zero\n");
+			yyerror("Division by zero");
 		}		
 	}
 	
@@ -141,12 +141,12 @@ void type_check_division(nodeType* parent,nodeType* lhs,nodeType* rhs)
 		parent->opr.datatype=get_type(rhs);
 		return;
 	}
-	else if(get_type(lhs)==MY_FLOAT || get_type(rhs)==MY_FLOAT)	// either is float,parent is float
+	else if((get_type(lhs)==MY_FLOAT && get_type(rhs)==MY_INT) || (get_type(rhs)==MY_FLOAT && get_type(lhs)==MY_INT))	// either is float,parent is float
 	{
 		parent->opr.datatype=MY_FLOAT;
 		return;
 	}
-	yyerror("type mismatch in division\n");
+	yyerror("type mismatch in division");
 }
 
 // modulo only allows int operands,also need to check for div by 0
@@ -157,7 +157,7 @@ void type_check_modulo(nodeType* parent,nodeType* lhs,nodeType* rhs)
 	{
 		if(rhs->con_i.value==0)
 		{
-			yyerror("Modulo by zero\n");
+			yyerror("Modulo by zero");
 		}	
 	}
 	if(get_type(lhs)==MY_INT && get_type(rhs)==MY_INT)		//both are only allowed to be int right now
@@ -167,8 +167,7 @@ void type_check_modulo(nodeType* parent,nodeType* lhs,nodeType* rhs)
 	}
 	else
 	{
-		yyerror("type mismatch in modulo\n");
-		exit(0);
+		yyerror("type mismatch in modulo");
 	}
 }
 
@@ -177,12 +176,11 @@ void type_check_prepostfix(nodeType* parent,nodeType* node)
 {
 	if(get_type(node)!=MY_INT && get_type(node)!=MY_FLOAT)
 	{
-		yyerror("type mismatch in ppprefix\n");
-		exit(0);
+		yyerror("type mismatch in ppprefix");
 	}
 	else if(node->type != typeId)
 	{
-		yyerror("No identifier in the increment operation\n");
+		yyerror("No identifier in the increment operation");
 	}
 	parent->opr.datatype=get_type(node);
 	return;
@@ -193,7 +191,7 @@ void type_check_typeid(nodeType* node)
 {
 	if(node->type!=typeId)
 	{
-		yyerror("type undefined\n");
+		yyerror("type undefined");
 	}
 	return;
 }
@@ -201,14 +199,15 @@ void type_check_typeid(nodeType* node)
 // GIGLAMESH
 void type_check_invoc(nodeType* parent,nodeType* func_name,nodeType* arg_list)
 {
-	if(func_name->opr.oper==FIELD)		// call is of form objref.func 
+	if(func_name==NULL)
+		return;
+	if(func_name->opr.oper==FIELD)		// call is of form objref.func so method should not be static
 	{
 		debugger("TYPE CHECK IN FIELD\n");
-		// incomplete
 		nodeType* objref=get_operand(func_name,0);
 		func_name=get_operand(func_name,1);
 		// check method is not static
-		if(func_name->id.symrec->is_static==1)
+		if(func_name->id.symrec->is_static==1 && objref->type!=typeConI) 
 		{
 			yyerror("incorrect usage of static function");
 			return;
@@ -217,14 +216,19 @@ void type_check_invoc(nodeType* parent,nodeType* func_name,nodeType* arg_list)
 		
 		if(accmod==modPRIVATE)
 		{
-			yyerror("calling private function");
+			if(objref->type!=typeConI)
+				yyerror("calling private function");
 			return;
 		}
 	}
 	else
 	{
-		//Making node as int node for taking int input
-		//Currently we can take only int inputs
+		// function must be static
+		if(func_name->id.symrec->is_static!=1 && strcmp(func_name->id.symrec->sym_name,"scanf")!=0 && strcmp(func_name->id.symrec->sym_name,"println")!=0 && strcmp(func_name->id.symrec->sym_name,"print")!=0)
+		{
+			yyerror("incorrectly using a class function which is not static");
+			return;
+		}
 		if(strcmp(func_name->id.symrec->sym_name,"scanf")==0)
 		{
 			parent->opr.datatype = MY_INT;
@@ -286,12 +290,12 @@ void type_check_array_invoc(nodeType* parent,nodeType* array_name,nodeType* type
 {
 	if(get_type(type_of_arg) != MY_INT)
 	{
-		yyerror("Array arguement should be a int\n");
+		yyerror("Array arguement should be a int");
 	}
 	struct sym_record*p = search(current_st,array_name->id.symrec->sym_name);	// find array in sym_tab
 	if(p==NULL)
 	{
-		yyerror("Array not declared\n");
+		yyerror("Array not declared");
 	}
 	parent->opr.datatype = p->type;			// assign array's data type to parent node
 }	
@@ -336,12 +340,23 @@ void type_check_ternary(nodeType* parent,nodeType* bool_stmt,nodeType* exp1,node
 	if(get_type(bool_stmt)!= MY_BOOL)
 	{
 		yyerror("No boolean condition in conditional operator");
-		exit(0);
 	}
 	else if(get_type(exp1) != get_type(exp2))
 	{
 		yyerror("type mismatch in ternary operator, types of operand 2 & 3 should be same");
-		exit(0);
 	}
 	parent->opr.datatype=get_type(exp1);
 }	
+void type_check_func_return(nodeType* return_expr, int flag)
+{
+	if(flag == 1)
+	{
+		if(curr_return_type!=MY_VOID)
+			yyerror("type mismatch in return type");
+	}	
+	else if(get_type(return_expr)!=curr_return_type)
+	{
+	
+		yyerror("type mismatch in return type");
+	}
+}

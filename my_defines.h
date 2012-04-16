@@ -50,6 +50,7 @@
 
 #define BUFFSIZE 100
 #define MAXSTACK_SIZE 50
+#define MAX_THREADS 50
 
 #include "y.tab.h"
 

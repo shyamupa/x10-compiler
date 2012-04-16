@@ -22,6 +22,7 @@ extern char* yytext;
 extern int yywrap();
 extern int yycolumn;
 extern int yyleng;
+extern int curr_return_type;
 
 /*prototypes start*/
 
@@ -57,6 +58,9 @@ nodeType* root;
 int debug_flag=0;
 int error_found=0;
 int seen_main=0;
+int seen_return=0;
+int seen_loop=0;
+int seen_switch=0;
 
 /*global variables*/
 
@@ -293,6 +297,7 @@ FuncDefnList
 FuncDefn
 	:DEF Mods Static_or_not IDENT 	
 				{
+					seen_return=0;
 					debugger("%s\n",yytext);
 					struct sym_record* s=install(yytext);
 					if(s!=NULL)
@@ -321,9 +326,17 @@ FuncDefn
 						$4=NULL;
 					}
 				}
-	'(' FormalArgLIST ')' ':' ReturnType {insert_signature($4,$7,$10);} 
+	'(' FormalArgLIST ')' ':' ReturnType 
+					{
+						insert_signature($4,$7,$10);
+						curr_return_type = $10->con_i.value;
+					} 
 	CompoundStmt	
 				{ 												   
+					if(seen_return==0 && $10->con_i.value!=MY_VOID)
+					{
+						yyerror("return missing in function");
+					}
 					$$=make_node(FUNC,6,$2,$3,$4,$7,$10,$12);
 					debugger("FUNCTION MATCHED\n");
 				} 
@@ -377,14 +390,26 @@ Stmt
 	;
 
 FinishStmt
-		: FINISH '{' AsyncStmtList '}' ';' {$$ = make_node(FINISH,1,$3);}  
+		: FINISH '{' AsyncStmtList '}' {$$ = make_node(FINISH,1,$3);}  
 		;
 
 JumpStmt
-	:CONTINUE ';'		{$$=make_node(CONTINUE,0);}	
-	|BREAK ';'			{$$=make_node(BREAK,0);}
-	|RETURN ';'			{debugger("In Return \n");$$=make_node(RETURN,0);}
-	|RETURN Expression ';'	{$$=make_node(RETURN,1,$2);}
+	:CONTINUE ';'		{
+							$$=make_node(CONTINUE,0);
+							if(seen_loop<=0)
+							{
+								yyerror("stray continue");
+							}
+						}	
+	|BREAK ';'			{
+							$$=make_node(BREAK,0);
+							if(seen_loop<=0 && seen_switch<=0)
+							{
+								yyerror("stray break");
+							}
+						}
+	|RETURN ';'				{$$=make_node(RETURN,0);seen_return=1;type_check_func_return(empty(EMPTY),1);}
+	|RETURN Expression ';'	{$$=make_node(RETURN,1,$2);seen_return=1;type_check_func_return($2,2);}
 	;
 	
 AsyncStmtList
@@ -393,7 +418,7 @@ AsyncStmtList
 			;
 
 AsyncStmt
-	:ASYNC '{' postfix_Expression ';' '}' ';'		{ $$=make_node(ASYNC,2,$3);}
+	:ASYNC '{' postfix_Expression ';' '}' { $$=make_node(ASYNC,2,$3);}
 	;
 	
 CompoundStmt	
@@ -423,16 +448,16 @@ NonFuncDeclaration
 	|VarDec error ';'	{yyerror("error in non func decln stmt");}
 	;
 ExpressionStmt	
-	:Expression ';'	{$$=$1;}
-	|';'		{$$=empty(EMPTY);}
+	:Expression ';'			{$$=$1;}
+	|';'					{$$=empty(EMPTY);}
 	|Expression error ';'	{yyerror("error in exp stmt");}
-	|error ';'	{yyerror("error in empty stmt");}
+	|error ';'				{yyerror("error in empty stmt");}
 	;
 	
 SelectionStmt	
-	:IF '(' Expression ')' Stmt %prec IFX	{$$=make_node(IF,2,$3,$5);}
-	|IF '(' Expression ')' Stmt ELSE Stmt	{$$=make_node(IF_ELSE,3,$3,$5,$7);}
-	|SWITCH '(' Expression ')' '{' CaseStmtList '}'		{$$=make_node(SWITCH,2,$3,$6);}
+	:IF '(' Expression ')' Stmt %prec IFX				{$$=make_node(IF,2,$3,$5);}
+	|IF '(' Expression ')' Stmt ELSE Stmt				{$$=make_node(IF_ELSE,3,$3,$5,$7);}
+	|SWITCH '(' Expression ')' '{' {seen_switch++;} CaseStmtList '}'		{$$=make_node(SWITCH,2,$3,$7);seen_switch--;}
 	;
 
 CaseStmtList 
@@ -449,11 +474,11 @@ DefaultStmt
 	;
 
 IterationStmt	
-	:WHILE '(' Expression ')' Stmt			{$$ = make_node(WHILE, 2, $3, $5);}
+	:WHILE '(' Expression ')' {seen_loop++;}Stmt			{$$ = make_node(WHILE, 2, $3, $6);seen_loop--;}
 	;
 
 BasicForStmt	
-	:FOR '(' Expression ';' Expression ';' Expression ')' Stmt {$$=make_node(FOR,4,$3,$5,$7,$9);}
+	:FOR '(' Expression ';' Expression ';' Expression ')' {seen_loop++;}Stmt {$$=make_node(FOR,4,$3,$5,$7,$10);seen_loop--;}
 	;
 	
 ObjCreation	
@@ -534,9 +559,15 @@ IdList
 	;
 primary_Expression	
 	:IDENT			{
-						struct sym_record*s =search(current_st,yytext);
-						debugger("Ident %s not found in st = %d\n",yytext,s==NULL);					
-						$$=make_id(s);
+						struct sym_record* s =search(current_st,yytext);
+						if(s==NULL)
+						{
+							yyerror("Identifier used before declaration");
+						}
+						else						
+						{
+							$$=make_id(s);
+						}	
 					}
 	|ConstExp				{$$=$1;}
 	|'(' Expression ')' 	{$$=$2;}
@@ -676,7 +707,31 @@ postfix_Expression
 											$$=make_node(FIELD,2,$1,$3);
 											$$->opr.datatype = s->type;
 										}
-									}								
+									}
+	|THIS '.' IDENT 				{
+										struct sym_record* s=search(current_st,yytext);
+										
+										if(s==NULL)
+										{
+											yyerror("field not valid");
+											
+										}
+										else
+										{
+											$3=make_id(s);
+										
+											if(s->is_proc_name==1)
+											{
+												$3->id.symrec->is_field=0;
+											}
+											else
+											{
+												$3->id.symrec->is_field=1;
+											}	
+											$$=make_node(FIELD,2,con_i(THIS),$3);
+											$$->opr.datatype = s->type;
+										}
+									}																
 	|postfix_Expression PP			
 									{
 										$$=make_node(POSTFIX,2,$1,con_i(MY_PP));
@@ -768,7 +823,7 @@ int main(int argc, char** argv)
 void yyerror (char *s) /* Called by yyparse on error */
 {
 	error_found=1;
-	printf("%d:%d:error:%s at %s  \n",yyline_no,yycolumn-yyleng,s,yytext);
+	printf("x-10 compiler:%d:%d:%s at %s  \n",yyline_no,yycolumn-yyleng,s,yytext);
 }
 
 

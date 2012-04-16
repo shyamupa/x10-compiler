@@ -417,7 +417,7 @@ struct sym_record* install(char* sym_name)
 	}	
 	else
 	{
-		r=search(current_st,sym_name);
+		r=search_shallow(current_st,sym_name);
 		if(r==NULL)	// sym_name not already in table add it
 		{
 			//debugger("I AM HERE\n");
@@ -530,9 +530,15 @@ void print_store_var(nodeType* n)
 void print_load_var(nodeType* n)
 {
 	debugger("IN LOAD VAR\n");	
-	if(n->type != typeId && n->opr.oper!=FIELD)	// neither ident nor field so error
+	if(n->type==typeConI)
+	{
+		if(n->con_i.value==THIS)
+			fprintf(output,"ldarg.0 \n");
+	}
+	else if(n->type != typeId && n->opr.oper!=FIELD)	// neither ident nor field so error
 		{
-			debugger("CASE 1\n");
+			
+			debugger("CASE 1 %d \n",n->con_i.value);
 			debugger("Trying to load a non variable \n");		// for safety against ldc.i4 needs
 			exit(0);
 		}

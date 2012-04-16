@@ -36,6 +36,7 @@ struct symbol_table* free_table (struct symbol_table* st);
 struct symbol_table* new_sym_table(struct symbol_table* parent);
 struct sym_record* insert(struct symbol_table* st,char* sym_name);	// inserts a record and returns a ptr to it
 struct sym_record* search(struct symbol_table* st,char* target_name);	//searches for a record and returns a ptr to it
+struct sym_record* search_shallow(struct symbol_table* st,char* target_name);	//searches for a record and returns a ptr to it
 void print_st(struct symbol_table* st);
 int search_keywords(char* sym_name);
 char* newuid();

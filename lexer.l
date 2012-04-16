@@ -11,15 +11,16 @@ int yycolumn=1;
 void yyerror (char *);
 
 %}
-delim 		[ \t]
-ws		{delim}+
-letter 		[A-Za-z_]
-digit 		[0-9]
+delim 			[ \t]
+ws				{delim}+
+letter 			[A-Za-z_]
+digit 			[0-9]
 line_comment 	"//".*\n
-id		{letter}({letter}|{digit})*	
-integer		{digit}+
-float		[-+]?{digit}*\.{digit}+([eE][-+]?{digit}+)?
-comment 	"/*"(.|\n)*"*/"
+id				{letter}({letter}|{digit})*	
+integer			{digit}+
+hexval			0[xX][0-9a-fA-F]+
+float			[-+]?{digit}*\.{digit}+([eE][-+]?{digit}+)?[Ff]
+comment 		"/*"(.|\n)*"*/"
 
 %%
 ^\n$		{}
@@ -96,7 +97,7 @@ when		{yycolumn=yycolumn+yyleng;return WHEN;}
 "-="		{yycolumn=yycolumn+yyleng;return MINUS_EQ;}
 "*="		{yycolumn=yycolumn+yyleng;return MULT_EQ;}
 "/="		{yycolumn=yycolumn+yyleng;return DIV_EQ;}
-"="			{yycolumn=yycolumn+yyleng;/*printf("!%s!",yytext)*/;return EQ;}
+"="			{yycolumn=yycolumn+yyleng;return EQ;}
 "?"			{yycolumn=yycolumn+yyleng;return QM;}
 "||"		{yycolumn=yycolumn+yyleng;return BOOL_OR;}
 "|"			{yycolumn=yycolumn+yyleng;return BIT_OR;}
@@ -148,10 +149,17 @@ new			{yycolumn=yycolumn+yyleng;return NEW;}
 				yylval.cVal=yytext[0];
 				return CHAR;
 			}
-{integer}	{	yycolumn=yycolumn+yyleng;
-				yylval.iVal=atoi(yytext);
+{hexval}	{	yycolumn=yycolumn+yyleng;
+				yylval.iVal=strtol(yytext,NULL,16);
+				//printf("HEX %s\n",yytext);
 				return INTEGER;
 			}
+{integer}	{	yycolumn=yycolumn+yyleng;
+				yylval.iVal=atoi(yytext);
+				//printf("INT %s\n",yytext);
+				return INTEGER;
+			}
+				
 {float}		{	yycolumn=yycolumn+yyleng;
 				//printf("%s FLOAT lexer",yytext);
 				yylval.fVal=atof(yytext);

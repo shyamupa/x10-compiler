@@ -53,7 +53,8 @@ void ir_async_stmt_list(nodeType* n);
 void ir_continue(nodeType* n);
 void ir_load_ref(nodeType* n);
 void ir_method_invoc(nodeType* n);
-
+void print_stelem(nodeType* n);
+void ir_print_arg_type(nodeType* n);
 
 
 

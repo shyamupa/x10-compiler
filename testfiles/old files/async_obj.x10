@@ -1,0 +1,126 @@
+public class myclass()
+{
+	
+	def myfun():int
+	{
+		println(1);		
+		println(1);		
+		println(1);		
+		println(1);		
+		println(1);		
+		println(1);		
+		println(1);		
+		println(1);		
+		println(1);		
+		println(1);		
+		println(1);		
+		println(1);		
+		println(1);		
+		println(1);		
+		println(1);		
+		println(1);		
+		println(1);		
+		println(1);		
+		println(1);		
+		println(1);		
+		println(1);		
+		println(1);		
+		println(1);		
+		println(1);		
+		println(1);		
+		println(1);		
+		println(1);		
+		println(1);		
+		println(1);		
+		println(1);		
+		println(1);		
+		println(1);		
+		println(1);		
+		println(1);		
+		println(1);		
+		println(1);		
+		println(1);		
+		println(1);		
+		println(1);		
+		println(1);		
+		println(1);		
+		println(1);		
+		println(1);		
+		return (6+7); 
+	}
+};
+public class class2()
+{	
+	def static main():void
+	{	
+		val objref:myclass=new myclass();
+		async {objref.myfun();};
+		println(2);
+		println(2);
+		println(2);
+		println(2);
+		println(2);
+		println(2);
+		println(2);
+		println(2);
+		println(2);
+		println(2);
+		println(2);
+		println(2);
+		println(2);
+		println(2);
+		println(2);
+		println(2);
+		println(2);
+		println(2);
+		println(2);
+		println(2);
+		println(2);
+		println(2);
+		println(2);
+		println(2);
+		println(2);
+		println(2);
+		println(2);
+		println(2);
+		println(2);
+		println(2);
+		println(2);
+		println(2);
+		println(2);
+		println(2);
+		println(2);
+		println(2);
+		println(2);
+		println(2);
+		println(2);
+		println(2);
+		println(2);
+		println(2);
+		println(2);
+		println(2);
+		println(2);
+		println(2);
+		println(2);
+		println(2);
+		println(2);
+		println(2);
+		println(2);
+		println(2);
+		println(2);
+		println(2);
+		println(2);
+		println(2);
+		println(2);
+		println(2);
+		println(2);
+		println(2);
+		println(2);
+		println(2);
+		println(2);
+		println(2);
+		
+		return;
+	}
+};
+

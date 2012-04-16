@@ -63,6 +63,20 @@ sym_record* insert(symbol_table* st,char* sym_name)	// inserts a record and retu
 	}	
 	return rv;
 }
+
+sym_record* search_shallow(symbol_table* st,char* target_name)	//searches for a record and returns a ptr to it
+{
+	sym_record* p;
+		p=st->Head;	// first sym_record
+		while(p!=NULL)
+		{
+			if(strcmp(p->sym_name,target_name)==0)
+				return p;
+			p=p->next;	
+		}
+	return NULL;
+}
+
 sym_record* search(symbol_table* st,char* target_name)	//searches for a record and returns a ptr to it
 {
 	sym_record* p;
@@ -79,6 +93,7 @@ sym_record* search(symbol_table* st,char* target_name)	//searches for a record a
 	}	
 	return NULL;
 }
+
 void print_st(symbol_table* st)
 {
 	debugger("####################\n");

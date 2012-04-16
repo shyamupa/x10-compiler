@@ -274,14 +274,17 @@ void ir_assign(nodeType* n)
 			{	
 				ir_array_lhs(unary_exp);
 				generate(ass_exp);
-				debugger("stelem.i4\n");
-				fprintf(output,"stelem.i4\n");
+				//~ debugger("stelem.i4\n");
+				//~ fprintf(output,"stelem.i4\n");
+				print_stelem(unary_exp);
 			}
 			else if(unary_exp->opr.oper==FIELD)			// assign to field  THIS PART NEEDS TO BE INCLUDED IN LATER CASES
 			{
 				
 				ir_load_ref(unary_exp);			// first load the obj ref
+				
 				generate(ass_exp);				// generate whatever is to be assigned
+				
 				print_store_var(get_operand(unary_exp,1));		// store in field using stfld
 				
 			}
@@ -294,7 +297,9 @@ void ir_assign(nodeType* n)
 					fprintf(output,"ldarg.0\n");		
 				}
 				prepost_put = 1;	
+				
 				generate(ass_exp);
+				
 				prepost_put = 0;
 				print_store_var(unary_exp);		// use store_var function to decide instruction
 			}	
@@ -308,11 +313,32 @@ void ir_assign(nodeType* n)
 				generate(ass_exp);
 				debugger("add\n");
 				fprintf(output,"add\n");
-				debugger("stelem.i4\n");
-				fprintf(output,"stelem.i4\n");
+				//~ debugger("stelem.i4\n");
+				//~ fprintf(output,"stelem.i4\n");
+				print_stelem(unary_exp);
+			}
+			else if(unary_exp->opr.oper==FIELD)			// assign to field  THIS PART NEEDS TO BE INCLUDED IN LATER CASES
+			{
+				
+				ir_load_ref(unary_exp);			// first load the obj ref
+				debugger("dup\n");			// load obj ref which is always 0 in constr
+				fprintf(output,"dup\n");
+				print_load_var(get_operand(unary_exp,1));		
+				generate(ass_exp);				// generate whatever is to be assigned
+				debugger("add\n");
+				fprintf(output,"add\n");
+				print_store_var(get_operand(unary_exp,1));		// store in field using stfld
+				
 			}
 			else
-			{			
+			{	
+				if(unary_exp->id.symrec->is_field==1)	// inside constructor to print 
+				{
+					debugger("ldarg.0\n");			// load obj ref which is always 0 in constr
+					fprintf(output,"ldarg.0\n");		
+					debugger("dup\n");			// load obj ref which is always 0 in constr
+					fprintf(output,"dup\n");		
+				}		
 				print_load_var(unary_exp);		// first load to perform add
 				
 				prepost_put = 1;
@@ -335,11 +361,32 @@ void ir_assign(nodeType* n)
 				
 				debugger("sub\n");
 				fprintf(output,"sub\n");
-				debugger("stelem.i4\n");
-				fprintf(output,"stelem.i4\n");
+				//~ debugger("stelem.i4\n");
+				//~ fprintf(output,"stelem.i4\n");
+				print_stelem(unary_exp);
+			}
+			else if(unary_exp->opr.oper==FIELD)			// assign to field  THIS PART NEEDS TO BE INCLUDED IN LATER CASES
+			{
+				
+				ir_load_ref(unary_exp);			// first load the obj ref
+				debugger("dup\n");			// load obj ref which is always 0 in constr
+				fprintf(output,"dup\n");
+				print_load_var(get_operand(unary_exp,1));		
+				generate(ass_exp);				// generate whatever is to be assigned
+				debugger("sub\n");
+				fprintf(output,"sub\n");
+				print_store_var(get_operand(unary_exp,1));		// store in field using stfld
+				
 			}
 			else
 			{			
+				if(unary_exp->id.symrec->is_field==1)	// inside constructor to print 
+				{
+					debugger("ldarg.0\n");			// load obj ref which is always 0 in constr
+					fprintf(output,"ldarg.0\n");		
+					debugger("dup\n");			// load obj ref which is always 0 in constr
+					fprintf(output,"dup\n");		
+				}
 				print_load_var(unary_exp);
 				
 				prepost_put = 1;
@@ -362,11 +409,32 @@ void ir_assign(nodeType* n)
 				
 				debugger("mul\n");
 				fprintf(output,"mul\n");
-				debugger("stelem.i4\n");
-				fprintf(output,"stelem.i4\n");
+				//~ debugger("stelem.i4\n");
+				//~ fprintf(output,"stelem.i4\n");
+				print_stelem(unary_exp);
+			}
+			else if(unary_exp->opr.oper==FIELD)			// assign to field  THIS PART NEEDS TO BE INCLUDED IN LATER CASES
+			{
+				
+				ir_load_ref(unary_exp);			// first load the obj ref
+				debugger("dup\n");			// load obj ref which is always 0 in constr
+				fprintf(output,"dup\n");
+				print_load_var(get_operand(unary_exp,1));		
+				generate(ass_exp);				// generate whatever is to be assigned
+				debugger("mul\n");
+				fprintf(output,"mul\n");
+				print_store_var(get_operand(unary_exp,1));		// store in field using stfld
+				
 			}
 			else
 			{			
+				if(unary_exp->id.symrec->is_field==1)	// inside constructor to print 
+				{
+					debugger("ldarg.0\n");			// load obj ref which is always 0 in constr
+					fprintf(output,"ldarg.0\n");		
+					debugger("dup\n");			// load obj ref which is always 0 in constr
+					fprintf(output,"dup\n");		
+				}
 				print_load_var(unary_exp);
 				
 				prepost_put = 1;
@@ -390,11 +458,32 @@ void ir_assign(nodeType* n)
 				
 				debugger("div\n");
 				fprintf(output,"div\n");
-				debugger("stelem.i4\n");
-				fprintf(output,"stelem.i4\n");
+				//~ debugger("stelem.i4\n");
+				//~ fprintf(output,"stelem.i4\n");
+				print_stelem(unary_exp);
+			}
+			else if(unary_exp->opr.oper==FIELD)			// assign to field  THIS PART NEEDS TO BE INCLUDED IN LATER CASES
+			{
+				
+				ir_load_ref(unary_exp);			// first load the obj ref
+				debugger("dup\n");			// load obj ref which is always 0 in constr
+				fprintf(output,"dup\n");
+				print_load_var(get_operand(unary_exp,1));		
+				generate(ass_exp);				// generate whatever is to be assigned
+				debugger("div\n");
+				fprintf(output,"div\n");
+				print_store_var(get_operand(unary_exp,1));		// store in field using stfld
+				
 			}
 			else
 			{			
+				if(unary_exp->id.symrec->is_field==1)	// inside constructor to print 
+				{
+					debugger("ldarg.0\n");			// load obj ref which is always 0 in constr
+					fprintf(output,"ldarg.0\n");		
+					debugger("dup\n");			// load obj ref which is always 0 in constr
+					fprintf(output,"dup\n");		
+				}
 				print_load_var(unary_exp);
 				
 				prepost_put = 1;
@@ -857,12 +946,13 @@ void ir_fun_invoc(nodeType* n)
 		generate(explist);
 		debugger("call void [mscorlib]System.Console::WriteLine");
 		debugger("(");
-		debugger("int32");
+		//~ debugger("int32");
 		debugger(")\n");
 
 		fprintf(output,"call void [mscorlib]System.Console::WriteLine");
 		fprintf(output,"(");
-		fprintf(output,"int32");
+		//~ fprintf(output,"int32");
+		ir_print_arg_type(explist);
 		fprintf(output,")\n");
 	}
 	else if(strcmp(func_name->id.symrec->sym_name,"print")==0) 		// print function for ints
@@ -870,12 +960,13 @@ void ir_fun_invoc(nodeType* n)
 		generate(explist);
 		debugger("call void [mscorlib]System.Console::Write");
 		debugger("(");
-		debugger("int32");
+		//~ debugger("int32");
 		debugger(")\n");
 
 		fprintf(output,"call void [mscorlib]System.Console::Write");
 		fprintf(output,"(");
-		fprintf(output,"int32");
+		//~ fprintf(output,"int32");
+		ir_print_arg_type(explist);
 		fprintf(output,")\n");
 	}
 	else if(strcmp(func_name->id.symrec->sym_name,"scanf")==0)		//scanf function for ints
@@ -1245,32 +1336,36 @@ void ir_async_stmt_list(nodeType* n)
 	debugger("In ir_async_stmt_list\n");
 	nodeType* async_stmt = get_operand(n,0);
 	nodeType* async_stmt_list = get_operand(n,1);
-	//char thread_id[16];  		// GIGLAMESH !!!
 	//since X10 does not associate explicit thread id with a thread during async we generate one explicitly for code gen and store it in thread_id..
 	nodeType* temp_node;
 	temp_node = n;
+	char thread_id_list[MAX_THREADS][16]; 		//maximum number of threads that can be spawned in finish is 50
+	int index=0;
 	while(n->opr.oper == ASYNC_LIST)
 	{
 		async_stmt = get_operand(n,0);
 		async_stmt_list = get_operand(n,1);
-		memset(thread_id,0,16);
-		strcpy(thread_id,ir_async(async_stmt));
-		debugger("ldloc %s\n",thread_id); 
-		fprintf(output,"ldloc %s\n",thread_id); 
-		//the below lines perform thread.join operation of the thread just started
-		debugger("callvirt instance void class [mscorlib]System.Threading.Thread::Join()\n");
-		fprintf(output,"callvirt instance void class [mscorlib]System.Threading.Thread::Join()\n");
+		memset(thread_id_list[index],0,16);
+		//~ strcpy(thread_id,ir_async(async_stmt));
+		strcpy(thread_id_list[index],ir_async(async_stmt)); 
+		index++;
 		n = async_stmt_list;
 	}
 	//the loop would break when n->oper.opr is ASYNC so perform its codegen below...
 	memset(thread_id,0,16);
-	strcpy(thread_id , ir_async(async_stmt_list));
-	debugger("ldloc %s\n",thread_id); 
-	fprintf(output,"ldloc %s\n",thread_id); 
-	debugger("callvirt instance void class [mscorlib]System.Threading.Thread::Join()\n");
-	fprintf(output,"callvirt instance void class [mscorlib]System.Threading.Thread::Join()\n");
+	strcpy(thread_id_list[index],ir_async(n)) ;
+	int i;
+	for(i=0;i<=index;i++)
+		{
+			debugger("ldloc %s\n",thread_id_list[i]); 
+			fprintf(output,"ldloc %s\n",thread_id_list[i]); 
+			//the below lines perform thread.join operation of the thread just started
+			debugger("callvirt instance void class [mscorlib]System.Threading.Thread::Join()\n");
+			fprintf(output,"callvirt instance void class [mscorlib]System.Threading.Thread::Join()\n");
+		}
 	memset(thread_id,0,16);
-	
+
+
 }
 void ir_for(nodeType* n)
 {
@@ -1371,8 +1466,25 @@ void ir_array_rhs(nodeType* n)
 	debugger("ldloc %s\n",array_name->id.symrec->uid ); 
 	fprintf(output,"ldloc %s\n",array_name->id.symrec->uid ); 
 	generate(array_index);
-	debugger("ldelem.i4\n");
-	fprintf(output,"ldelem.i4\n");
+	//~ debugger("ldelem.i4\n");
+	//~ fprintf(output,"ldelem.i4\n");
+	switch(n->opr.datatype)
+	{
+		case MY_INT:
+			debugger("ldelem.i4\n");
+			fprintf(output,"ldelem.i4\n");
+			break;
+		case MY_FLOAT:
+			debugger("ldelem.r4\n");
+			fprintf(output,"ldelem.r4\n");
+			break;
+		case MY_BOOL:
+			debugger("ldelem.u1\n");
+			fprintf(output,"ldelem.u1\n");
+			break;
+		default:
+			debugger("IN DEFAULT OF Array LHS\n");
+	}
 }
 
 
@@ -1625,8 +1737,17 @@ void ir_load_ref(nodeType* n)
 {
 	debugger("IN IR_LOAD_REF\n");
 	nodeType* ident = get_operand(n,0);	// ident from ident.field	
-	debugger("ldloc %s\n",ident->id.symrec->uid ); //	load the object reference
-	fprintf(output,"ldloc %s\n",ident->id.symrec->uid ); 
+	if(ident->type==typeConI)
+	{
+		debugger("ldarg.0 \n");
+		fprintf(output,"ldarg.0 \n");
+
+	}
+	else
+	{
+		debugger("ldloc %s\n",ident->id.symrec->uid ); //	load the object reference
+		fprintf(output,"ldloc %s\n",ident->id.symrec->uid ); 
+	}	
 }
 
 // to handle situations 
@@ -1638,4 +1759,81 @@ void ir_method_invoc(nodeType* n)
 	ir_load_ref(n);
 	generate(arglist);
 	
+}
+
+void print_stelem(nodeType* n)
+{
+	switch(n->opr.datatype)
+	{
+		case MY_INT:
+			debugger("stelem.i4\n");
+			fprintf(output,"stelem.i4\n");
+			break;
+		case MY_FLOAT:
+			debugger("stelem.r4\n");
+			fprintf(output,"stelem.r4\n");
+			break;
+		case MY_BOOL:
+			debugger("stelem.i1\n");
+			fprintf(output,"stelem.i1\n");
+			break;
+		default:
+			debugger("IN DEFAULT OF Array LHS\n");
+	}
+}
+
+void ir_print_arg_type(nodeType* n)
+{
+	if(n->type==typeId)
+	{
+		switch(n->id.symrec->type)
+		{
+			case MY_INT:
+				fprintf(output,"int32");
+				break;
+			case MY_FLOAT:	
+				fprintf(output,"float32");
+				break;
+			case MY_BOOL:	
+				fprintf(output,"bool");
+				break;
+			default:	
+				debugger("IN DEFAULT OF PRINT typeId TYPE\n");	
+		}
+	}
+	else
+	{
+		switch(n->type)
+		{
+			case typeConI:
+				fprintf(output,"int32");
+				break;
+			case typeConF:	
+				fprintf(output,"float32");
+				break;
+			case typeConB:	
+				fprintf(output,"bool");
+				break;	
+			case typeOpr:
+			{
+				switch(n->opr.datatype)
+				{
+					case MY_INT:
+						fprintf(output,"int32");
+						break;
+					case MY_FLOAT:
+						fprintf(output,"float32");
+						break;
+					case MY_BOOL:
+						fprintf(output,"bool");
+						break;
+					default:	
+						debugger("IN DEFAULT OF PRINT typeOpr TYPE\n");
+				}
+			}	
+			default:
+				debugger("IN DEFAULT OF PRINT FUNC TYPE\n");		
+		}
+	}
+	return;
 }
